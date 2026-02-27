@@ -63,7 +63,8 @@ export async function middleware(request: NextRequest) {
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login')
     const isInternalPage = request.nextUrl.pathname.startsWith('/dashboard') ||
-        request.nextUrl.pathname.startsWith('/new-ticket')
+        request.nextUrl.pathname.startsWith('/new-ticket') ||
+        request.nextUrl.pathname.startsWith('/admin')
 
     // Redirection logic
     if (isInternalPage && !user) {
@@ -73,8 +74,21 @@ export async function middleware(request: NextRequest) {
     }
 
     if (isAuthPage && user) {
+        let redirectPath = '/dashboard'
+
+        // Cek jika rute admin dari profiles table
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+            redirectPath = '/admin'
+        }
+
         const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
+        url.pathname = redirectPath
         return NextResponse.redirect(url)
     }
 

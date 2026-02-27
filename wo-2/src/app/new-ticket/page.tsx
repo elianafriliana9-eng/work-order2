@@ -51,6 +51,7 @@ export default function NewTicketPage() {
         handleSubmit,
         watch,
         setValue,
+        trigger,
         formState: { errors }
     } = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -83,14 +84,26 @@ export default function NewTicketPage() {
         setFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
-    const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
+    const nextStep = async () => {
+        let fieldsToValidate: (keyof FormValues)[] = [];
+        if (step === 1) fieldsToValidate = ["title", "brand", "category"];
+        else if (step === 2) fieldsToValidate = ["description", "platform", "dimension"];
+        else if (step === 3) fieldsToValidate = ["deadline", "urgentReason"];
+
+        const isStepValid = await trigger(fieldsToValidate);
+        if (isStepValid) {
+            setStep((s) => Math.min(s + 1, totalSteps));
+        } else {
+            console.log("Validation errors step:", step, errors);
+        }
+    };
     const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
     const router = useRouter();
 
     const onSubmit = async (data: FormValues) => {
         if (step < totalSteps) {
-            nextStep();
+            await nextStep();
             return;
         }
 
@@ -129,12 +142,19 @@ export default function NewTicketPage() {
                     const fileName = `${Math.random()}.${fileExt}`;
                     const filePath = `${user.id}/${woData.id}/${fileName}`;
 
+                    console.log("Attempting upload:", {
+                        bucket: 'attachments',
+                        path: filePath,
+                        userId: user.id
+                    });
+
                     const { error: uploadError } = await supabase.storage
                         .from('attachments')
                         .upload(filePath, file);
 
                     if (uploadError) {
-                        console.error("Upload error:", uploadError);
+                        console.error("Upload error details:", uploadError);
+                        alert(`Gagal upload file ${file.name}: ${uploadError.message}\n(Bucket: attachments, UserID: ${user.id.substring(0, 8)}...)`);
                         continue;
                     }
 
@@ -143,15 +163,24 @@ export default function NewTicketPage() {
                         .getPublicUrl(filePath);
 
                     // 3. Save attachment record
-                    await supabase
+                    const insertPayload = {
+                        wo_id: woData.id,
+                        file_url: publicUrl,
+                        file_type: file.type
+                    };
+                    console.log("Inserting attachment record:", JSON.stringify(insertPayload));
+
+                    const { data: attachData, error: attachError } = await supabase
                         .from('work_order_attachments')
-                        .insert([
-                            {
-                                wo_id: woData.id,
-                                file_url: publicUrl,
-                                file_type: file.type
-                            }
-                        ]);
+                        .insert([insertPayload])
+                        .select();
+
+                    console.log("Attachment insert result:", { data: attachData, error: attachError ? JSON.stringify(attachError) : null });
+
+                    if (attachError) {
+                        console.error("Attachment record error (full):", JSON.stringify(attachError));
+                        alert(`Gagal mencatat lampiran ${file.name}: ${attachError.message || attachError.code || JSON.stringify(attachError)}`);
+                    }
                 }
             }
 
@@ -174,7 +203,7 @@ export default function NewTicketPage() {
                         <div className="bg-primary text-primary-foreground p-1 rounded">
                             <Layout size={20} />
                         </div>
-                        <span>WorkOrder2026</span>
+                        <span>WorkOrder <span className="text-muted-foreground font-normal">System</span></span>
                     </Link>
                     <Link href="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
                         Batal & Keluar
@@ -207,6 +236,14 @@ export default function NewTicketPage() {
                 {/* Form Container */}
                 <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-border shadow-xl shadow-zinc-200/50 dark:shadow-none overflow-hidden">
                     <form onSubmit={handleSubmit(onSubmit)} className="p-8 lg:p-12">
+                        {/* Error Summary */}
+                        {Object.keys(errors).length > 0 && (
+                            <div className="mb-8 p-4 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-3">
+                                <AlertCircle size={18} />
+                                <span>Beberapa isian belum lengkap atau tidak valid. Silakan cek kembali.</span>
+                            </div>
+                        )}
+
                         <AnimatePresence mode="wait">
                             {/* Step 1: Dasar */}
                             {step === 1 && (

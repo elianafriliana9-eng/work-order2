@@ -1,11 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Layout, ArrowLeft, ShieldCheck, Mail } from "lucide-react";
+import { Layout, ArrowLeft, ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
+
     async function handleGoogleLogin() {
         try {
             const { error } = await supabase.auth.signInWithOAuth({
@@ -18,6 +26,45 @@ export default function LoginPage() {
         } catch (error: any) {
             console.error("Error logging in with Google:", error.message);
             alert("Failed to login with Google. Please check your Supabase configuration.");
+        }
+    }
+
+    async function handleEmailLogin(e: React.FormEvent) {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) throw error;
+
+            // Check role
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+                    router.push('/admin');
+                    router.refresh();
+                    return;
+                }
+            }
+
+            router.push('/dashboard');
+            router.refresh();
+        } catch (error: any) {
+            console.error("Error logging in with Email:", error.message);
+            setError("Email atau password salah.");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -45,7 +92,7 @@ export default function LoginPage() {
                     Masuk ke Work Order System
                 </h2>
                 <p className="mt-2 text-center text-sm text-muted-foreground">
-                    Gunakan akun Google domain perusahaan untuk melanjutkan.
+                    Gunakan akun Google domain perusahaan atau login Admin.
                 </p>
             </div>
 
@@ -56,6 +103,7 @@ export default function LoginPage() {
             >
                 <div className="bg-white dark:bg-zinc-900 py-10 px-6 shadow-xl shadow-zinc-200/50 dark:shadow-none sm:rounded-3xl border border-border">
                     <div className="space-y-6">
+                        {/* Google Login */}
                         <button
                             onClick={handleGoogleLogin}
                             className="w-full flex items-center justify-center gap-3 px-4 py-4 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-800 text-black dark:text-white font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm group"
@@ -75,6 +123,61 @@ export default function LoginPage() {
                             </div>
                             <div className="relative flex justify-center text-sm">
                                 <span className="px-2 bg-white dark:bg-zinc-900 text-muted-foreground uppercase tracking-widest text-[10px] font-bold">
+                                    Atau Login Admin
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Email/Password Form */}
+                        <form onSubmit={handleEmailLogin} className="space-y-4">
+                            {error && (
+                                <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl">
+                                    {error}
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 ml-1">Email Karyawan</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="admin@it.com"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 ml-1">Password</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                                    <input
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading || !email || !password}
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50"
+                            >
+                                {loading ? <Loader2 size={16} className="animate-spin" /> : "Masuk"}
+                            </button>
+                        </form>
+
+                        <div className="relative pt-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-border"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white dark:bg-zinc-900 text-muted-foreground uppercase tracking-widest text-[10px] font-bold">
                                     Informasi Keamanan
                                 </span>
                             </div>
@@ -84,8 +187,8 @@ export default function LoginPage() {
                             <div className="flex items-start gap-3 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-border">
                                 <ShieldCheck className="text-primary shrink-0" size={18} />
                                 <div>
-                                    <p className="font-bold text-foreground">Single Sign-On (SSO)</p>
-                                    <p className="text-muted-foreground mt-0.5">Akses otomatis tersinkronisasi dengan akun internal TIM.</p>
+                                    <p className="font-bold text-foreground">Akses Terenkripsi</p>
+                                    <p className="text-muted-foreground mt-0.5">Semua data login dilindungi dengan enkripsi end-to-end.</p>
                                 </div>
                             </div>
                         </div>

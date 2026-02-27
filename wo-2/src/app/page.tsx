@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ClipboardList,
@@ -15,8 +16,61 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import BounceCards from "@/components/BounceCards";
 
 export default function LandingPage() {
+  const [showcases, setShowcases] = useState<any[]>([]);
+  const [statsData, setStatsData] = useState({
+    activeTickets: "0",
+    avgCompletion: "0 Hari",
+    highestPriority: "P2 (Standar)",
+  });
+
+  useEffect(() => {
+    async function loadData() {
+      // Load Showcases
+      const { data: showcaseData } = await supabase
+        .from('showcase_items')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (showcaseData) setShowcases(showcaseData);
+
+      // Load Stats
+      const { data: woData } = await supabase
+        .from('work_orders')
+        .select('id, status, priority, created_at, updated_at');
+
+      if (woData) {
+        const activeCount = woData.filter(d => d.status !== 'Completed' && d.status !== 'Rejected').length;
+
+        // Calculate average completion time
+        const completed = woData.filter(d => d.status === 'Completed');
+        let avgDays = "0";
+        if (completed.length > 0) {
+          const totalMs = completed.reduce((acc, curr) => {
+            const end = new Date(curr.updated_at).getTime();
+            const start = new Date(curr.created_at).getTime();
+            return acc + (end - start);
+          }, 0);
+          const avgMs = totalMs / completed.length;
+          avgDays = (avgMs / (1000 * 60 * 60 * 24)).toFixed(1);
+        }
+
+        // Determine highest priority
+        const hasP1 = woData.some(d => d.status !== 'Completed' && d.priority === 'P1');
+        const priorityStr = hasP1 ? "P1 (Urgent)" : "P2 (Standar)";
+
+        setStatsData({
+          activeTickets: activeCount.toString(),
+          avgCompletion: `${avgDays} Hari`,
+          highestPriority: priorityStr
+        });
+      }
+    }
+    loadData();
+  }, []);
+
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
@@ -24,9 +78,9 @@ export default function LandingPage() {
   };
 
   const stats = [
-    { label: "Active Tickets", value: "12", icon: ClipboardList, color: "text-blue-500" },
-    { label: "Avg. Completion", value: "2.4 Days", icon: Clock, color: "text-green-500" },
-    { label: "Current Priority", value: "P1 (Urgent)", icon: AlertCircle, color: "text-red-500" },
+    { label: "Active Tickets", value: statsData.activeTickets, icon: ClipboardList, color: "text-blue-500" },
+    { label: "Avg. Completion", value: statsData.avgCompletion, icon: Clock, color: "text-green-500" },
+    { label: "Current Priority", value: statsData.highestPriority, icon: AlertCircle, color: "text-red-500" },
   ];
 
   const workflow = [
@@ -179,55 +233,44 @@ export default function LandingPage() {
       </section>
 
       {/* Showcase Section */}
-      <section id="showcase" className="py-24 bg-zinc-50 dark:bg-zinc-900/30">
+      <section id="showcase" className="py-24 bg-zinc-50 dark:bg-zinc-900/30 overflow-hidden">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
             <div className="max-w-xl">
               <h2 className="text-4xl font-bold mb-4 tracking-tight">Showcase Karya Kreatif</h2>
               <p className="text-lg text-muted-foreground">
                 Hasil pengerjaan tim Creative Design untuk berbagai brand dan kebutuhan media.
               </p>
             </div>
-            <Link href="/login" className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all">
+            <Link href="/login" className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all z-10 relative">
               Mulai Project Baru <ArrowRight size={20} />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { title: "Banner Promo Lebaran", brand: "Brand X", category: "Social Media", img: "https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800&auto=format&fit=crop" },
-              { title: "Dashboard Kepegawaian", brand: "Internal", category: "UI/UX Design", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop" },
-              { title: "E-Catalog Ramadhan", brand: "Retail A", category: "Digital Catalog", img: "https://images.unsplash.com/photo-1544145945-f904253d0c71?q=80&w=800&auto=format&fit=crop" },
-              { title: "Logo Rebranding", brand: "Startup B", category: "Branding", img: "https://images.unsplash.com/photo-1622737133809-d95047b9e673?q=80&w=800&auto=format&fit=crop" },
-              { title: "Social Media Kit", brand: "Brand Y", category: "Design Asset", img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop" },
-              { title: "Product Photography", brand: "F&B Z", category: "Asset", img: "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=800&auto=format&fit=crop" },
-            ].map((project, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:shadow-xl transition-all"
-              >
-                <div className="aspect-video relative overflow-hidden">
-                  <img
-                    src={project.img}
-                    alt={project.title}
-                    className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold text-white border border-white/30">
-                      {project.category}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="text-xs font-bold text-primary uppercase tracking-widest mb-2">{project.brand}</div>
-                  <h3 className="text-xl font-bold mb-1">{project.title}</h3>
-                </div>
-              </motion.div>
-            ))}
+          <div className="flex justify-center items-center w-full min-h-[500px]">
+            {showcases.length > 0 ? (
+              <BounceCards
+                className="custom-bounceCards scale-y-110 sm:scale-100"
+                images={showcases.slice(0, 5).map(s => s.img_url)}
+                containerWidth="100%"
+                containerHeight={400}
+                animationDelay={0.5}
+                animationStagger={0.08}
+                easeType="elastic.out(1, 0.5)"
+                transformStyles={[
+                  "rotate(5deg) translate(-200px)",
+                  "rotate(0deg) translate(-100px)",
+                  "rotate(-5deg)",
+                  "rotate(5deg) translate(100px)",
+                  "rotate(-5deg) translate(200px)"
+                ]}
+                enableHover={true}
+              />
+            ) : (
+              <div className="text-center p-10 border-2 border-dashed border-border rounded-3xl w-full max-w-xl">
+                <p className="text-muted-foreground">Belum ada karya showcase yang diunggah.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

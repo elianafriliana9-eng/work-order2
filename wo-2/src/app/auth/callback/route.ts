@@ -43,12 +43,27 @@ export async function GET(request: Request) {
                 },
             }
         )
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
-            console.log("Auth Callback: Success! Redirecting to", next);
-            return NextResponse.redirect(`${origin}${next}`)
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error && data?.user) {
+            let redirectUrl = next;
+
+            // Override redirect for admin roles
+            if (next === '/dashboard' || next === '/dashboard-v2') {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+                    redirectUrl = '/admin';
+                }
+            }
+
+            console.log("Auth Callback: Success! Redirecting to", redirectUrl);
+            return NextResponse.redirect(`${origin}${redirectUrl}`)
         }
-        console.error("Auth Callback: Error exchanging code:", error.message);
+        console.error("Auth Callback: Error exchanging code:", error?.message);
     } else {
         console.warn("Auth Callback: No code found in searchParams");
     }

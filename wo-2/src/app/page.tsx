@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ClipboardList,
   CheckCircle2,
@@ -12,14 +12,27 @@ import {
   Code2,
   Database,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  X,
+  TrendingUp
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import BounceCards from "@/components/BounceCards";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 
 export default function LandingPage() {
   const [showcases, setShowcases] = useState<any[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
   const [statsData, setStatsData] = useState({
     activeTickets: "0",
     avgCompletion: "0 Hari",
@@ -66,6 +79,25 @@ export default function LandingPage() {
           avgCompletion: `${avgDays} Hari`,
           highestPriority: priorityStr
         });
+
+        // Calculate Last 7 Days Chart Data
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - i));
+          return {
+            date: d.toISOString().split('T')[0],
+            dayName: d.toLocaleDateString('id-ID', { weekday: 'short' }),
+            total: 0
+          };
+        });
+
+        woData.forEach(wo => {
+          const woDate = new Date(wo.created_at).toISOString().split('T')[0];
+          const found = last7Days.find(d => d.date === woDate);
+          if (found) found.total += 1;
+        });
+
+        setChartData(last7Days);
       }
     }
     loadData();
@@ -162,24 +194,98 @@ export default function LandingPage() {
           </motion.div>
         </div>
 
-        {/* Counters */}
+        {/* Counters & Analytics */}
         <div className="container mx-auto px-6 mt-24">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className={`p-3 w-fit rounded-xl bg-zinc-100 dark:bg-zinc-900 mb-4 ${stat.color}`}>
-                  <stat.icon size={24} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Chart Area */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="lg:col-span-8 p-8 rounded-[2rem] border border-black/5 dark:border-white/5 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden relative group"
+            >
+              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <TrendingUp size={22} className="text-primary" /> Permintaan 7 Hari Terakhir
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Grafik volume tiket masuk ke divisi IT & Creative.
+                  </p>
                 </div>
-                <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                <div className="text-muted-foreground font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
+              </div>
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150, 150, 150, 0.1)" />
+                    <XAxis
+                      dataKey="dayName"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: '#888' }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: '#888' }}
+                    />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                      cursor={{ stroke: 'rgba(150, 150, 150, 0.2)', strokeWidth: 2, strokeDasharray: '5 5' }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="var(--primary)"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorTotal)"
+                      animationDuration={1500}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
+
+            {/* Stats Cards */}
+            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-6">
+              {stats.map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ delay: i * 0.1, duration: 0.6, ease: "easeOut" }}
+                  className="group relative p-6 rounded-[2rem] border border-black/5 dark:border-white/5 bg-white dark:bg-zinc-900 shadow-xl hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_20px_40px_-15px_rgba(255,255,255,0.05)] hover:-translate-y-2 transition-all duration-500 overflow-hidden flex items-center justify-between"
+                >
+                  <div className={`absolute -bottom-4 -right-4 opacity-[0.03] dark:opacity-5 group-hover:scale-[1.3] group-hover:-translate-y-2 group-hover:-translate-x-2 transition-transform duration-700 ease-out ${stat.color}`}>
+                    <stat.icon size={120} />
+                  </div>
+
+                  <div className="relative z-10 flex flex-col justify-center">
+                    <div className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-zinc-900 via-zinc-700 to-zinc-400 dark:from-white dark:via-zinc-300 dark:to-zinc-600 mb-1">
+                      {stat.value}
+                    </div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-primary transition-colors duration-300">
+                      {stat.label}
+                    </div>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500 relative z-10 ${stat.color}`}>
+                    <stat.icon size={22} className={stat.color} />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -265,6 +371,7 @@ export default function LandingPage() {
                   "rotate(-5deg) translate(200px)"
                 ]}
                 enableHover={true}
+                onImageClick={(src: string) => setSelectedImage(src)}
               />
             ) : (
               <div className="text-center p-10 border-2 border-dashed border-border rounded-3xl w-full max-w-xl">
@@ -312,6 +419,40 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X size={24} />
+            </motion.button>
+
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              src={selectedImage}
+              alt="Full Preview"
+              className="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain bg-zinc-900"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

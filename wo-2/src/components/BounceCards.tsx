@@ -18,7 +18,8 @@ export default function BounceCards({
         'rotate(-10deg) translate(85px)',
         'rotate(2deg) translate(170px)'
     ],
-    enableHover = false
+    enableHover = false,
+    onImageClick
 }: any) {
     const containerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -133,9 +134,10 @@ export default function BounceCards({
                     }}
                     onMouseEnter={() => pushSiblings(idx)}
                     onMouseLeave={resetSiblings}
+                    onClick={() => onImageClick && onImageClick(src, idx)}
                 >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className="w-full h-full object-cover" src={src} alt={`card-${idx}`} />
+                    <img className="w-full h-full object-cover cursor-pointer" src={src} alt={`card-${idx}`} />
                 </div>
             ))}
         </div>

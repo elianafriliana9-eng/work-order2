@@ -7,8 +7,9 @@ import {
     Trash2,
     Link as LinkIcon,
     Upload,
+    X,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
 export default function AdminShowcasePage() {
@@ -22,6 +23,7 @@ export default function AdminShowcasePage() {
     const [category, setCategory] = useState("Social Media");
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState("");
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const CATEGORIES = [
         "Social Media", "UI/UX Design", "Digital Catalog",
@@ -214,7 +216,10 @@ export default function AdminShowcasePage() {
                                     transition={{ delay: i * 0.05 }}
                                     className="group relative overflow-hidden rounded-xl border border-border bg-white dark:bg-zinc-900 shadow-sm"
                                 >
-                                    <div className="aspect-video relative overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                                    <div
+                                        className="aspect-video relative overflow-hidden bg-zinc-100 dark:bg-zinc-800 cursor-pointer"
+                                        onClick={() => setSelectedImage(item.img_url)}
+                                    >
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                             src={item.img_url}
@@ -222,6 +227,11 @@ export default function AdminShowcasePage() {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                             onError={(e) => (e.currentTarget.src = "https://placehold.co/600x400/27272a/fafafa?text=Image+Broken")}
                                         />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="text-white text-xs font-bold px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/20">
+                                                Lihat Gambar
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="p-4">
                                         <div className="flex justify-between items-start mb-1">
@@ -245,6 +255,40 @@ export default function AdminShowcasePage() {
                     )}
                 </div>
             </div>
+
+            {/* Image Preview Modal */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedImage(null)}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                    >
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            <X size={24} />
+                        </motion.button>
+
+                        <motion.img
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            src={selectedImage}
+                            alt="Full Preview"
+                            className="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain bg-zinc-900"
+                            onClick={(e) => e.stopPropagation()} // Prevent clicking image from closing modal
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

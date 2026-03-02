@@ -18,7 +18,10 @@ import {
   Zap,
   Globe,
   PenTool,
-  Download
+  Download,
+  MessageSquare,
+  History,
+  MousePointerClick
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -126,15 +129,44 @@ export default function LandingPage() {
     { title: "Review", desc: "Pengecekan hasil oleh pemohon.", icon: CheckCircle2 },
   ];
 
+  const sopPoints = [
+    { 
+      title: "Discussion Policy", 
+      desc: "Instruksi lisan/WA hanya bersifat diskusi, bukan perintah kerja.", 
+      icon: MessageSquare, 
+      color: "from-blue-500/20 to-blue-600/5",
+      iconColor: "text-blue-500" 
+    },
+    { 
+      title: "Clocking System", 
+      desc: "Waktu pengerjaan resmi dihitung sejak tiket diterbitkan di sistem.", 
+      icon: Clock, 
+      color: "from-[#49FFB8]/20 to-[#49FFB8]/5",
+      iconColor: "text-[#49FFB8]" 
+    },
+    { 
+      title: "Traceable Revisions", 
+      desc: "Seluruh riwayat revisi wajib tercatat dalam history tiket yang sama.", 
+      icon: History, 
+      color: "from-indigo-500/20 to-indigo-600/5",
+      iconColor: "text-indigo-500" 
+    },
+    { 
+      title: "Auto Closing", 
+      desc: "Tiket ditutup otomatis setelah 1x24 jam tanpa feedback tambahan.", 
+      icon: MousePointerClick, 
+      color: "from-rose-500/20 to-rose-600/5",
+      iconColor: "text-rose-500" 
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden text-foreground">
-      {/* --- BACKGROUND DECOR (OPSI 3) --- */}
+      {/* --- BACKGROUND DECOR --- */}
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
-        {/* Abstract Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#49FFB8]/10 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#1C3ECA]/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
         
-        {/* Floating Code Snippets / UI Elements Simulation */}
         <motion.div 
           animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -158,14 +190,6 @@ export default function LandingPage() {
             <div className="h-4 w-4 bg-white/10 rounded-sm" />
             <div className="h-4 w-4 bg-[#1C3ECA]/20 rounded-sm" />
           </div>
-        </motion.div>
-
-        <motion.div 
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[15%] left-[15%] opacity-20 hidden lg:block"
-        >
-          <Globe size={120} className="text-zinc-200 dark:text-zinc-800" />
         </motion.div>
       </div>
 
@@ -193,8 +217,8 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="container mx-auto px-6 text-center">
+      <section className="relative pt-32 pb-20 overflow-hidden text-center">
+        <div className="container mx-auto px-6">
           <motion.div {...fadeIn}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full bg-primary/10 text-primary border border-primary/20 backdrop-blur-md">
               <Zap size={12} fill="currentColor" />
@@ -229,10 +253,9 @@ export default function LandingPage() {
           </motion.div>
         </div>
 
-        {/* Counters & Analytics */}
+        {/* Analytics Section */}
         <div className="container mx-auto px-6 mt-32">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Chart Area */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -241,7 +264,7 @@ export default function LandingPage() {
             >
               <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
               <div className="flex items-center justify-between mb-12 relative z-10">
-                <div>
+                <div className="text-left">
                   <h3 className="text-2xl font-black flex items-center gap-3 tracking-tight">
                     <div className="p-2 bg-primary/10 rounded-lg"><TrendingUp size={24} className="text-primary" /></div>
                     Weekly Volume
@@ -261,37 +284,15 @@ export default function LandingPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150, 150, 150, 0.1)" />
-                    <XAxis
-                      dataKey="dayName"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }}
-                    />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '20px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.2)', padding: '12px' }}
-                      cursor={{ stroke: 'var(--primary)', strokeWidth: 2, strokeDasharray: '5 5' }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="total"
-                      stroke="var(--primary)"
-                      strokeWidth={4}
-                      fillOpacity={1}
-                      fill="url(#colorTotal)"
-                      animationDuration={2000}
-                    />
+                    <XAxis dataKey="dayName" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }} />
+                    <Tooltip contentStyle={{ borderRadius: '20px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.2)', padding: '12px' }} cursor={{ stroke: 'var(--primary)', strokeWidth: 2, strokeDasharray: '5 5' }} />
+                    <Area type="monotone" dataKey="total" stroke="var(--primary)" strokeWidth={4} fillOpacity={1} fill="url(#colorTotal)" animationDuration={2000} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </motion.div>
 
-            {/* Stats Cards */}
             <div className="lg:col-span-4 grid grid-cols-1 gap-6">
               {stats.map((stat, i) => (
                 <motion.div
@@ -304,18 +305,13 @@ export default function LandingPage() {
                   <div className={`absolute -bottom-6 -right-6 opacity-[0.03] dark:opacity-5 group-hover:scale-[1.4] transition-transform duration-700 ease-out ${stat.color}`}>
                     <stat.icon size={160} />
                   </div>
-
                   <div className="flex items-center gap-6">
                     <div className={`p-5 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-border shadow-inner group-hover:scale-110 transition-transform duration-500 ${stat.color}`}>
                       <stat.icon size={28} />
                     </div>
-                    <div>
-                      <div className="text-4xl font-black tracking-tighter leading-none mb-1">
-                        {stat.value}
-                      </div>
-                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-                        {stat.label}
-                      </div>
+                    <div className="text-left">
+                      <div className="text-4xl font-black tracking-tighter leading-none mb-1">{stat.value}</div>
+                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</div>
                     </div>
                   </div>
                 </motion.div>
@@ -325,84 +321,92 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SOP Section */}
-      <section id="sop" className="py-32 bg-zinc-50 dark:bg-zinc-900/50 relative">
+      {/* SOP Section - Refined Design */}
+      <section id="sop" className="py-32 bg-zinc-50 dark:bg-zinc-900/50 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent" />
-        <div className="container mx-auto px-6 text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 uppercase">
-            NO TICKET, <span className="text-red-500 italic">NO WORK</span>
-          </h2>
-          <div className="w-24 h-1.5 bg-primary mx-auto rounded-full mb-8 shadow-lg shadow-primary/20" />
-          <p className="max-w-2xl mx-auto text-lg text-muted-foreground font-medium">
-            Menciptakan ekosistem kerja yang transparan, terukur, dan bebas instruksi lisan yang terabaikan.
-          </p>
-        </div>
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {[
-              "Instruksi lisan/WA hanya bersifat diskusi.",
-              "Waktu pengerjaan dihitung sejak tiket terbit.",
-              "Revisi tercatat dalam history tiket terpusat.",
-              "Auto-closing setelah 1x24 jam tanpa feedback."
-            ].map((item, i) => (
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 uppercase italic">
+              NO TICKET, <span className="text-red-500">NO WORK</span>
+            </h2>
+            <p className="max-w-2xl mx-auto text-lg text-muted-foreground font-medium">
+              Protokol operasional wajib untuk efisiensi dan transparansi alur kerja divisi.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {sopPoints.map((point, i) => (
               <motion.div 
                 key={i}
-                whileHover={{ y: -5 }}
-                className="p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="group relative p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-border shadow-xl hover:shadow-2xl transition-all overflow-hidden"
               >
-                <div className="p-3 bg-primary/10 rounded-2xl w-fit mb-6">
-                  <CheckCircle2 size={24} className="text-primary" />
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${point.color} blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative z-10">
+                  <div className={`p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border w-fit mb-8 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500 ${point.iconColor}`}>
+                    <point.icon size={28} />
+                  </div>
+                  <h4 className="text-lg font-black mb-3 tracking-tight uppercase">{point.title}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                    {point.desc}
+                  </p>
                 </div>
-                <p className="font-bold text-sm leading-relaxed">
-                  {item}
-                </p>
+                <div className="absolute bottom-6 right-8 text-4xl font-black opacity-[0.03] italic pointer-events-none group-hover:opacity-10 transition-opacity">
+                  0{i+1}
+                </div>
               </motion.div>
             ))}
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <div className="p-8 rounded-[2.5rem] bg-primary text-primary-foreground relative overflow-hidden group shadow-2xl">
-              <div className="absolute top-0 right-0 p-8 scale-150 opacity-10 group-hover:scale-175 transition-transform">
-                <AlertCircle size={150} />
+            <motion.div 
+              whileHover={{ scale: 1.01 }}
+              className="p-10 rounded-[3.5rem] bg-zinc-900 text-white relative overflow-hidden group shadow-2xl border border-white/5"
+            >
+              <div className="absolute top-0 right-0 p-10 scale-150 opacity-10 group-hover:scale-175 transition-transform duration-1000">
+                <AlertCircle size={200} className="text-red-500" />
               </div>
-              <div className="relative z-10">
-                <h3 className="text-2xl font-black mb-4 tracking-tight uppercase">Urgent Policy (P1)</h3>
-                <p className="opacity-90 leading-relaxed mb-8 text-lg font-medium">
-                  Masalah teknis yang menghentikan operasional (system down) atau kebutuhan langsung Owner akan diprioritaskan segera di luar antrian standar.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="px-6 py-2 bg-white/10 rounded-full border border-white/20 backdrop-blur-md">
-                    <span className="text-xs font-bold uppercase tracking-widest">Priority level: High</span>
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
+                <div className="flex-1">
+                  <div className="inline-block px-4 py-1 mb-6 rounded-full bg-red-500/20 border border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest">
+                    Critical Protocol
                   </div>
-                  <a
-                    href="/files/SOP_WorkOrder_IT_Creative.pdf"
-                    className="flex items-center gap-3 px-8 py-3 bg-white text-primary rounded-xl font-bold hover:bg-zinc-100 transition-all shadow-xl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Download size={18} />
-                    Download Full SOP
-                  </a>
+                  <h3 className="text-3xl font-black mb-4 tracking-tight uppercase leading-none">Urgent Policy (P1)</h3>
+                  <p className="text-zinc-400 leading-relaxed text-lg font-medium italic">
+                    Hanya permintaan Owner atau kendala teknis yang bersifat "System Down" yang mendapatkan jalur prioritas utama.
+                  </p>
                 </div>
+                <a
+                  href="/files/SOP_WorkOrder_IT_Creative.pdf"
+                  className="flex items-center gap-4 px-10 py-5 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#49FFB8] hover:text-black transition-all shadow-xl active:scale-95 shrink-0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Download size={20} />
+                  Download SOP
+                </a>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Showcase Section */}
       <section id="showcase" className="py-32 overflow-hidden relative">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8 text-center md:text-left">
+        <div className="container mx-auto px-6 text-center md:text-left">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
             <div className="max-w-xl">
               <span className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-4 block">Creative Portfolio</span>
               <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.8]">DESIGN <br />SHOWCASE</h2>
               <p className="text-lg text-muted-foreground mt-6 font-medium italic">
-                Cek hasil karya terbaru tim Creative Design kami untuk berbagai kebutuhan brand.
+                Eksplorasi karya visual tim Creative Design kami.
               </p>
             </div>
-            <Link href="/login" className="px-10 py-5 bg-zinc-900 text-white dark:bg-white dark:text-black rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:scale-105 transition-all shadow-2xl">
-              New Project <ArrowRight size={20} />
+            <Link href="/login" className="px-10 py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:shadow-2xl shadow-primary/30 transition-all z-10">
+              Start Project <ArrowRight size={20} />
             </Link>
           </div>
 
@@ -428,8 +432,8 @@ export default function LandingPage() {
                 onImageClick={(src: string) => setSelectedImage(src)}
               />
             ) : (
-              <div className="text-center p-20 border-2 border-dashed border-border rounded-[3rem] w-full max-w-2xl backdrop-blur-sm">
-                <p className="text-muted-foreground font-black tracking-widest uppercase opacity-50 text-sm">Waiting for artistic masterpieces...</p>
+              <div className="text-center p-20 border-2 border-dashed border-border rounded-[3rem] w-full max-w-2xl backdrop-blur-sm opacity-50">
+                <p className="text-muted-foreground font-black tracking-widest uppercase">Waiting for design input...</p>
               </div>
             )}
           </div>
@@ -437,10 +441,9 @@ export default function LandingPage() {
       </section>
 
       {/* Workflow Section */}
-      <section id="workflow" className="py-32 bg-zinc-950 text-white relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#49FFB8]/20 to-transparent" />
+      <section id="workflow" className="py-32 bg-zinc-950 text-white relative">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl md:text-6xl font-black text-center mb-32 tracking-tighter uppercase">SYSTEM PIPELINE</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-center mb-24 tracking-tighter uppercase">SYSTEM PIPELINE</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative">
             {workflow.map((step, i) => (
               <div key={i} className="relative z-10 group">
@@ -464,13 +467,13 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-20 border-t border-border bg-zinc-50 dark:bg-black/20">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-12 text-center md:text-left">
             <div className="flex flex-col items-center md:items-start gap-4">
               <div className="flex items-center gap-2 font-black text-3xl tracking-tighter">
                 <Layout size={28} className="text-primary" />
                 <span>WO.2026</span>
               </div>
-              <p className="text-[10px] text-muted-foreground font-black tracking-[0.3em] uppercase opacity-50 text-center md:text-left leading-relaxed">
+              <p className="text-[10px] text-muted-foreground font-black tracking-[0.3em] uppercase opacity-50 leading-relaxed">
                 Managed by IT & Creative Division <br />
                 SRT CORPORATION INDONESIA
               </p>
@@ -510,7 +513,6 @@ export default function LandingPage() {
             >
               <X size={32} />
             </motion.button>
-
             <motion.img
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

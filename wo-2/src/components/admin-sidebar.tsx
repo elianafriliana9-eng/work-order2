@@ -48,6 +48,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
     const menuItems = [
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard, show: true },
         { href: "/admin/tickets", label: "Kelola Tiket", icon: Ticket, show: true },
+        { href: "/admin/it-dev", label: "IT Development", icon: Code, show: isHeadIT || role === "it_dev" },
         { href: "/admin/reports/submit", label: "Laporan Harian", icon: Send, show: !isHeadIT },
         { href: "/admin/reports", label: "Laporan Tim", icon: FileText, show: isHeadIT },
         { href: "/admin/reporting", label: "Reporting", icon: PieChart, show: isHeadIT },

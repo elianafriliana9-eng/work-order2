@@ -76,7 +76,26 @@ export default function NewTicketPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files);
-            setFiles((prev) => [...prev, ...newFiles]);
+            
+            // Solve 1: Filter dangerous file types (Client-side check)
+            const allowedTypes = [
+                'image/jpeg', 
+                'image/png', 
+                'image/jpg', 
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            
+            const filteredFiles = newFiles.filter(file => {
+                if (!allowedTypes.includes(file.type)) {
+                    alert(`File ${file.name} ditolak. Hanya file gambar, PDF, atau Word yang diizinkan.`);
+                    return false;
+                }
+                return true;
+            });
+
+            setFiles((prev) => [...prev, ...filteredFiles]);
         }
     };
 

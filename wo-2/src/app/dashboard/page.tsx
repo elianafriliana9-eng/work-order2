@@ -11,7 +11,8 @@ import {
     Filter,
     ArrowRight,
     User,
-    LogOut
+    LogOut,
+    Code2
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";

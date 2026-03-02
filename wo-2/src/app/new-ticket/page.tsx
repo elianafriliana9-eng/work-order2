@@ -33,6 +33,10 @@ const formSchema = z.object({
     description: z.string().min(20, "Deskripsi minimal 20 karakter"),
     platform: z.string().optional(),
     dimension: z.string().optional(),
+    taskType: z.enum(["Bug Fix", "New Feature", "Maintenance", "Develop New System"]).optional(),
+    moduleAffected: z.string().optional(),
+    reproductionSteps: z.string().optional(),
+    credentials: z.string().optional(),
     // Step 3
     deadline: z.string(),
     urgentReason: z.string().optional(),
@@ -361,13 +365,64 @@ export default function NewTicketPage() {
                                             )}
 
                                             {selectedCategory === "Programming" && (
-                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                                                    <label className="block text-sm font-semibold mb-2">Platform</label>
-                                                    <input
-                                                        {...register("platform")}
-                                                        placeholder="Contoh: Admin Panel / Mobile App"
-                                                        className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary outline-none transition-all"
-                                                    />
+                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <label className="block text-sm font-semibold mb-2">Platform</label>
+                                                            <select
+                                                                {...register("platform")}
+                                                                className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary outline-none transition-all text-sm appearance-none cursor-pointer"
+                                                            >
+                                                                <option value="">Pilih Platform...</option>
+                                                                <option value="Web Application">Web Application</option>
+                                                                <option value="Mobile App (Android/iOS)">Mobile App (Android/iOS)</option>
+                                                                <option value="Internal System / ERP">Internal System / ERP</option>
+                                                                <option value="Desktop Application">Desktop Application</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-semibold mb-2">Jenis Pekerjaan</label>
+                                                            <select
+                                                                {...register("taskType")}
+                                                                className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary outline-none transition-all text-sm appearance-none cursor-pointer"
+                                                            >
+                                                                <option value="Bug Fix">Bug Fix 🐞</option>
+                                                                <option value="New Feature">New Feature ✨</option>
+                                                                <option value="Maintenance">Maintenance ⚙️</option>
+                                                                <option value="Develop New System">Develop New System 🚀</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Modul yang Terdampak</label>
+                                                        <input
+                                                            {...register("moduleAffected")}
+                                                            placeholder="Contoh: Menu Login, Laporan Gaji, dll."
+                                                            className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
+                                                        />
+                                                    </div>
+
+                                                    {watch("taskType") === "Bug Fix" && (
+                                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                                                            <label className="block text-sm font-semibold mb-2 text-red-500">Langkah Reproduksi Bug</label>
+                                                            <textarea
+                                                                {...register("reproductionSteps")}
+                                                                rows={3}
+                                                                placeholder="1. Buka menu X... 2. Klik tombol Y... 3. Muncul error Z..."
+                                                                className="w-full px-4 py-3 rounded-xl border border-red-100 bg-red-50/30 dark:bg-red-500/5 focus:ring-2 focus:ring-red-500 outline-none transition-all resize-none text-sm"
+                                                            />
+                                                        </motion.div>
+                                                    )}
+
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Akses / Kredensial (Opsional)</label>
+                                                        <input
+                                                            {...register("credentials")}
+                                                            placeholder="Username/Pass untuk testing jika diperlukan"
+                                                            className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
+                                                        />
+                                                    </div>
                                                 </motion.div>
                                             )}
                                         </div>

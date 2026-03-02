@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   ChevronRight,
   X,
-  TrendingUp
+  TrendingUp,
+  Download
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -333,6 +334,22 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Download SOP Button */}
+              <a
+                href="/files/SOP_WorkOrder_IT_Creative.pdf"
+                className="group p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-border shadow-sm hover:shadow-md transition-all flex items-center justify-between mt-2 cursor-pointer"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div>
+                  <h4 className="font-bold text-lg">Download SOP Lengkap</h4>
+                  <p className="text-sm text-muted-foreground mt-1">Unduh dokumen PDF Standar Operasional Prosedur Work Order.</p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Download size={20} />
+                </div>
+              </a>
             </div>
           </div>
         </div>

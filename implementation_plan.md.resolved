@@ -1,0 +1,76 @@
+# IT & Creative Service Management System (One-Door Solution)
+
+Sistem ini dirancang sebagai platform satu pintu untuk mengelola seluruh *Work Order* (WO) di divisi IT & Kreatif, memastikan setiap tugas terdokumentasi dan memiliki prioritas yang jelas sesuai prinsip "No Ticket, No Work".
+
+## User Review Required
+
+> [!IMPORTANT]
+> Sistem ini memiliki aturan ketat mengenai **deadline** dan **prioritas**. 
+> - Deadline < 3 hari memerlukan alasan khusus (*Rush Reason*).
+> - Akses data dibatasi per divisi menggunakan Row Level Security (RLS).
+
+## Proposed Architecture & Modules
+
+Sistem akan dibangun menggunakan **El-Stack**: Next.js (App Router), Tailwind CSS, Shadcn/ui, dan Supabase.
+
+---
+
+### [Database & Auth]
+Sistem menggunakan Supabase untuk manajemen user dan database PostgreSQL.
+
+#### [NEW] [Database Schema](file:///Users/itsrtcorp/Work-order/Context.md#L24-L81)
+- **Profiles:** Menyimpan profil user, role (Admin/User), divisi, dan nama PIC.
+- **Work Orders (WO):** Jantung sistem yang menyimpan data tiket, kategori (Programming/Design/Asset), prioritas (P1-P3), dan status.
+- **Attachments:** Tabel pendukung untuk menyimpan file referensi atau lampiran proyek.
+
+---
+
+### [Core Modules]
+
+#### 1. Entry Gate (Authentication)
+- Implementasi Google Auth dengan pembatasan domain (Restricted Domain) untuk memastikan hanya internal yang bisa mengakses.
+
+#### 2. Landing Page (SOP Dashboard)
+- Menampilkan visi "Single Entry Point".
+- Counter realtime untuk tiket aktif dan rata-rata waktu penyelesaian.
+- Highlight informasi SOP agar user paham alur kerja.
+
+#### 3. Smart Work Order Form
+- **Step 1:** Informasi dasar.
+- **Step 2:** Form kondisional berdasarkan kategori (misal: jika 'Design', munculkan field Dimensi & Media Publikasi).
+- **Step 3:** Timeline dengan logika SLA Warning (peringatan jika < 3 hari).
+- **Step 4:** Upload lampiran.
+
+#### 4. Admin Workspace (`/admin`)
+- **Triaging View:** Untuk Head of IT/Admin memverifikasi brief baru (Verify/Reject).
+- **Task Assignment:** Penugasan tiket ke personil spesifik.
+- **Resource Monitoring:** Pantauan beban kerja tim.
+
+#### 5. Reporting Engine
+- Visualisasi performa bulanan menggunakan **Recharts**.
+- Laporan jumlah tugas selesai vs tugas mendesak untuk evaluasi manajemen.
+
+#### 6. Asset Management Folder
+- Direktori untuk akses mandiri file final (Read-Only) sehingga user tidak perlu meminta file berulang kali.
+
+---
+
+### [Development & Operational Rules]
+
+#### Standard Penamaan
+Seluruh hasil kerja wajib mengikuti format: `YYYYMMDD_NamaProject_Versi`.
+
+#### Alur Status
+`Incoming` -> `Verified` (Triage) -> `On Progress` -> `Review` -> `Completed` / `Rejected`.
+*Auto-closing:* Tiket otomatis menjadi `Done` jika tidak ada feedback dalam 1x24 jam setelah tahap Review.
+
+## Verification Plan
+
+### Automated Tests
+- Menjalankan testing untuk logika SLA Warning pada form WO.
+- Verifikasi RLS (Row Level Security) untuk memastikan user hanya bisa melihat data divisinya sendiri.
+
+### Manual Verification
+- Melakukan simulasi input WO dari sisi User (Step-by-step form).
+- Melakukan simulasi Triaging & Assignment dari sisi Admin.
+- Verifikasi chart analytics pada Reporting Engine.

@@ -395,10 +395,20 @@ export default function NewTicketPage() {
                                                     </div>
 
                                                     <div>
-                                                        <label className="block text-sm font-semibold mb-2">Modul yang Terdampak</label>
+                                                        <label className="block text-sm font-semibold mb-2">
+                                                            {watch("taskType") === "Develop New System" ? "Nama Sistem Baru" : 
+                                                             watch("taskType") === "New Feature" ? "Modul Penambahan Fitur" :
+                                                             watch("taskType") === "Maintenance" ? "Target Pemeliharaan" : 
+                                                             "Modul yang Terdampak"}
+                                                        </label>
                                                         <input
                                                             {...register("moduleAffected")}
-                                                            placeholder="Contoh: Menu Login, Laporan Gaji, dll."
+                                                            placeholder={
+                                                                watch("taskType") === "Develop New System" ? "Contoh: Sistem Inventaris Gudang..." : 
+                                                                watch("taskType") === "New Feature" ? "Sebutkan modul tujuan fitur baru..." :
+                                                                watch("taskType") === "Maintenance" ? "Contoh: Server API, Database, dll." : 
+                                                                "Contoh: Menu Login, Laporan Gaji, dll."
+                                                            }
                                                             className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
                                                         />
                                                     </div>

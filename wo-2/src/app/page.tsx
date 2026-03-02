@@ -15,6 +15,9 @@ import {
   ChevronRight,
   X,
   TrendingUp,
+  Zap,
+  Globe,
+  PenTool,
   Download
 } from "lucide-react";
 import Link from "next/link";
@@ -123,41 +126,67 @@ export default function LandingPage() {
     { title: "Review", desc: "Pengecekan hasil oleh pemohon.", icon: CheckCircle2 },
   ];
 
-  async function handleGoogleLogin() {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      console.error("Error logging in with Google:", error.message);
-      alert("Failed to login with Google. Please check your Supabase configuration.");
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden text-foreground">
+      {/* --- BACKGROUND DECOR (OPSI 3) --- */}
+      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
+        {/* Abstract Glows */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#49FFB8]/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#1C3ECA]/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        
+        {/* Floating Code Snippets / UI Elements Simulation */}
+        <motion.div 
+          animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[20%] right-[10%] p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hidden lg:block"
+        >
+          <Code2 size={24} className="text-[#49FFB8]/40 mb-2" />
+          <div className="space-y-1.5">
+            <div className="h-1 w-12 bg-white/20 rounded-full" />
+            <div className="h-1 w-20 bg-white/10 rounded-full" />
+            <div className="h-1 w-16 bg-[#49FFB8]/20 rounded-full" />
+          </div>
+        </motion.div>
+
+        <motion.div 
+          animate={{ y: [0, 30, 0], x: [0, -15, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute bottom-[30%] left-[5%] p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hidden lg:block"
+        >
+          <PenTool size={24} className="text-[#1C3ECA]/40 mb-2" />
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="h-4 w-4 bg-white/10 rounded-sm" />
+            <div className="h-4 w-4 bg-[#1C3ECA]/20 rounded-sm" />
+          </div>
+        </motion.div>
+
+        <motion.div 
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[15%] left-[15%] opacity-20 hidden lg:block"
+        >
+          <Globe size={120} className="text-zinc-200 dark:text-zinc-800" />
+        </motion.div>
+      </div>
+
       {/* Navigation */}
-      <nav className="fixed top-0 z-50 w-full glass">
+      <nav className="fixed top-0 z-50 w-full glass border-b border-border/50">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-2 font-bold text-xl">
-            <div className="bg-primary text-primary-foreground p-1 rounded">
+            <div className="bg-primary text-primary-foreground p-1 rounded shadow-lg shadow-primary/20">
               <Layout size={20} />
             </div>
-            <span>WorkOrder <span className="text-muted-foreground font-normal">System</span></span>
+            <span>WorkOrder <span className="text-muted-foreground font-normal italic">System</span></span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-widest">
             <Link href="#sop" className="hover:text-primary transition-colors">SOP</Link>
             <Link href="#showcase" className="hover:text-primary transition-colors">Showcase</Link>
             <Link href="#workflow" className="hover:text-primary transition-colors">Workflow</Link>
             <Link
               href="/login"
-              className="px-5 py-2 bg-white text-black border border-zinc-200 rounded-full hover:bg-zinc-50 transition-colors flex items-center gap-2 text-sm font-semibold shadow-sm"
+              className="px-6 py-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all flex items-center gap-2 text-xs font-bold shadow-md shadow-primary/10"
             >
-              Login
+              Login Admin
             </Link>
           </div>
         </div>
@@ -167,57 +196,62 @@ export default function LandingPage() {
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="container mx-auto px-6 text-center">
           <motion.div {...fadeIn}>
-            <span className="inline-block px-4 py-1.5 mb-6 text-xs font-semibold tracking-wider uppercase rounded-full bg-secondary text-secondary-foreground border border-border">
-              IT & Creative Service Management
-            </span>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
-              Single Entry Point for <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500">
-                Your Work Orders
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full bg-primary/10 text-primary border border-primary/20 backdrop-blur-md">
+              <Zap size={12} fill="currentColor" />
+              Digital Technology Division
+            </div>
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.9]">
+              CRAFTING THE <br />
+              <span className="relative inline-block">
+                FUTURE
+                <div className="absolute bottom-2 left-0 w-full h-3 bg-[#49FFB8]/30 -z-10 rounded-full blur-sm" />
               </span>
+              {" "}OF TECH
             </h1>
-            <p className="max-w-2xl mx-auto text-xl text-muted-foreground mb-10 leading-relaxed">
-              Membangun sistem satu pintu untuk mengelola permintaan IT Development,
-              Creative Design, & Asset Management secara transparan dan terukur.
+            <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed font-medium">
+              Satu pintu untuk seluruh ekosistem layanan teknologi. <br className="hidden md:block" />
+              <span className="text-foreground font-bold underline decoration-[#49FFB8]/50 decoration-4 underline-offset-4">Graphic Design</span> • 
+              <span className="text-foreground font-bold underline decoration-[#1C3ECA]/50 decoration-4 underline-offset-4"> IT Development</span> • 
+              <span className="text-foreground font-bold underline decoration-zinc-400/50 decoration-4 underline-offset-4"> IT Support</span>
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
               <Link
                 href="/login"
-                className="group flex items-center gap-3 px-8 py-4 bg-white text-black border border-zinc-200 rounded-xl font-bold hover:bg-zinc-50 transition-all shadow-md hover:shadow-lg"
+                className="group flex items-center gap-3 px-10 py-5 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/25"
               >
-                Masuk ke Sistem
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                Launch Work Order
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link href="#sop" className="px-8 py-4 bg-secondary text-secondary-foreground border border-border rounded-xl font-semibold hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-                Pelajari SOP
+              <Link href="#sop" className="px-10 py-5 bg-secondary/50 backdrop-blur-md text-secondary-foreground border border-border rounded-2xl font-bold hover:bg-secondary transition-all">
+                System SOP
               </Link>
             </div>
           </motion.div>
         </div>
 
         {/* Counters & Analytics */}
-        <div className="container mx-auto px-6 mt-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="container mx-auto px-6 mt-32">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             {/* Chart Area */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="lg:col-span-8 p-8 rounded-[2rem] border border-black/5 dark:border-white/5 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden relative group"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="lg:col-span-8 p-10 rounded-[3rem] border border-border bg-white dark:bg-zinc-900 shadow-2xl relative overflow-hidden group"
             >
-              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-              <div className="flex items-center justify-between mb-8">
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
+              <div className="flex items-center justify-between mb-12 relative z-10">
                 <div>
-                  <h3 className="text-xl font-bold flex items-center gap-2">
-                    <TrendingUp size={22} className="text-primary" /> Permintaan 7 Hari Terakhir
+                  <h3 className="text-2xl font-black flex items-center gap-3 tracking-tight">
+                    <div className="p-2 bg-primary/10 rounded-lg"><TrendingUp size={24} className="text-primary" /></div>
+                    Weekly Volume
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Grafik volume tiket masuk ke divisi IT & Creative.
+                  <p className="text-sm text-muted-foreground mt-2 font-medium italic">
+                    Live analytics of tickets entering the pipeline.
                   </p>
                 </div>
               </div>
-              <div className="h-[250px] w-full">
+              <div className="h-[300px] w-full relative z-10">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -231,26 +265,26 @@ export default function LandingPage() {
                       dataKey="dayName"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: '#888' }}
+                      tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }}
                       dy={10}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: '#888' }}
+                      tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }}
                     />
                     <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
-                      cursor={{ stroke: 'rgba(150, 150, 150, 0.2)', strokeWidth: 2, strokeDasharray: '5 5' }}
+                      contentStyle={{ borderRadius: '20px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.2)', padding: '12px' }}
+                      cursor={{ stroke: 'var(--primary)', strokeWidth: 2, strokeDasharray: '5 5' }}
                     />
                     <Area
                       type="monotone"
                       dataKey="total"
                       stroke="var(--primary)"
-                      strokeWidth={3}
+                      strokeWidth={4}
                       fillOpacity={1}
                       fill="url(#colorTotal)"
-                      animationDuration={1500}
+                      animationDuration={2000}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -258,31 +292,31 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Stats Cards */}
-            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-6">
+            <div className="lg:col-span-4 grid grid-cols-1 gap-6">
               {stats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
-                  initial={{ opacity: 0, x: 30 }}
+                  initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ delay: i * 0.1, duration: 0.6, ease: "easeOut" }}
-                  className="group relative p-6 rounded-[2rem] border border-black/5 dark:border-white/5 bg-white dark:bg-zinc-900 shadow-xl hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_20px_40px_-15px_rgba(255,255,255,0.05)] hover:-translate-y-2 transition-all duration-500 overflow-hidden flex items-center justify-between"
+                  transition={{ delay: i * 0.1 }}
+                  className="group relative p-8 rounded-[2.5rem] border border-border bg-white dark:bg-zinc-900 shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden"
                 >
-                  <div className={`absolute -bottom-4 -right-4 opacity-[0.03] dark:opacity-5 group-hover:scale-[1.3] group-hover:-translate-y-2 group-hover:-translate-x-2 transition-transform duration-700 ease-out ${stat.color}`}>
-                    <stat.icon size={120} />
+                  <div className={`absolute -bottom-6 -right-6 opacity-[0.03] dark:opacity-5 group-hover:scale-[1.4] transition-transform duration-700 ease-out ${stat.color}`}>
+                    <stat.icon size={160} />
                   </div>
 
-                  <div className="relative z-10 flex flex-col justify-center">
-                    <div className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-zinc-900 via-zinc-700 to-zinc-400 dark:from-white dark:via-zinc-300 dark:to-zinc-600 mb-1">
-                      {stat.value}
+                  <div className="flex items-center gap-6">
+                    <div className={`p-5 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-border shadow-inner group-hover:scale-110 transition-transform duration-500 ${stat.color}`}>
+                      <stat.icon size={28} />
                     </div>
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-primary transition-colors duration-300">
-                      {stat.label}
+                    <div>
+                      <div className="text-4xl font-black tracking-tighter leading-none mb-1">
+                        {stat.value}
+                      </div>
+                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+                        {stat.label}
+                      </div>
                     </div>
-                  </div>
-
-                  <div className={`p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500 relative z-10 ${stat.color}`}>
-                    <stat.icon size={22} className={stat.color} />
                   </div>
                 </motion.div>
               ))}
@@ -291,86 +325,89 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SOP Section - No Ticket No Work */}
-      <section id="sop" className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
+      {/* SOP Section */}
+      <section id="sop" className="py-32 bg-zinc-50 dark:bg-zinc-900/50 relative">
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent" />
+        <div className="container mx-auto px-6 text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 uppercase">
+            NO TICKET, <span className="text-red-500 italic">NO WORK</span>
+          </h2>
+          <div className="w-24 h-1.5 bg-primary mx-auto rounded-full mb-8 shadow-lg shadow-primary/20" />
+          <p className="max-w-2xl mx-auto text-lg text-muted-foreground font-medium">
+            Menciptakan ekosistem kerja yang transparan, terukur, dan bebas instruksi lisan yang terabaikan.
+          </p>
+        </div>
         <div className="container mx-auto px-6">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            <div className="lg:w-1/2">
-              <h2 className="text-4xl font-bold mb-6 leading-tight">
-                Standar Operasional: <br />
-                <span className="text-red-500 italic uppercase">"No Ticket, No Work"</span>
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8 text-justify">
-                Seluruh permintaan pekerjaan WAJIB diinput melalui sistem. Tim IT & Kreatif berhak
-                menunda pengerjaan jika tiket belum dibuat untuk menghindari instruksi yang terlewat
-                dan tumpang tindih prioritas.
-              </p>
-              <ul className="space-y-4">
-                {[
-                  "Instruksi lisan/WA hanya bersifat diskusi.",
-                  "Waktu pengerjaan dihitung sejak tiket diterbitkan.",
-                  "Revisi tercatat dalam history tiket yang sama.",
-                  "Auto-closing setelah 1x24 jam tanpa feedback."
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 font-medium">
-                    <CheckCircle2 size={18} className="text-primary" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="lg:w-1/2 w-full grid grid-cols-1 gap-4">
-              <div className="p-8 rounded-2xl bg-primary text-primary-foreground relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 scale-150 opacity-10 group-hover:scale-175 transition-transform">
-                  <AlertCircle size={100} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {[
+              "Instruksi lisan/WA hanya bersifat diskusi.",
+              "Waktu pengerjaan dihitung sejak tiket terbit.",
+              "Revisi tercatat dalam history tiket terpusat.",
+              "Auto-closing setelah 1x24 jam tanpa feedback."
+            ].map((item, i) => (
+              <motion.div 
+                key={i}
+                whileHover={{ y: -5 }}
+                className="p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-lg"
+              >
+                <div className="p-3 bg-primary/10 rounded-2xl w-fit mb-6">
+                  <CheckCircle2 size={24} className="text-primary" />
                 </div>
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold mb-4">Urgent Policy (P1)</h3>
-                  <p className="opacity-90 leading-relaxed mb-6">
-                    Masalah teknis yang menghentikan operasional (system down) atau kebutuhan langsung Owner akan diprioritaskan segera.
-                  </p>
-                  <div className="p-4 bg-white/10 rounded-lg border border-white/20">
-                    <span className="text-sm font-bold uppercase tracking-widest">Priority level: High</span>
+                <p className="font-bold text-sm leading-relaxed">
+                  {item}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="p-8 rounded-[2.5rem] bg-primary text-primary-foreground relative overflow-hidden group shadow-2xl">
+              <div className="absolute top-0 right-0 p-8 scale-150 opacity-10 group-hover:scale-175 transition-transform">
+                <AlertCircle size={150} />
+              </div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-black mb-4 tracking-tight uppercase">Urgent Policy (P1)</h3>
+                <p className="opacity-90 leading-relaxed mb-8 text-lg font-medium">
+                  Masalah teknis yang menghentikan operasional (system down) atau kebutuhan langsung Owner akan diprioritaskan segera di luar antrian standar.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="px-6 py-2 bg-white/10 rounded-full border border-white/20 backdrop-blur-md">
+                    <span className="text-xs font-bold uppercase tracking-widest">Priority level: High</span>
                   </div>
+                  <a
+                    href="/files/SOP_WorkOrder_IT_Creative.pdf"
+                    className="flex items-center gap-3 px-8 py-3 bg-white text-primary rounded-xl font-bold hover:bg-zinc-100 transition-all shadow-xl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download size={18} />
+                    Download Full SOP
+                  </a>
                 </div>
               </div>
-
-              {/* Download SOP Button */}
-              <a
-                href="/files/SOP_WorkOrder_IT_Creative.pdf"
-                className="group p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-border shadow-sm hover:shadow-md transition-all flex items-center justify-between mt-2 cursor-pointer"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div>
-                  <h4 className="font-bold text-lg">Download SOP Lengkap</h4>
-                  <p className="text-sm text-muted-foreground mt-1">Unduh dokumen PDF Standar Operasional Prosedur Work Order.</p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Download size={20} />
-                </div>
-              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Showcase Section */}
-      <section id="showcase" className="py-24 bg-zinc-50 dark:bg-zinc-900/30 overflow-hidden">
+      <section id="showcase" className="py-32 overflow-hidden relative">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8 text-center md:text-left">
             <div className="max-w-xl">
-              <h2 className="text-4xl font-bold mb-4 tracking-tight">Showcase Karya Kreatif</h2>
-              <p className="text-lg text-muted-foreground">
-                Hasil pengerjaan tim Creative Design untuk berbagai brand dan kebutuhan media.
+              <span className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-4 block">Creative Portfolio</span>
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.8]">DESIGN <br />SHOWCASE</h2>
+              <p className="text-lg text-muted-foreground mt-6 font-medium italic">
+                Cek hasil karya terbaru tim Creative Design kami untuk berbagai kebutuhan brand.
               </p>
             </div>
-            <Link href="/login" className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all z-10 relative">
-              Mulai Project Baru <ArrowRight size={20} />
+            <Link href="/login" className="px-10 py-5 bg-zinc-900 text-white dark:bg-white dark:text-black rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:scale-105 transition-all shadow-2xl">
+              New Project <ArrowRight size={20} />
             </Link>
           </div>
 
-          <div className="flex justify-center items-center w-full min-h-[500px]">
+          <div className="flex justify-center items-center w-full min-h-[500px] relative">
+            <div className="absolute inset-0 bg-primary/5 blur-[100px] rounded-full scale-50" />
             {showcases.length > 0 ? (
               <BounceCards
                 className="custom-bounceCards scale-y-110 sm:scale-100"
@@ -381,18 +418,18 @@ export default function LandingPage() {
                 animationStagger={0.08}
                 easeType="elastic.out(1, 0.5)"
                 transformStyles={[
-                  "rotate(5deg) translate(-200px)",
-                  "rotate(0deg) translate(-100px)",
+                  "rotate(5deg) translate(-250px)",
+                  "rotate(0deg) translate(-125px)",
                   "rotate(-5deg)",
-                  "rotate(5deg) translate(100px)",
-                  "rotate(-5deg) translate(200px)"
+                  "rotate(5deg) translate(125px)",
+                  "rotate(-5deg) translate(250px)"
                 ]}
                 enableHover={true}
                 onImageClick={(src: string) => setSelectedImage(src)}
               />
             ) : (
-              <div className="text-center p-10 border-2 border-dashed border-border rounded-3xl w-full max-w-xl">
-                <p className="text-muted-foreground">Belum ada karya showcase yang diunggah.</p>
+              <div className="text-center p-20 border-2 border-dashed border-border rounded-[3rem] w-full max-w-2xl backdrop-blur-sm">
+                <p className="text-muted-foreground font-black tracking-widest uppercase opacity-50 text-sm">Waiting for artistic masterpieces...</p>
               </div>
             )}
           </div>
@@ -400,23 +437,23 @@ export default function LandingPage() {
       </section>
 
       {/* Workflow Section */}
-      <section id="workflow" className="py-24">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-16">Alur Kerja Sistem Satu Pintu</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+      <section id="workflow" className="py-32 bg-zinc-950 text-white relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#49FFB8]/20 to-transparent" />
+        <div className="container mx-auto px-6">
+          <h2 className="text-4xl md:text-6xl font-black text-center mb-32 tracking-tighter uppercase">SYSTEM PIPELINE</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative">
             {workflow.map((step, i) => (
-              <div key={i} className="relative">
-                <div className="p-6 rounded-2xl border border-border flex flex-col items-center text-center hover:border-primary transition-colors group">
-                  <div className="p-4 rounded-full bg-secondary text-primary mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <step.icon size={28} />
+              <div key={i} className="relative z-10 group">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 mb-8 group-hover:bg-primary group-hover:border-primary transition-all duration-500 shadow-2xl relative">
+                    <div className="absolute -top-4 -right-4 w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center text-xs font-black border border-white/10">0{i+1}</div>
+                    <step.icon size={42} className="text-primary group-hover:text-white transition-colors" />
                   </div>
-                  <h4 className="text-xl font-bold mb-3">{step.title}</h4>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+                  <h4 className="text-2xl font-black mb-4 tracking-tight uppercase">{step.title}</h4>
+                  <p className="text-zinc-400 text-sm leading-relaxed font-medium">{step.desc}</p>
                 </div>
                 {i < workflow.length - 1 && (
-                  <div className="hidden md:block absolute top-1/3 -right-4 translate-x-1/2 text-muted-foreground">
-                    <ChevronRight size={24} />
-                  </div>
+                  <div className="hidden md:block absolute top-[40px] -right-1/2 w-full h-[1px] bg-gradient-to-r from-primary/50 to-transparent -z-10" />
                 )}
               </div>
             ))}
@@ -425,14 +462,31 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2 font-bold opacity-80">
-            <Layout size={18} />
-            <span>WorkOrder2026</span>
+      <footer className="py-20 border-t border-border bg-zinc-50 dark:bg-black/20">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+            <div className="flex flex-col items-center md:items-start gap-4">
+              <div className="flex items-center gap-2 font-black text-3xl tracking-tighter">
+                <Layout size={28} className="text-primary" />
+                <span>WO.2026</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground font-black tracking-[0.3em] uppercase opacity-50 text-center md:text-left leading-relaxed">
+                Managed by IT & Creative Division <br />
+                SRT CORPORATION INDONESIA
+              </p>
+            </div>
+            <div className="flex gap-12 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+              <Link href="#" className="hover:text-primary transition-colors">Docs</Link>
+              <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
+              <Link href="#" className="hover:text-primary transition-colors">Support</Link>
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground">
-            © 2026 IT & Creative Division. All rights reserved.
+          <div className="mt-20 pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">
+            <span>© 2026 IT & Creative Division. All rights reserved.</span>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-[#49FFB8] animate-pulse" />
+              <span>System Operational</span>
+            </div>
           </div>
         </div>
       </footer>
@@ -445,26 +499,26 @@ export default function LandingPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedImage(null)}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl"
           >
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
+              className="absolute top-8 right-8 p-3 bg-white/5 hover:bg-white/10 text-white rounded-full transition-colors border border-white/10"
               onClick={() => setSelectedImage(null)}
             >
-              <X size={24} />
+              <X size={32} />
             </motion.button>
 
             <motion.img
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
               src={selectedImage}
               alt="Full Preview"
-              className="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain bg-zinc-900"
+              className="max-w-full max-h-[85vh] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.5)] border border-white/5 object-contain bg-zinc-900/50"
               onClick={(e) => e.stopPropagation()}
             />
           </motion.div>

@@ -6,6 +6,7 @@ import { Layout, ArrowLeft, ShieldCheck, Mail, Lock, Loader2 } from "lucide-reac
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { ADMIN_ROLES, DEFAULT_REDIRECTS } from "@/lib/constants";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ export default function LoginPage() {
             if (error) throw error;
         } catch (error: any) {
             console.error("Error logging in with Google:", error.message);
-            alert("Failed to login with Google. Please check your Supabase configuration.");
+            setError("Gagal login dengan Google. Cek konfigurasi Supabase.");
         }
     }
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
 
             if (error) throw error;
 
-            // Check role
+            // Fetch profile and determine redirect
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 const { data: profile } = await supabase
@@ -51,17 +52,15 @@ export default function LoginPage() {
                     .eq('id', user.id)
                     .single();
 
-                if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
-                    router.push('/admin');
-                    router.refresh();
-                    return;
-                }
-            }
+                const redirectPath = (profile && ADMIN_ROLES.includes(profile.role as any))
+                    ? DEFAULT_REDIRECTS.ADMIN
+                    : DEFAULT_REDIRECTS.USER;
 
-            router.push('/dashboard');
-            router.refresh();
+                router.push(redirectPath);
+                router.refresh();
+            }
         } catch (error: any) {
-            console.error("Error logging in with Email:", error.message);
+            console.error("Login Error:", error.message);
             setError("Email atau password salah.");
         } finally {
             setLoading(false);
@@ -89,10 +88,10 @@ export default function LoginPage() {
                     </div>
                 </div>
                 <h2 className="text-center text-3xl font-extrabold tracking-tight text-foreground">
-                    Masuk ke Work Order System
+                    Work Order System
                 </h2>
                 <p className="mt-2 text-center text-sm text-muted-foreground">
-                    Gunakan akun Google domain perusahaan atau login Admin.
+                    Gunakan akun domain perusahaan atau login Admin.
                 </p>
             </div>
 
@@ -123,7 +122,7 @@ export default function LoginPage() {
                             </div>
                             <div className="relative flex justify-center text-sm">
                                 <span className="px-2 bg-white dark:bg-zinc-900 text-muted-foreground uppercase tracking-widest text-[10px] font-bold">
-                                    Atau Login Admin
+                                    Atau Login Manual
                                 </span>
                             </div>
                         </div>
@@ -136,7 +135,7 @@ export default function LoginPage() {
                                 </div>
                             )}
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 ml-1">Email Karyawan</label>
+                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 ml-1">Email</label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                                     <input
@@ -144,7 +143,7 @@ export default function LoginPage() {
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="admin@it.com"
+                                        placeholder="user@it.com"
                                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                                     />
                                 </div>
@@ -166,29 +165,18 @@ export default function LoginPage() {
                             <button
                                 type="submit"
                                 disabled={loading || !email || !password}
-                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50"
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50 shadow-md shadow-primary/20"
                             >
                                 {loading ? <Loader2 size={16} className="animate-spin" /> : "Masuk"}
                             </button>
                         </form>
 
-                        <div className="relative pt-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-border"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-zinc-900 text-muted-foreground uppercase tracking-widest text-[10px] font-bold">
-                                    Informasi Keamanan
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 text-xs">
+                        <div className="grid grid-cols-1 gap-4 text-xs pt-2">
                             <div className="flex items-start gap-3 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-border">
                                 <ShieldCheck className="text-primary shrink-0" size={18} />
                                 <div>
-                                    <p className="font-bold text-foreground">Akses Terenkripsi</p>
-                                    <p className="text-muted-foreground mt-0.5">Semua data login dilindungi dengan enkripsi end-to-end.</p>
+                                    <p className="font-bold text-foreground">Keamanan Terjamin</p>
+                                    <p className="text-muted-foreground mt-0.5">Session dienkripsi dengan standar Supabase SSR.</p>
                                 </div>
                             </div>
                         </div>
@@ -196,9 +184,8 @@ export default function LoginPage() {
                 </div>
 
                 <p className="mt-8 text-center text-xs text-muted-foreground leading-relaxed px-4">
-                    Dengan masuk ke sistem, Anda tunduk pada
-                    <span className="text-foreground font-medium"> SOP IT & Creative Service </span>
-                    yang berlaku termasuk kebijakan data dan privasi.
+                    Punya masalah login? 
+                    <Link href="#" className="text-primary font-medium hover:underline ml-1"> Hubungi IT Support </Link>
                 </p>
             </motion.div>
         </div>

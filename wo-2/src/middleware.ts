@@ -62,21 +62,23 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+    const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
     const isInternalPage = request.nextUrl.pathname.startsWith('/dashboard') ||
         request.nextUrl.pathname.startsWith('/new-ticket') ||
-        request.nextUrl.pathname.startsWith('/admin')
+        isAdminPage
 
-    // Redirection logic
+    // 1. Unauthenticated users cannot access internal pages
     if (isInternalPage && !user) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
 
+    // 2. Authenticated users cannot access auth pages
     if (isAuthPage && user) {
         let redirectPath = '/dashboard'
 
-        // Cek jika rute admin dari profiles table
+        // Check if admin from profiles table
         const { data: profile } = await supabase
             .from('profiles')
             .select('role')
@@ -90,6 +92,23 @@ export async function middleware(request: NextRequest) {
         const url = request.nextUrl.clone()
         url.pathname = redirectPath
         return NextResponse.redirect(url)
+    }
+
+    // 3. Strict Admin Access Control (IDOR/Access Guard)
+    if (isAdminPage && user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
+
+        if (!isAdmin) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/dashboard'
+            return NextResponse.redirect(url)
+        }
     }
 
     return response

@@ -20,26 +20,40 @@ import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
     const [tickets, setTickets] = useState<any[]>([]);
+    const [ongoingTasks, setOngoingTasks] = useState<any[]>([]);
     const [userName, setUserName] = useState<string>("");
+    const [loadingOngoing, setLoadingOngoing] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        async function getProfile() {
+        async function getData() {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "User");
 
-                // Fetch tickets for this user
-                const { data } = await supabase
+                // Fetch personal tickets
+                const { data: personalData } = await supabase
                     .from('work_orders')
                     .select('*')
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false });
 
-                if (data) setTickets(data);
+                if (personalData) setTickets(personalData);
+
+                // Fetch Team Ongoing Tasks (Global Execution status)
+                setLoadingOngoing(true);
+                const { data: ongoingData } = await supabase
+                    .from('work_orders')
+                    .select('title, brand, category, status, priority, created_at')
+                    .eq('status', 'Execution')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (ongoingData) setOngoingTasks(ongoingData);
+                setLoadingOngoing(false);
             }
         }
-        getProfile();
+        getData();
     }, []);
 
     async function handleLogout() {
@@ -92,6 +106,47 @@ export default function DashboardPage() {
                     </div>
                 ))}
             </div>
+
+            {/* Team Live Pipeline (Ongoing Projects) */}
+            <section className="mb-10">
+                <div className="flex items-center gap-2 mb-4 px-1">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Team Live Pipeline</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    {loadingOngoing ? (
+                        <div className="col-span-full py-4 text-center text-xs text-muted-foreground italic">Loading pipeline...</div>
+                    ) : ongoingTasks.length > 0 ? (
+                        ongoingTasks.map((task, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: i * 0.05 }}
+                                className="p-4 rounded-2xl border border-blue-100 dark:border-blue-500/20 bg-blue-50/30 dark:bg-blue-500/5 relative overflow-hidden group"
+                            >
+                                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Code2 size={40} className="text-blue-600" />
+                                </div>
+                                <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter mb-1 truncate">
+                                    {task.category}
+                                </div>
+                                <div className="text-xs font-bold text-foreground line-clamp-1 mb-2">
+                                    {task.title}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500 text-white uppercase">Ongoing</span>
+                                    <span className="text-[9px] text-muted-foreground font-medium">{task.brand}</span>
+                                </div>
+                            </motion.div>
+                        ))
+                    ) : (
+                        <div className="col-span-full p-6 rounded-2xl border border-dashed border-border text-center">
+                            <p className="text-xs text-muted-foreground italic">Antrian pengerjaan sedang kosong. ✨</p>
+                        </div>
+                    )}
+                </div>
+            </section>
 
             {/* Ticket List */}
             <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-border shadow-sm overflow-hidden">

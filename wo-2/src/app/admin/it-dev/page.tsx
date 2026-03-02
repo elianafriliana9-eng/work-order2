@@ -16,6 +16,7 @@ import {
     ArrowUpRight,
     Github,
     Server,
+    TrendingUp,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";

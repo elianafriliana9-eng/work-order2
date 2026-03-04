@@ -31,7 +31,6 @@ import {
     ResponsiveContainer,
 } from 'recharts';
 
-export const dynamic = "force-dynamic";
 
 export default function ITDevelopmentPage() {
     const [tickets, setTickets] = useState<any[]>([]);

@@ -72,7 +72,6 @@ const QuickActionLink = ({ href, icon: Icon, title, description, isPrimary = fal
     </Link>
 );
 
-export const dynamic = "force-dynamic";
 
 export default function AdminDashboardPage() {
     const [tickets, setTickets] = useState<TicketData[]>([]);

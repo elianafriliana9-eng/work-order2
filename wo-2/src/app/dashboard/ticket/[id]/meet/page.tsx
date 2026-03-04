@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { LiveKitRoom, VideoConference, RoomAudioRenderer } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 
 export default function MeetingRoomPage() {
     const { id } = useParams();
@@ -27,6 +27,7 @@ export default function MeetingRoomPage() {
                 }
 
                 const username = user.user_metadata?.full_name || user.email?.split('@')[0] || "User";
+                const userId = user.id;
 
                 // 2. Verify ticket
                 const { data: woData, error: woError } = await supabase
@@ -46,7 +47,7 @@ export default function MeetingRoomPage() {
 
                 // 3. Request LiveKit Token
                 const roomName = `ticket-${id}`;
-                const res = await fetch(`/api/livekit?room=${roomName}&username=${encodeURIComponent(username)}`);
+                const res = await fetch(`/api/livekit?room=${roomName}&username=${encodeURIComponent(username)}&userId=${encodeURIComponent(userId)}`);
                 const data = await res.json();
 
                 if (!res.ok) throw new Error(data.error || "Gagal mendapatkan akses ruangan.");
@@ -103,17 +104,29 @@ export default function MeetingRoomPage() {
             </div>
 
             <div className="flex-1 relative">
-                <LiveKitRoom
-                    video={true}
-                    audio={true}
-                    token={token}
-                    serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-                    // This generates a predefined grid layout and control bar
-                    className="h-full w-full custom-lk-theme"
-                >
-                    <VideoConference />
-                    <RoomAudioRenderer />
-                </LiveKitRoom>
+                {!process.env.NEXT_PUBLIC_LIVEKIT_URL ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-red-500">
+                        <AlertCircle size={48} className="mb-4" />
+                        <h2 className="text-xl font-bold">Error: Server URL is missing</h2>
+                        <p className="max-w-md text-center text-sm mt-2 opacity-80">NEXT_PUBLIC_LIVEKIT_URL environment variable is not defined on the client. Please check your .env configuration and rebuild the app.</p>
+                    </div>
+                ) : (
+                    <LiveKitRoom
+                        video={true}
+                        audio={true}
+                        token={token}
+                        serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+                        onDisconnected={() => {
+                            console.log("Disconnected from room.");
+                            alert("Anda telah terputus atau keluar dari ruangan (Disconnected).");
+                            router.back();
+                        }}
+                        className="h-full w-full custom-lk-theme"
+                    >
+                        <VideoConference />
+                        <RoomAudioRenderer />
+                    </LiveKitRoom>
+                )}
             </div>
         </div>
     );

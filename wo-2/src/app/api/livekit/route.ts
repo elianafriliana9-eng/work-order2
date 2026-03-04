@@ -12,10 +12,12 @@ export async function GET(req: NextRequest) {
     try {
         const room = req.nextUrl.searchParams.get('room');
         const username = req.nextUrl.searchParams.get('username');
+        const userId = req.nextUrl.searchParams.get('userId');
 
-        if (!room || !username) {
+        if (!room || !username || !userId) {
+            console.error("Missing query params:", { room, username, userId });
             return NextResponse.json(
-                { error: 'Missing "room" or "username" query parameter' },
+                { error: 'Missing "room", "username", or "userId" query parameter' },
                 { status: 400 }
             );
         }
@@ -25,6 +27,7 @@ export async function GET(req: NextRequest) {
         const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
 
         if (!apiKey || !apiSecret || !wsUrl) {
+            console.error("LiveKit misconfiguration: Missing env variables.", { hasApiKey: !!apiKey, hasApiSecret: !!apiSecret, hasWsUrl: !!wsUrl });
             return NextResponse.json(
                 { error: 'Server is not configured for LiveKit' },
                 { status: 500 }
@@ -35,7 +38,8 @@ export async function GET(req: NextRequest) {
         // For now, we will just mint a token for the requested room.
 
         const at = new AccessToken(apiKey, apiSecret, {
-            identity: username,
+            identity: userId,
+            name: username,
             // Optional: Set time to live for the token
             ttl: '1h',
         });

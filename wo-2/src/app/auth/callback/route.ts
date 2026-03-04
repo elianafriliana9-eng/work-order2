@@ -3,16 +3,13 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url)
-    const code = searchParams.get('code')
+    const requestUrl = new URL(request.url)
+    const code = requestUrl.searchParams.get('code')
+    const origin = requestUrl.origin
     
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseKey) {
-        console.error("Auth Callback: Missing environment variables.");
-        return NextResponse.redirect(`${origin}/login?error=env_missing`)
-    }
+    // Fallback if environment variables are not detected during the request
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ropwebyycwvsvdrbgnpn.supabase.co'
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8'
 
     if (code) {
         const cookieStore = await cookies()
@@ -39,6 +36,7 @@ export async function GET(request: Request) {
             const { data, error } = await supabase.auth.exchangeCodeForSession(code)
             
             if (!error && data?.user) {
+                // Determine if user has admin privileges
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role')
@@ -48,12 +46,14 @@ export async function GET(request: Request) {
                 const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
                 const redirectPath = isAdmin ? '/admin' : '/dashboard'
 
-                return NextResponse.redirect(`${origin}${redirectPath}`)
+                // Using absolute URL for redirect to avoid blank page issues in Next.js 16/Vercel
+                return NextResponse.redirect(new URL(redirectPath, origin).toString())
             }
         } catch (err) {
-            console.error("Auth exchange error:", err);
+            console.error("Auth callback exception:", err);
         }
     }
 
-    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+    // Default error redirect
+    return NextResponse.redirect(new URL('/login?error=auth_failed', origin).toString())
 }

@@ -54,7 +54,7 @@ export default function LandingPage() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(6);
-        
+
         console.log("Showcase Data:", showcaseData);
         if (showcaseData && showcaseData.length > 0) {
           setShowcases(showcaseData);
@@ -66,48 +66,48 @@ export default function LandingPage() {
         // Fetch basic counts from work_orders
         const { data: woData, error } = await supabase
           .from('work_orders')
-          .select('status, priority, created_at, updated_at');
+          .select('status, priority, created_at, deadline');
 
         if (error) {
-           console.warn("Stats restricted by RLS, using defaults.");
+          console.warn("Stats restricted by RLS, using defaults.");
         } else if (woData) {
-            const activeCount = woData.filter(d => d.status !== 'Completed' && d.status !== 'Rejected').length;
-            const completed = woData.filter(d => d.status === 'Completed');
-            let avgDays = "0";
-            if (completed.length > 0) {
-              const totalMs = completed.reduce((acc, curr) => {
-                const end = new Date(curr.updated_at).getTime();
-                const start = new Date(curr.created_at).getTime();
-                return acc + (end - start);
-              }, 0);
-              avgDays = ((totalMs / completed.length) / (1000 * 60 * 60 * 24)).toFixed(1);
-            }
+          const activeCount = woData.filter(d => d.status !== 'Completed' && d.status !== 'Rejected').length;
+          const completed = woData.filter(d => d.status === 'Completed');
+          let avgDays = "0";
+          if (completed.length > 0) {
+            const totalMs = completed.reduce((acc, curr) => {
+              const end = new Date(curr.deadline || curr.created_at).getTime();
+              const start = new Date(curr.created_at).getTime();
+              return acc + (end - start);
+            }, 0);
+            avgDays = ((totalMs / completed.length) / (1000 * 60 * 60 * 24)).toFixed(1);
+          }
 
-            const hasP1 = woData.some(d => d.status !== 'Completed' && d.priority === 'P1');
+          const hasP1 = woData.some(d => d.status !== 'Completed' && d.priority === 'P1');
 
-            setStatsData({
-              activeTickets: activeCount.toString(),
-              avgCompletion: `${avgDays} Hari`,
-              highestPriority: hasP1 ? "P1 (Urgent)" : "P2 (Standar)"
-            });
+          setStatsData({
+            activeTickets: activeCount.toString(),
+            avgCompletion: `${avgDays} Hari`,
+            highestPriority: hasP1 ? "P1 (Urgent)" : "P2 (Standar)"
+          });
 
-            // Calculate Last 7 Days Chart Data
-            const last7Days = Array.from({ length: 7 }, (_, i) => {
-              const d = new Date();
-              d.setDate(d.getDate() - (6 - i));
-              return {
-                date: d.toISOString().split('T')[0],
-                dayName: d.toLocaleDateString('id-ID', { weekday: 'short' }),
-                total: 0
-              };
-            });
+          // Calculate Last 7 Days Chart Data
+          const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            return {
+              date: d.toISOString().split('T')[0],
+              dayName: d.toLocaleDateString('id-ID', { weekday: 'short' }),
+              total: 0
+            };
+          });
 
-            woData.forEach(wo => {
-              const woDate = new Date(wo.created_at).toISOString().split('T')[0];
-              const found = last7Days.find(d => d.date === woDate);
-              if (found) found.total += 1;
-            });
-            setChartData(last7Days);
+          woData.forEach(wo => {
+            const woDate = new Date(wo.created_at).toISOString().split('T')[0];
+            const found = last7Days.find(d => d.date === woDate);
+            if (found) found.total += 1;
+          });
+          setChartData(last7Days);
         }
 
       } catch (err) {
@@ -265,21 +265,21 @@ export default function LandingPage() {
       <section id="showcase" className="py-20 sm:py-32 overflow-hidden text-center md:text-left bg-white dark:bg-zinc-950">
         <div className="container mx-auto px-6">
           <div className="max-w-xl mb-12 sm:mb-20 mx-auto md:mx-0">
-             <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 block">Creative Portfolio</span>
-             <h2 className="text-4xl sm:text-7xl font-black tracking-tighter uppercase leading-[1.1] sm:leading-[0.8]">DESIGN <br />SHOWCASE</h2>
-             <p className="mt-6 text-muted-foreground text-sm sm:text-lg">Kumpulan karya visual terbaik dari tim Creative.</p>
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 block">Creative Portfolio</span>
+            <h2 className="text-4xl sm:text-7xl font-black tracking-tighter uppercase leading-[1.1] sm:leading-[0.8]">DESIGN <br />SHOWCASE</h2>
+            <p className="mt-6 text-muted-foreground text-sm sm:text-lg">Kumpulan karya visual terbaik dari tim Creative.</p>
           </div>
           <div className="flex justify-center items-center w-full min-h-[300px] sm:min-h-[500px] relative">
             {showcases.length > 0 ? (
               <div className="w-full flex justify-center py-10">
-                <BounceCards 
-                   className="custom-bounceCards scale-90 sm:scale-100"
-                   images={showcases.map(s => s.img_url)} 
-                   containerWidth="100%" 
-                   containerHeight={500} 
-                   animationDelay={0.1}
-                   enableHover={true}
-                   onImageClick={(src: string) => setSelectedImage(src)}
+                <BounceCards
+                  className="custom-bounceCards scale-90 sm:scale-100"
+                  images={showcases.map(s => s.img_url)}
+                  containerWidth="100%"
+                  containerHeight={500}
+                  animationDelay={0.1}
+                  enableHover={true}
+                  onImageClick={(src: string) => setSelectedImage(src)}
                 />
               </div>
             ) : (
@@ -300,7 +300,7 @@ export default function LandingPage() {
               <div key={i} className="relative group">
                 <div className="flex flex-col items-center">
                   <div className="p-6 sm:p-8 rounded-[2rem] bg-white/5 border border-white/10 mb-6 group-hover:bg-primary transition-all relative">
-                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-black">0{i+1}</div>
+                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-black">0{i + 1}</div>
                     <step.icon size={32} className="text-primary group-hover:text-white" />
                   </div>
                   <h4 className="text-lg font-black mb-2 uppercase tracking-tight">{step.title}</h4>

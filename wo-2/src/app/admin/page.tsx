@@ -29,7 +29,6 @@ interface TicketData {
     brand: string;
     deadline: string;
     created_at: string;
-    updated_at: string;
 }
 
 interface ReportData {
@@ -102,7 +101,7 @@ export default function AdminDashboardPage() {
                 if (userRole !== ROLES.HEAD_IT) {
                     ticketQuery = ticketQuery.or(`assigned_to.eq.${user.id},assigned_role.eq.${userRole}`);
                 }
-                
+
                 const { data: ticketData } = await ticketQuery.order('created_at', { ascending: false });
                 if (ticketData) setTickets(ticketData);
 
@@ -143,11 +142,11 @@ export default function AdminDashboardPage() {
         { label: "Total Tiket", value: tickets.length, icon: Ticket, color: "text-zinc-500" },
         { label: "Dikerjakan", value: tickets.filter(t => ['Execution', 'On Progress'].includes(t.status)).length, icon: Monitor, color: "text-blue-500" },
         { label: "Selesai", value: tickets.filter(t => t.status === 'Completed').length, icon: CheckCircle2, color: "text-green-500" },
-        { 
-            label: isHeadIT ? "Perlu Approval" : "Dalam Review", 
-            value: isHeadIT ? tickets.filter(t => t.status === 'Open').length : tickets.filter(t => t.status === 'Review').length, 
-            icon: Clock, 
-            color: "text-amber-500" 
+        {
+            label: isHeadIT ? "Perlu Approval" : "Dalam Review",
+            value: isHeadIT ? tickets.filter(t => t.status === 'Open').length : tickets.filter(t => t.status === 'Review').length,
+            icon: Clock,
+            color: "text-amber-500"
         },
     ];
 

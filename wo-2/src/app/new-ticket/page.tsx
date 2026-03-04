@@ -40,7 +40,7 @@ const formSchema = z.object({
     moduleAffected: z.string().optional(),
     reproductionSteps: z.string().optional(),
     credentials: z.string().optional(),
-    // Step 3: Meeting Integration
+    // Step 3: Meeting integration (Placeholder for LiveKit later)
     meetingType: z.enum(["Offline", "Online"]),
     meetingDate: z.string().min(1, "Jadwal meeting harus dipilih"),
     // Step 4
@@ -134,10 +134,11 @@ export default function NewTicketPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not authenticated");
 
-            // Online Meeting Integration: Generate Mock Google Meet Link
+            // Online Meeting: Default to internal LiveKit room name (using ticket ID later)
             let meetingLink = null;
             if (data.meetingType === "Online") {
-                meetingLink = `https://meet.google.com/new-${Math.random().toString(36).substring(7)}`;
+                // Placeholder link for LiveKit internal room
+                meetingLink = `/dashboard/meeting/${Math.random().toString(36).substring(7)}`;
             }
 
             // 1. Create Work Order
@@ -284,7 +285,7 @@ export default function NewTicketPage() {
                                 </motion.div>
                             )}
 
-                            {/* Step 3: Face to Face Meeting Integration */}
+                            {/* Step 3: Meeting Schedule */}
                             {step === 3 && (
                                 <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                                     <div className="space-y-4">
@@ -293,7 +294,7 @@ export default function NewTicketPage() {
                                         
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             {[
-                                                { id: "Online", icon: Video, label: "Online Meeting", sub: "Via Google Meet" },
+                                                { id: "Online", icon: Video, label: "Online Meeting", sub: "Via LiveKit (Internal)" },
                                                 { id: "Offline", icon: MapPin, label: "Offline / In-Person", sub: "Di Kantor IT" },
                                             ].map((type) => (
                                                 <button key={type.id} type="button" onClick={() => setValue("meetingType", type.id as any)} className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${selectedMeetingType === type.id ? "border-primary bg-primary/5 text-primary" : "border-border hover:border-zinc-300 dark:hover:border-zinc-700"}`}>
@@ -315,7 +316,7 @@ export default function NewTicketPage() {
                                         {selectedMeetingType === "Online" && (
                                             <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-medium flex items-center gap-3">
                                                 <Video size={16} />
-                                                <span>Link meeting otomatis akan tersedia di dalam ticket setelah Anda mengirim form ini.</span>
+                                                <span>Room video call internal (LiveKit) akan otomatis dibuat untuk tiket ini.</span>
                                             </div>
                                         )}
                                     </div>

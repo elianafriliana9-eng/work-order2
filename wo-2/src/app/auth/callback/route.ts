@@ -7,15 +7,15 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code')
     const origin = requestUrl.origin
 
-    console.log('[Auth Callback] Starting. Origin:', origin, 'Has code:', !!code)
-
     if (!code) {
-        console.error('[Auth Callback] No code provided')
         return NextResponse.redirect(new URL('/login?error=no_code', origin))
     }
 
     try {
         const cookieStore = await cookies()
+
+        // Collect cookies that need to be set on the final redirect response
+        const cookiesToSet: { name: string; value: string; options: CookieOptions }[] = []
 
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,19 +26,11 @@ export async function GET(request: Request) {
                         return cookieStore.get(name)?.value
                     },
                     set(name: string, value: string, options: CookieOptions) {
-                        try {
-                            cookieStore.set({ name, value, ...options })
-                        } catch (e) {
-                            // Cookie setting might fail in some edge cases
-                            console.error('[Auth Callback] Cookie set error:', e)
-                        }
+                        // Store cookies to apply them on the redirect response later
+                        cookiesToSet.push({ name, value, options })
                     },
                     remove(name: string, options: CookieOptions) {
-                        try {
-                            cookieStore.set({ name, value: '', ...options })
-                        } catch (e) {
-                            console.error('[Auth Callback] Cookie remove error:', e)
-                        }
+                        cookiesToSet.push({ name, value: '', options: { ...options, maxAge: 0 } })
                     },
                 },
             }
@@ -46,21 +38,12 @@ export async function GET(request: Request) {
 
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
-        if (error) {
-            console.error('[Auth Callback] Exchange error:', error.message)
+        if (error || !data?.user) {
             return NextResponse.redirect(new URL('/login?error=exchange_failed', origin))
         }
 
-        if (!data?.user) {
-            console.error('[Auth Callback] No user returned after exchange')
-            return NextResponse.redirect(new URL('/login?error=no_user', origin))
-        }
-
-        console.log('[Auth Callback] User authenticated:', data.user.id)
-
-        // Determine redirect path based on role
+        // Determine redirect path
         let redirectPath = '/dashboard'
-
         try {
             const { data: profile } = await supabase
                 .from('profiles')
@@ -71,15 +54,20 @@ export async function GET(request: Request) {
             if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
                 redirectPath = '/admin'
             }
-            console.log('[Auth Callback] Role:', profile?.role, '-> Redirect to:', redirectPath)
-        } catch (profileErr) {
-            console.error('[Auth Callback] Profile fetch error (non-fatal):', profileErr)
-            // Non-fatal: still redirect to dashboard
+        } catch {
+            // Non-fatal, default to /dashboard
         }
 
-        return NextResponse.redirect(new URL(redirectPath, origin))
+        // Create redirect response and SET ALL COOKIES on it
+        const response = NextResponse.redirect(new URL(redirectPath, origin))
+
+        for (const cookie of cookiesToSet) {
+            response.cookies.set(cookie.name, cookie.value, cookie.options)
+        }
+
+        return response
     } catch (err) {
-        console.error('[Auth Callback] Fatal error:', err)
+        console.error('[Auth Callback] Fatal:', err)
         return NextResponse.redirect(new URL('/login?error=callback_exception', origin))
     }
 }

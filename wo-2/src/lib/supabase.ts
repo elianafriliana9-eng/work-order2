@@ -6,8 +6,7 @@ const getValidUrl = () => {
   if (envUrl && envUrl.startsWith('http')) {
     return envUrl;
   }
-  // This value is ONLY used during build-time to prevent crashes.
-  // At runtime, if env is set correctly in Vercel, it will use that.
+  // Fallback to production URL during build to prevent Vercel crashes
   return 'https://ropwebyycwvsvdrbgnpn.supabase.co';
 }
 
@@ -16,6 +15,7 @@ const getValidKey = () => {
   if (envKey && envKey.length > 10) {
     return envKey;
   }
+  // Fallback to production Key during build
   return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8';
 }
 

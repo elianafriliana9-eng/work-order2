@@ -3,25 +3,26 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url)
+    const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
+    const origin = 'https://digitalteamsrt.com'
     
     if (code) {
         const cookieStore = await cookies()
 
         const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            'https://ropwebyycwvsvdrbgnpn.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8',
             {
                 cookies: {
-                    get(name: string) {
-                        return cookieStore.get(name)?.value
+                    async get(name: string) {
+                        return (await cookieStore).get(name)?.value
                     },
-                    set(name: string, value: string, options: CookieOptions) {
-                        cookieStore.set({ name, value, ...options })
+                    async set(name: string, value: string, options: CookieOptions) {
+                        (await cookieStore).set({ name, value, ...options })
                     },
-                    remove(name: string, options: CookieOptions) {
-                        cookieStore.set({ name, value: '', ...options })
+                    async remove(name: string, options: CookieOptions) {
+                        (await cookieStore).set({ name, value: '', ...options })
                     },
                 },
             }
@@ -30,7 +31,6 @@ export async function GET(request: Request) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         
         if (!error && data?.user) {
-            // Check for admin roles
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('role')
@@ -40,11 +40,9 @@ export async function GET(request: Request) {
             const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
             const redirectPath = isAdmin ? '/admin' : '/dashboard'
 
-            // PENTING: Pakai URL absolut untuk redirect
             return NextResponse.redirect(`${origin}${redirectPath}`)
         }
     }
 
-    // Balikin ke login kalau gagal
     return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }

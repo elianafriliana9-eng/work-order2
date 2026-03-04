@@ -8,13 +8,9 @@ export async function middleware(request: NextRequest) {
         },
     })
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        return response;
-    }
-
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL.trim(),
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim(),
+        'https://ropwebyycwvsvdrbgnpn.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8',
         {
             cookies: {
                 get(name: string) {
@@ -58,7 +54,6 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // This will refresh session if expired - essential for SSR
     const { data: { user } } = await supabase.auth.getUser()
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login')
@@ -67,18 +62,14 @@ export async function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/new-ticket') ||
         isAdminPage
 
-    // 1. Unauthenticated users cannot access internal pages
     if (isInternalPage && !user) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
 
-    // 2. Authenticated users cannot access auth pages
     if (isAuthPage && user) {
         let redirectPath = '/dashboard'
-
-        // Check if admin from profiles table
         const { data: profile } = await supabase
             .from('profiles')
             .select('role')
@@ -88,22 +79,18 @@ export async function middleware(request: NextRequest) {
         if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
             redirectPath = '/admin'
         }
-
         const url = request.nextUrl.clone()
         url.pathname = redirectPath
         return NextResponse.redirect(url)
     }
 
-    // 3. Strict Admin Access Control (IDOR/Access Guard)
     if (isAdminPage && user) {
         const { data: profile } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
             .single()
-
         const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
-
         if (!isAdmin) {
             const url = request.nextUrl.clone()
             url.pathname = '/dashboard'
@@ -116,13 +103,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - auth/callback (auth flow)
-         */
-        '/((?!_next/static|_next/image|favicon.ico|auth/callback).*)',
+        '/((?!_next/static|_next/image|favicon.ico|auth/callback|$).*)',
     ],
 }

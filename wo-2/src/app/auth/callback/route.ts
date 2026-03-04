@@ -5,11 +5,6 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
 
-    console.log("--- Auth Callback Debug ---");
-    console.log("Full URL:", request.url);
-    console.log("Params:", Object.fromEntries(searchParams.entries()));
-    console.log("Supabase Env - URL:", !!process.env.NEXT_PUBLIC_SUPABASE_URL, "| Key:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
     const code = searchParams.get('code')
     // if "next" is in search params, use it as the redirection URL
     const next = searchParams.get('next') ?? '/dashboard'
@@ -17,13 +12,9 @@ export async function GET(request: Request) {
     if (code) {
         const cookieStore = await cookies()
 
-        console.log("Auth Callback: Code received, exchanging for session...");
-        console.log("Supabase URL present:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-        console.log("Supabase Anon Key present:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
         const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 cookies: {
                     get(name: string) {
@@ -36,38 +27,29 @@ export async function GET(request: Request) {
                         cookieStore.set({ name, value: '', ...options })
                     },
                 },
-                global: {
-                    headers: {
-                        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
-                    },
-                },
             }
         )
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error && data?.user) {
             let redirectUrl = next;
 
-            // Override redirect for admin roles
-            if (next === '/dashboard' || next === '/dashboard-v2') {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', data.user.id)
-                    .single();
+            // Determine role and correct dashboard
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', data.user.id)
+                .single();
 
-                if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
-                    redirectUrl = '/admin';
-                }
+            if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+                redirectUrl = '/admin';
+            } else {
+                redirectUrl = '/dashboard';
             }
 
-            console.log("Auth Callback: Success! Redirecting to", redirectUrl);
             return NextResponse.redirect(`${origin}${redirectUrl}`)
         }
-        console.error("Auth Callback: Error exchanging code:", error?.message);
-    } else {
-        console.warn("Auth Callback: No code found in searchParams");
     }
 
     // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`)
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }

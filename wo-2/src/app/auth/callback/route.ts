@@ -6,9 +6,6 @@ export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
     
-    // Default fallback to dashboard
-    const next = searchParams.get('next') ?? '/dashboard'
-
     if (code) {
         const cookieStore = await cookies()
 
@@ -43,10 +40,11 @@ export async function GET(request: Request) {
             const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
             const redirectPath = isAdmin ? '/admin' : '/dashboard'
 
+            // PENTING: Pakai URL absolut untuk redirect
             return NextResponse.redirect(`${origin}${redirectPath}`)
         }
     }
 
-    // If exchange fails or no code, send to login with error
-    return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
+    // Balikin ke login kalau gagal
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }

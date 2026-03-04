@@ -56,6 +56,17 @@ export async function GET(request: Request) {
 
             console.log("[Auth Callback] Redirecting to:", redirectPath)
             const response = NextResponse.redirect(new URL(redirectPath, origin).toString())
+            
+            // Ensure cookies are correctly transferred to the redirect response
+            const allCookies = cookieStore.getAll()
+            allCookies.forEach((cookie) => {
+                response.cookies.set(cookie.name, cookie.value, {
+                    ...cookie,
+                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production',
+                })
+            })
+
             return response
         }
     }

@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    // DONT return here, let it pass to the page if env is missing during build/init
+    // Skip middleware logic if essential config is missing (e.g. during build)
     if (!supabaseUrl || !supabaseKey) {
         return response
     }
@@ -47,45 +47,58 @@ export async function middleware(request: NextRequest) {
             }
         )
 
+        // Refresh session and get user
         const { data: { user } } = await supabase.auth.getUser()
 
-        const isAuthPage = request.nextUrl.pathname.startsWith('/login')
-        const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
-        const isInternalPage = request.nextUrl.pathname.startsWith('/dashboard') ||
-            request.nextUrl.pathname.startsWith('/new-ticket') ||
-            isAdminPage
+        const path = request.nextUrl.pathname
+        const isAuthPage = path.startsWith('/login')
+        const isAdminPage = path.startsWith('/admin')
+        const isUserPage = path.startsWith('/dashboard') || path.startsWith('/new-ticket')
 
-        if (isInternalPage && !user) {
+        // 1. Redirect to login if accessing internal pages without a session
+        if ((isAdminPage || isUserPage) && !user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
 
+        // 2. Redirect to correct dashboard if already logged in
         if (isAuthPage && user) {
-            let redirectPath = '/dashboard'
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .maybeSingle()
+            let target = '/dashboard'
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .maybeSingle()
 
-            if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
-                redirectPath = '/admin'
+                if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+                    target = '/admin'
+                }
+            } catch {
+                // Ignore error, use default target
             }
-            return NextResponse.redirect(new URL(redirectPath, request.url))
+            return NextResponse.redirect(new URL(target, request.url))
         }
 
+        // 3. Prevent users from accessing admin pages
         if (isAdminPage && user) {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .maybeSingle()
-            const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
-            if (!isAdmin) {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .maybeSingle()
+
+                const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
+                if (!isAdmin) {
+                    return NextResponse.redirect(new URL('/dashboard', request.url))
+                }
+            } catch {
                 return NextResponse.redirect(new URL('/dashboard', request.url))
             }
         }
-    } catch (e) {
-        console.error("Middleware Error:", e)
+
+    } catch (err) {
+        console.error('[Middleware] Unexpected error:', err)
     }
 
     return response
@@ -93,6 +106,15 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|auth/callback|api).*)',
+        /*
+         * Match all request paths except for:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - auth/callback (auth flow)
+         * - landing page (handled by default)
+         * - api routes (optional, let them handle their own auth)
+         */
+        '/((?!_next/static|_next/image|favicon.ico|auth/callback|api|$).*)',
     ],
 }

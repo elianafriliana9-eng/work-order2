@@ -266,7 +266,7 @@ export default function AdminTicketDetailPage() {
                                 <div>
                                     <p className="text-sm font-bold">{ticket.meeting_type} Meeting</p>
                                     <p className="text-xs text-muted-foreground">
-                                        {new Date(ticket.meeting_date).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(ticket.meeting_date).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' WIB'}
                                     </p>
                                 </div>
                             </div>

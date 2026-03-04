@@ -158,7 +158,7 @@ export default function NewTicketPage() {
                         platform: data.platform,
                         dimension: data.dimension,
                         meeting_type: data.meetingType,
-                        meeting_date: data.meetingDate,
+                        meeting_date: data.meetingDate ? `${data.meetingDate}:00+07:00` : null,
                         meeting_link: meetingLink
                     }
                 ])
@@ -291,7 +291,7 @@ export default function NewTicketPage() {
                                     <div className="space-y-4">
                                         <h2 className="text-xl font-bold flex items-center gap-2"><Users size={20} className="text-primary" /> Jadwal Face-to-Face Meeting</h2>
                                         <p className="text-sm text-muted-foreground italic">Pilih jadwal untuk mendiskusikan brief secara langsung dengan tim.</p>
-                                        
+
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             {[
                                                 { id: "Online", icon: Video, label: "Online Meeting", sub: "Via LiveKit (Internal)" },

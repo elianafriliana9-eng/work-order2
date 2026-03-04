@@ -47,7 +47,16 @@ export async function middleware(request: NextRequest) {
         const isUserPage = path.startsWith('/dashboard') || path.startsWith('/new-ticket')
 
         if ((isAdminPage || isUserPage) && !user) {
-            return NextResponse.redirect(new URL('/login', request.url))
+            const redirectResponse = NextResponse.redirect(new URL('/login', request.url))
+            // Copy cookies from our local response to the redirect response
+            response.cookies.getAll().forEach(cookie => {
+                redirectResponse.cookies.set(cookie.name, cookie.value, {
+                    ...cookie,
+                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production'
+                })
+            })
+            return redirectResponse
         }
 
         if (isAuthPage && user) {
@@ -61,7 +70,15 @@ export async function middleware(request: NextRequest) {
             if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
                 target = '/admin'
             }
-            return NextResponse.redirect(new URL(target, request.url))
+            const redirectResponse = NextResponse.redirect(new URL(target, request.url))
+            response.cookies.getAll().forEach(cookie => {
+                redirectResponse.cookies.set(cookie.name, cookie.value, {
+                    ...cookie,
+                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production'
+                })
+            })
+            return redirectResponse
         }
 
         if (isAdminPage && user) {
@@ -73,7 +90,15 @@ export async function middleware(request: NextRequest) {
 
             const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
             if (!isAdmin) {
-                return NextResponse.redirect(new URL('/dashboard', request.url))
+                const redirectResponse = NextResponse.redirect(new URL('/dashboard', request.url))
+                response.cookies.getAll().forEach(cookie => {
+                    redirectResponse.cookies.set(cookie.name, cookie.value, {
+                        ...cookie,
+                        sameSite: 'lax',
+                        secure: process.env.NODE_ENV === 'production'
+                    })
+                })
+                return redirectResponse
             }
         }
 

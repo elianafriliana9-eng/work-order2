@@ -7,6 +7,10 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code')
     const origin = requestUrl.origin
 
+    console.log("[Auth Callback] Request received:", request.url)
+    console.log("[Auth Callback] Code present:", !!code)
+    console.log("[Auth Callback] Origin determined:", origin)
+
     if (code) {
         const cookieStore = await cookies()
 
@@ -30,19 +34,29 @@ export async function GET(request: Request) {
 
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         
+        if (error) {
+            console.error("[Auth Callback] Exchange Error:", error.message)
+        }
+
         if (!error && data?.user) {
+            console.log("[Auth Callback] User Authenticated:", data.user.id)
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('role')
                 .eq('id', data.user.id)
                 .maybeSingle()
 
+            console.log("[Auth Callback] Profile Role:", profile?.role)
+
             const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
             const redirectPath = isAdmin ? '/admin' : '/dashboard'
 
-            return NextResponse.redirect(new URL(redirectPath, origin).toString())
+            console.log("[Auth Callback] Redirecting to:", redirectPath)
+            const response = NextResponse.redirect(new URL(redirectPath, origin).toString())
+            return response
         }
     }
 
+    console.warn("[Auth Callback] No code or user found, redirecting to login")
     return NextResponse.redirect(new URL('/login?error=auth_failed', origin).toString())
 }

@@ -36,20 +36,18 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { error, data: authData } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (error) throw error;
 
-            // Fetch profile and determine redirect
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
+            if (authData.user) {
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role')
-                    .eq('id', user.id)
+                    .eq('id', authData.user.id)
                     .single();
 
                 const redirectPath = (profile && ADMIN_ROLES.includes(profile.role as any))

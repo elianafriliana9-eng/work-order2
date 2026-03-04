@@ -54,7 +54,14 @@ export default function LandingPage() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(6);
-        if (showcaseData) setShowcases(showcaseData);
+        
+        console.log("Showcase Data:", showcaseData);
+        if (showcaseData && showcaseData.length > 0) {
+          setShowcases(showcaseData);
+        } else {
+          // Fallback to manual check if query returns nothing
+          console.warn("No showcase data found in Supabase.");
+        }
 
         // Fetch basic counts from work_orders
         const { data: woData, error } = await supabase
@@ -138,80 +145,66 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden text-foreground">
-      {/* Background Decor */}
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#49FFB8]/10 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#1C3ECA]/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <nav className="fixed top-0 z-50 w-full glass border-b border-border/50">
-        <div className="container mx-auto flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-2 font-bold text-xl">
-            <div className="bg-primary text-primary-foreground p-1 rounded shadow-lg shadow-primary/20">
-              <Layout size={20} />
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-2 font-bold text-lg sm:text-xl shrink-0">
+            <div className="bg-primary text-primary-foreground p-1 rounded shadow-lg">
+              <Layout size={18} />
             </div>
-            <span>WorkOrder <span className="text-muted-foreground font-normal italic">System</span></span>
+            <span className="whitespace-nowrap">WorkOrder <span className="text-muted-foreground font-normal italic">System</span></span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-widest">
-            <Link href="#sop" className="hover:text-primary transition-colors">SOP</Link>
-            <Link href="#showcase" className="hover:text-primary transition-colors">Showcase</Link>
-            <Link href="#workflow" className="hover:text-primary transition-colors">Workflow</Link>
-            <Link href="/login" className="px-6 py-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all flex items-center gap-2 text-xs font-bold">Login Admin</Link>
+          <div className="flex items-center gap-2 sm:gap-8">
+            <Link href="/login" className="px-4 sm:px-6 py-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all flex items-center gap-2 text-[10px] sm:text-xs font-bold whitespace-nowrap">
+              Login Admin
+            </Link>
           </div>
         </div>
       </nav>
 
-      <section className="relative pt-32 pb-20 text-center">
+      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 text-center">
         <div className="container mx-auto px-6">
           <motion.div {...fadeIn}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full bg-primary/10 text-primary border border-primary/20 backdrop-blur-md">
-              <Zap size={12} fill="currentColor" /> Digital Technology Division
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 mb-6 sm:mb-8 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] uppercase rounded-full bg-primary/10 text-primary border border-primary/20 backdrop-blur-md">
+              <Zap size={10} fill="currentColor" /> Digital Technology Division
             </div>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.9]">
-              CRAFTING THE <br /> <span className="relative inline-block">FUTURE<div className="absolute bottom-2 left-0 w-full h-3 bg-[#49FFB8]/30 -z-10 rounded-full blur-sm" /></span> OF TECH
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 leading-[1.1] sm:leading-[0.9]">
+              CRAFTING THE <br /> <span className="relative inline-block">FUTURE<div className="absolute bottom-1 sm:bottom-2 left-0 w-full h-2 sm:h-3 bg-[#49FFB8]/30 -z-10 rounded-full blur-sm" /></span> OF TECH
             </h1>
-            <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed font-medium">
+            <p className="max-w-2xl mx-auto text-sm sm:text-lg md:text-xl text-muted-foreground mb-10 sm:mb-12 leading-relaxed font-medium">
               Satu pintu untuk seluruh ekosistem layanan teknologi. <br className="hidden md:block" />
-              <span className="text-foreground font-bold underline decoration-[#49FFB8]/50 decoration-4 underline-offset-4">Graphic Design</span> • 
-              <span className="text-foreground font-bold underline decoration-[#1C3ECA]/50 decoration-4 underline-offset-4"> IT Development</span> • 
-              <span className="text-foreground font-bold underline decoration-zinc-400/50 decoration-4 underline-offset-4"> IT Support</span>
+              <span className="text-foreground font-bold underline decoration-[#49FFB8]/50 decoration-2">Design</span> • <span className="text-foreground font-bold underline decoration-[#1C3ECA]/50 decoration-2">Development</span> • <span className="text-foreground font-bold">Support</span>
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-              <Link href="/login" className="group flex items-center gap-3 px-10 py-5 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/25">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
+              <Link href="/login" className="w-full sm:w-auto group flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/25">
                 Launch Work Order <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link href="#sop" className="px-10 py-5 bg-secondary/50 backdrop-blur-md text-secondary-foreground border border-border rounded-2xl font-bold hover:bg-secondary transition-all">
+              <Link href="#sop" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-secondary/50 backdrop-blur-md text-secondary-foreground border border-border rounded-2xl font-bold hover:bg-secondary transition-all">
                 System SOP
               </Link>
             </div>
           </motion.div>
         </div>
 
-        {/* Analytics Section */}
-        <div className="container mx-auto px-6 mt-32">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="lg:col-span-8 p-10 rounded-[3rem] border border-border bg-white dark:bg-zinc-900 shadow-2xl relative overflow-hidden group"
-            >
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
-              <div className="flex items-center justify-between mb-12 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 mt-20 sm:mt-32">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
+            <div className="lg:col-span-8 p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-border bg-white dark:bg-zinc-900 shadow-2xl relative overflow-hidden text-left">
+              <div className="flex items-center justify-between mb-8 sm:mb-12">
                 <div className="text-left">
-                  <h3 className="text-2xl font-black flex items-center gap-3 tracking-tight">
-                    <div className="p-2 bg-primary/10 rounded-lg"><TrendingUp size={24} className="text-primary" /></div>
-                    Weekly Volume
+                  <h3 className="text-xl sm:text-2xl font-black flex items-center gap-3 tracking-tight">
+                    <div className="p-2 bg-primary/10 rounded-lg"><TrendingUp size={20} className="text-primary" /></div> Weekly Volume
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-2 font-medium italic">
-                    Live analytics of tickets entering the pipeline.
-                  </p>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground mt-2 italic">Live analytics of tickets entering the pipeline.</p>
                 </div>
               </div>
-              <div className="h-[300px] w-full relative z-10">
+              <div className="h-[250px] sm:h-[300px] w-full relative z-10">
                 {isClient && chartData.length > 0 && (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -30, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
@@ -219,131 +212,112 @@ export default function LandingPage() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150, 150, 150, 0.1)" />
-                      <XAxis dataKey="dayName" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888', fontWeight: 600 }} />
-                      <Tooltip contentStyle={{ borderRadius: '20px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.2)', padding: '12px' }} cursor={{ stroke: 'var(--primary)', strokeWidth: 2, strokeDasharray: '5 5' }} />
-                      <Area type="monotone" dataKey="total" stroke="var(--primary)" strokeWidth={4} fillOpacity={1} fill="url(#colorTotal)" animationDuration={2000} />
+                      <XAxis dataKey="dayName" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#888' }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#888' }} />
+                      <Tooltip contentStyle={{ borderRadius: '12px', fontSize: '10px' }} />
+                      <Area type="monotone" dataKey="total" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
               </div>
-            </motion.div>
+            </div>
 
-            <div className="lg:col-span-4 grid grid-cols-1 gap-6">
+            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 sm:gap-6">
               {stats.map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="group relative p-8 rounded-[2.5rem] border border-border bg-white dark:bg-zinc-900 shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden"
-                >
-                  <div className={`absolute -bottom-6 -right-6 opacity-[0.03] dark:opacity-5 group-hover:scale-[1.4] transition-transform duration-700 ease-out ${stat.color}`}>
-                    <stat.icon size={160} />
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className={`p-5 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-border shadow-inner group-hover:scale-110 transition-transform duration-500 ${stat.color}`}>
-                      <stat.icon size={28} />
+                <div key={i} className="group relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-border bg-white dark:bg-zinc-900 shadow-xl overflow-hidden text-left">
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <div className={`p-3 sm:p-5 rounded-2xl sm:rounded-3xl bg-zinc-50 dark:bg-zinc-800 border ${stat.color} shrink-0`}>
+                      <stat.icon size={20} className="sm:w-7 sm:h-7" />
                     </div>
-                    <div className="text-left">
-                      <div className="text-4xl font-black tracking-tighter leading-none mb-1">{stat.value}</div>
-                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</div>
+                    <div className="min-w-0">
+                      <div className="text-xl sm:text-3xl md:text-4xl font-black tracking-tighter truncate">{stat.value}</div>
+                      <div className="text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">{stat.label}</div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* SOP Section */}
-      <section id="sop" className="py-32 bg-zinc-50 dark:bg-zinc-900/50 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent" />
+      <section id="sop" className="py-20 sm:py-32 bg-zinc-50 dark:bg-zinc-900/5 relative overflow-hidden">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 uppercase italic">
-              NO TICKET, <span className="text-red-500">NO WORK</span>
-            </h2>
-            <p className="max-w-2xl mx-auto text-lg text-muted-foreground font-medium">
-              Protokol operasional wajib untuk efisiensi dan transparansi alur kerja divisi.
-            </p>
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-4 uppercase italic">NO TICKET, <span className="text-red-500">NO WORK</span></h2>
+            <p className="max-w-2xl mx-auto text-sm sm:text-lg text-muted-foreground">Protokol operasional wajib untuk efisiensi divisi.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {sopPoints.map((point, i) => (
-              <motion.div key={i} className="group relative p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-border shadow-xl overflow-hidden">
-                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${point.color} blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                <div className="relative z-10">
-                  <div className={`p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border w-fit mb-8 ${point.iconColor}`}>
-                    <point.icon size={28} />
-                  </div>
-                  <h4 className="text-lg font-black mb-3 uppercase tracking-tight">{point.title}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{point.desc}</p>
+              <div key={i} className="group relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-border shadow-xl overflow-hidden text-left">
+                <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-zinc-50 dark:bg-zinc-800 w-fit mb-4 sm:mb-8 ${point.iconColor}`}>
+                  <point.icon size={24} />
                 </div>
-              </motion.div>
+                <h4 className="text-sm sm:text-lg font-black mb-2 sm:mb-3 uppercase tracking-tight">{point.title}</h4>
+                <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">{point.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Showcase Section */}
-      <section id="showcase" className="py-32 overflow-hidden relative">
-        <div className="container mx-auto px-6 text-center md:text-left">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
-            <div className="max-w-xl">
-              <span className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-4 block">Creative Portfolio</span>
-              <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.8]">DESIGN <br />SHOWCASE</h2>
-            </div>
+      {/* SHOWCASE SECTION */}
+      <section id="showcase" className="py-20 sm:py-32 overflow-hidden text-center md:text-left bg-white dark:bg-zinc-950">
+        <div className="container mx-auto px-6">
+          <div className="max-w-xl mb-12 sm:mb-20 mx-auto md:mx-0">
+             <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 block">Creative Portfolio</span>
+             <h2 className="text-4xl sm:text-7xl font-black tracking-tighter uppercase leading-[1.1] sm:leading-[0.8]">DESIGN <br />SHOWCASE</h2>
+             <p className="mt-6 text-muted-foreground text-sm sm:text-lg">Kumpulan karya visual terbaik dari tim Creative.</p>
           </div>
-          <div className="flex justify-center items-center w-full min-h-[500px] relative">
+          <div className="flex justify-center items-center w-full min-h-[300px] sm:min-h-[500px] relative">
             {showcases.length > 0 ? (
-              <BounceCards
-                className="custom-bounceCards"
-                images={showcases.slice(0, 5).map(s => s.img_url)}
-                containerWidth="100%"
-                containerHeight={400}
-              />
+              <div className="w-full flex justify-center py-10">
+                <BounceCards 
+                   className="custom-bounceCards scale-90 sm:scale-100"
+                   images={showcases.map(s => s.img_url)} 
+                   containerWidth="100%" 
+                   containerHeight={500} 
+                   animationDelay={0.1}
+                   enableHover={true}
+                   onImageClick={(src: string) => setSelectedImage(src)}
+                />
+              </div>
             ) : (
-              <div className="text-center p-20 border-2 border-dashed border-border rounded-[3rem] w-full max-w-2xl backdrop-blur-sm opacity-50">
-                <p className="text-muted-foreground font-black tracking-widest uppercase">Waiting for design input...</p>
+              <div className="w-full max-w-2xl p-20 border-2 border-dashed border-border rounded-[3rem] text-center opacity-50">
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Waiting for design input...</p>
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Workflow Section */}
-      <section id="workflow" className="py-32 bg-zinc-950 text-white relative">
-        <div className="container mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-black text-center mb-24 tracking-tighter uppercase">SYSTEM PIPELINE</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative">
+      {/* SYSTEM PIPELINE SECTION */}
+      <section id="workflow" className="py-20 sm:py-32 bg-zinc-950 text-white relative">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-3xl sm:text-5xl font-black mb-16 tracking-tighter uppercase">SYSTEM PIPELINE</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             {workflow.map((step, i) => (
-              <div key={i} className="relative z-10 group">
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 mb-8 group-hover:bg-primary group-hover:border-primary transition-all duration-500 shadow-2xl relative">
-                    <div className="absolute -top-4 -right-4 w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center text-xs font-black border border-white/10">0{i+1}</div>
-                    <step.icon size={42} className="text-primary group-hover:text-white transition-colors" />
+              <div key={i} className="relative group">
+                <div className="flex flex-col items-center">
+                  <div className="p-6 sm:p-8 rounded-[2rem] bg-white/5 border border-white/10 mb-6 group-hover:bg-primary transition-all relative">
+                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-black">0{i+1}</div>
+                    <step.icon size={32} className="text-primary group-hover:text-white" />
                   </div>
-                  <h4 className="text-2xl font-black mb-4 tracking-tight uppercase">{step.title}</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed font-medium">{step.desc}</p>
+                  <h4 className="text-lg font-black mb-2 uppercase tracking-tight">{step.title}</h4>
+                  <p className="text-zinc-400 text-[10px] sm:text-xs leading-relaxed max-w-[150px]">{step.desc}</p>
                 </div>
-                {i < workflow.length - 1 && (
-                  <div className="hidden md:block absolute top-[40px] -right-1/2 w-full h-[1px] bg-gradient-to-r from-primary/50 to-transparent -z-10" />
-                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-20 border-t border-border bg-zinc-50 dark:bg-black/20 text-center">
+      <footer className="py-12 sm:py-20 border-t border-border bg-zinc-50 dark:bg-black/20 text-center">
         <div className="container mx-auto px-6">
-          <div className="flex items-center justify-center gap-2 font-black text-3xl mb-4">
-            <Layout size={28} className="text-primary" />
-            <span>WO.2026</span>
+          <div className="flex items-center justify-center gap-2 font-black text-2xl sm:text-3xl mb-4 text-primary">
+            <Layout size={24} /> <span>WO.2026</span>
           </div>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest">© 2026 SRT CORPORATION INDONESIA</p>
+          <p className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-[0.3em]">© 2026 SRT CORPORATION INDONESIA</p>
         </div>
       </footer>
 
@@ -360,7 +334,7 @@ export default function LandingPage() {
             <motion.button className="absolute top-8 right-8 p-3 text-white" onClick={() => setSelectedImage(null)}>
               <X size={32} />
             </motion.button>
-            <motion.img src={selectedImage} alt="Full Preview" className="max-w-full max-h-[85vh] rounded-2xl object-contain" onClick={(e) => e.stopPropagation()} />
+            <motion.img src={selectedImage} alt="Full Preview" className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl border border-white/10" onClick={(e) => e.stopPropagation()} />
           </motion.div>
         )}
       </AnimatePresence>

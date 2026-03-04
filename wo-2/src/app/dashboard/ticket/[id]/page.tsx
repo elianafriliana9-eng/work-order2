@@ -14,7 +14,10 @@ import {
     User,
     Building2,
     Monitor,
-    Maximize2
+    Maximize2,
+    Video,
+    MapPin,
+    ArrowUpRight
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -32,7 +35,6 @@ export default function TicketDetailPage() {
 
         async function fetchTicketData() {
             try {
-                // 1. Fetch Ticket
                 const { data: woData, error: woError } = await supabase
                     .from('work_orders')
                     .select('*')
@@ -42,7 +44,6 @@ export default function TicketDetailPage() {
                 if (woError) throw woError;
                 setTicket(woData);
 
-                // 2. Fetch Attachments
                 const { data: attachData, error: attachError } = await supabase
                     .from('work_order_attachments')
                     .select('*')
@@ -53,7 +54,6 @@ export default function TicketDetailPage() {
 
             } catch (error: any) {
                 console.error("Error fetching ticket:", error.message);
-                // Optionally redirect or show error
             } finally {
                 setLoading(false);
             }
@@ -119,7 +119,6 @@ export default function TicketDetailPage() {
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Details */}
                 <div className="lg:col-span-2 space-y-8">
                     <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-border shadow-sm">
                         <div className="mb-6">
@@ -145,7 +144,7 @@ export default function TicketDetailPage() {
                         </div>
 
                         {(ticket.platform || ticket.dimension) && (
-                            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-8">
                                 {ticket.platform && (
                                     <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border">
                                         <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Platform/Media</p>
@@ -158,6 +157,43 @@ export default function TicketDetailPage() {
                                         <p className="font-semibold">{ticket.dimension}</p>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Meeting Schedule Detail Section */}
+                        {ticket.meeting_date && (
+                            <div className="mt-8 border-t pt-8">
+                                <h3 className="text-lg font-bold mb-4">Jadwal Face-to-Face Meeting</h3>
+                                <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-border flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-4 rounded-2xl ${ticket.meeting_type === 'Online' ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'}`}>
+                                            {ticket.meeting_type === 'Online' ? <Video size={28} /> : <MapPin size={28} />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold">{ticket.meeting_type} Meeting</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {new Date(ticket.meeting_date).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {ticket.meeting_type === 'Online' && ticket.meeting_link && (
+                                        <a 
+                                            href={ticket.meeting_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                                        >
+                                            Gabung Meeting <ArrowUpRight size={16} />
+                                        </a>
+                                    )}
+
+                                    {ticket.meeting_type === 'Offline' && (
+                                        <div className="px-4 py-2 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-[10px] font-black uppercase tracking-widest">
+                                            Lokasi: Kantor IT
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </section>
@@ -203,9 +239,7 @@ export default function TicketDetailPage() {
                     </section>
                 </div>
 
-                {/* Right Column: Status & Timeline */}
                 <div className="space-y-8">
-                    {/* Status Tracking Card */}
                     <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-border shadow-sm">
                         <h3 className="text-lg font-bold mb-6">Ticket History</h3>
                         <div className="space-y-6">
@@ -241,7 +275,6 @@ export default function TicketDetailPage() {
                         </div>
                     </div>
 
-                    {/* Quick Info */}
                     <div className="bg-primary/5 dark:bg-primary/10 rounded-3xl p-8 border border-primary/10">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">

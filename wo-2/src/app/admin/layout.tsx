@@ -16,32 +16,45 @@ export default function AdminLayout({
     const router = useRouter();
 
     useEffect(() => {
+        let isMounted = true;
+
         async function checkAdminAccess() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                router.push("/login");
-                return;
+            try {
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError || !user) {
+                    if (isMounted) router.push("/login");
+                    return;
+                }
+
+                if (isMounted) {
+                    setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Admin");
+                }
+
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (!isMounted) return;
+
+                if (profileError || !profile || !['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+                    console.warn("Unauthorized access to admin panel or profile not found:", profileError);
+                    router.push("/dashboard");
+                    return;
+                }
+
+                setRole(profile.role);
+                setLoading(false);
+            } catch (err) {
+                console.error("Admin layout auth check failed:", err);
+                if (isMounted) router.push("/login");
             }
-
-            setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Admin");
-
-            // Fetch profile to get role
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-
-            if (!profile || !['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
-                // Not an admin role, redirect to user dashboard
-                router.push("/dashboard");
-                return;
-            }
-
-            setRole(profile.role);
-            setLoading(false);
         }
+
         checkAdminAccess();
+        return () => { isMounted = false };
     }, [router]);
 
     if (loading) {

@@ -1,0 +1,38 @@
+# Laporan Pekerjaan Harian - Work Order System (V2)
+**Tanggal:** 4 Maret 2026
+**Perihal:** Rekapitulasi Pembaruan Sistem & Integrasi Fasilitas Video Conference Internal
+
+Kepada Yth. Head of IT / Tim Manajemen,
+
+Berikut adalah rincian fungsionalitas dan pemeliharaan teknis (*maintenance*) yang telah diselesaikan dan diterapkan pada environment Production sistem Work Order pada tanggal 4 Maret 2026:
+
+---
+
+## 1. Integrasi Fasilitas In-House Video Conference (LiveKit)
+Telah dilakukan transisi platform untuk sesi diskusi/briefing dari layanan eksternal (Google Meet) menjadi layanan internal (*In-House*) langsung di dalam aplikasi Web Work Order, menggunakan teknologi WebRTC berbasis **LiveKit**.
+
+*   **Implementasi Server Mandiri:** Infrastruktur aplikasi telah disambungkan dengan *Self-Hosted* LiveKit Server (digitalteamsrt.com) yang dihosting melalui VPS guna menjaga privasi serta menekan latensi rapat internal.
+*   **Pembaruan Skema Database:** Dilakukan pembaruan pada tabel `work_orders` di Supabase untuk mencakup kolom konfigurasi rapat: `meeting_type` (Online/Offline) dan `meeting_date`.
+*   **Alur Pengajuan (*Ticketing*):** Formulir pembuatan tiket baru (`/new-ticket`) telah dimodifikasi, memungkinkan pelapor (*User*) menentukan secara spesifik apakah diskusi Briefing akan dilaksanakan via ruang publik nyata (Offline) atau via Ruang Ruang Virtual perusahaan (Online) lengkap dengan pemilihan waktunya.
+*   **Pembuatan JWT Token API (`/api/livekit`):** Telah dibuat sebuah *endpoint* *Backend Security* baru terspesialisasi yang berfungsi merancang JWT Access Token kedap-bocor untuk ruangan dengan menggunakan ID akun (*userId*).
+*   **Ruang Konferensi Virtual Khusus (`/dashboard/ticket/[id]/meet`):** Antarmuka rapat virtual menggunakan pustaka `@livekit/components-react` berdesain gelap (*dark theme*) yang solid telah diimplementasi. Dilengkapi dengan proteksi *Error UI Boundary* dan pemantau *WebSocket disconnection*.
+
+## 2. Sistem Kontrol Perizinan Pintu Rapat Otomatis
+Pada antarmuka halaman Detail Tiket untuk Pihak Pengaju maupun Panel Admin, telah ditanamkan logika kontrol akses ruangan virtual:
+*   Panel tautan **"Gabung Ruangan"** akan dibuka otomatis secara presisi dan tepat berselang **15 menit** sebelum jam penjadwalan.
+*   Pintu masuk virtual tersebut akan senantiasa *Disable/Locked* (terkunci tak bisa ditekan) apabila proses penayangan tiket belum difinalisasi atau diverifikasi keabsahannya oleh tim Head IT (status tiket di-luar *'Open'*).
+
+## 3. Pemeliharaan Stabilitas & *Debugging* Environment Production
+Untuk menjamin agar rilis (*Deployment*) fitur di atas di server eksekusi (*Vercel/VPS*) dapat berlangsung sukses, kami telah menangani berbagai rintangan *build-time*, antara lain:
+*   **Perbaikan Proses Inisialisasi Klien Supabase:** Memulihkan kode pembuatan klien Supabase pada sisi *SSR Server* yang sebelumnya mengakibatkan eror fatal pada proses kompilasi (*build-time*) dari pihak eksekutor.
+*   **Normalisasi Jalur Otentikasi Google (OAuth):** Melakukan standardisasi penanganan URL *callback* sehingga proses login pihak ketiga berjalan tanpa kendala interupsi (loop putus).
+*   **Pemasangan Direktori Dependencies Tambahan:** Memaksakan masuk *Zustand store packages* yang tidak tertanam tepat sebelumnya.
+
+---
+
+**Saran & Tindak Lanjut untuk Tim Operasional Server (Deployment):**
+Guna menayangkan fasilitas Meeting Internal ini kepada para pengguna aktif, kami memohon agar Administrator dapat melakukan **perintah `npm run build` dan *restart/deploy* ulang** (*Zero Downtime Restart*) dari dalam direktori VPS (atau platform hosting bersangkutan) demi meregistrasikan ragam *Environment Variables* LiveKit secara final pada sistem Front-End aplikasi.
+
+Demikian laporan ini dibuat untuk dipergunakan sebagai bahan catatan aktivitas *maintenance* pengembang sistem IT.
+
+Terima kasih.

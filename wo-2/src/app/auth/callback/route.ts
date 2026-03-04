@@ -6,56 +6,80 @@ export async function GET(request: Request) {
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
     const origin = requestUrl.origin
-    
-    // Fallback if environment variables are not detected during the request
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ropwebyycwvsvdrbgnpn.supabase.co'
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8'
 
-    if (code) {
+    console.log('[Auth Callback] Starting. Origin:', origin, 'Has code:', !!code)
+
+    if (!code) {
+        console.error('[Auth Callback] No code provided')
+        return NextResponse.redirect(new URL('/login?error=no_code', origin))
+    }
+
+    try {
         const cookieStore = await cookies()
 
         const supabase = createServerClient(
-            supabaseUrl,
-            supabaseKey,
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 cookies: {
                     get(name: string) {
                         return cookieStore.get(name)?.value
                     },
                     set(name: string, value: string, options: CookieOptions) {
-                        cookieStore.set({ name, value, ...options })
+                        try {
+                            cookieStore.set({ name, value, ...options })
+                        } catch (e) {
+                            // Cookie setting might fail in some edge cases
+                            console.error('[Auth Callback] Cookie set error:', e)
+                        }
                     },
                     remove(name: string, options: CookieOptions) {
-                        cookieStore.set({ name, value: '', ...options })
+                        try {
+                            cookieStore.set({ name, value: '', ...options })
+                        } catch (e) {
+                            console.error('[Auth Callback] Cookie remove error:', e)
+                        }
                     },
                 },
             }
         )
 
-        try {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-            
-            if (!error && data?.user) {
-                // Determine user role for redirection
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', data.user.id)
-                    .maybeSingle()
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
-                const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
-                const redirectPath = isAdmin ? '/admin' : '/dashboard'
-
-                // Using absolute URL for redirect to avoid blank page issues in Next.js 16/Vercel
-                return NextResponse.redirect(new URL(redirectPath, origin).toString())
-            } else {
-                console.error("Auth Callback: Exchange failed:", error?.message);
-            }
-        } catch (err) {
-            console.error("Auth callback exception:", err);
+        if (error) {
+            console.error('[Auth Callback] Exchange error:', error.message)
+            return NextResponse.redirect(new URL('/login?error=exchange_failed', origin))
         }
-    }
 
-    // Default error redirect
-    return NextResponse.redirect(new URL('/login?error=auth_failed', origin).toString())
+        if (!data?.user) {
+            console.error('[Auth Callback] No user returned after exchange')
+            return NextResponse.redirect(new URL('/login?error=no_user', origin))
+        }
+
+        console.log('[Auth Callback] User authenticated:', data.user.id)
+
+        // Determine redirect path based on role
+        let redirectPath = '/dashboard'
+
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', data.user.id)
+                .maybeSingle()
+
+            if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+                redirectPath = '/admin'
+            }
+            console.log('[Auth Callback] Role:', profile?.role, '-> Redirect to:', redirectPath)
+        } catch (profileErr) {
+            console.error('[Auth Callback] Profile fetch error (non-fatal):', profileErr)
+            // Non-fatal: still redirect to dashboard
+        }
+
+        return NextResponse.redirect(new URL(redirectPath, origin))
+    } catch (err) {
+        console.error('[Auth Callback] Fatal error:', err)
+        return NextResponse.redirect(new URL('/login?error=callback_exception', origin))
+    }
 }

@@ -8,9 +8,16 @@ export async function middleware(request: NextRequest) {
         },
     })
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+        return response
+    }
+
     const supabase = createServerClient(
-        'https://ropwebyycwvsvdrbgnpn.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8',
+        supabaseUrl,
+        supabaseKey,
         {
             cookies: {
                 get(name: string) {
@@ -74,7 +81,7 @@ export async function middleware(request: NextRequest) {
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .single()
+            .maybeSingle()
 
         if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
             redirectPath = '/admin'
@@ -89,7 +96,7 @@ export async function middleware(request: NextRequest) {
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .single()
+            .maybeSingle()
         const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
         if (!isAdmin) {
             const url = request.nextUrl.clone()
@@ -103,14 +110,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - auth/callback (auth flow)
-         * - api (api routes)
-         */
         '/((?!_next/static|_next/image|favicon.ico|auth/callback|api).*)',
     ],
 }

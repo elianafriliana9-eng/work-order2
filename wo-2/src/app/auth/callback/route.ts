@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code')
     const origin = requestUrl.origin
     
-    // Use environment variables first, fallback to hardcoded production keys only if necessary
+    // Fallback if environment variables are not detected during the request
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ropwebyycwvsvdrbgnpn.supabase.co'
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8'
 
@@ -44,12 +44,10 @@ export async function GET(request: Request) {
                     .maybeSingle()
 
                 const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
-                
-                // If on localhost, stay on localhost. If on production, stay on production.
-                const redirectUrl = new URL(isAdmin ? '/admin' : '/dashboard', origin)
-                
-                console.log("Auth Callback: Success, redirecting to:", redirectUrl.toString());
-                return NextResponse.redirect(redirectUrl.toString())
+                const redirectPath = isAdmin ? '/admin' : '/dashboard'
+
+                // Using absolute URL for redirect to avoid blank page issues in Next.js 16/Vercel
+                return NextResponse.redirect(new URL(redirectPath, origin).toString())
             } else {
                 console.error("Auth Callback: Exchange failed:", error?.message);
             }
@@ -59,6 +57,5 @@ export async function GET(request: Request) {
     }
 
     // Default error redirect
-    const errorUrl = new URL('/login?error=auth_failed', origin)
-    return NextResponse.redirect(errorUrl.toString())
+    return NextResponse.redirect(new URL('/login?error=auth_failed', origin).toString())
 }

@@ -29,6 +29,12 @@ export default function TicketDetailPage() {
     const [ticket, setTicket] = useState<any>(null);
     const [attachments, setAttachments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 60000); // update every minute
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         if (!id) return;
@@ -93,6 +99,13 @@ export default function TicketDetailPage() {
     };
 
     const statusInfo = getStatusInfo(ticket.status);
+
+    const isMeetingOpen = () => {
+        if (!ticket.meeting_date || ticket.status === 'Open') return false;
+        const meetingTime = new Date(ticket.meeting_date).getTime();
+        // 15 minutes before meeting = 15 * 60 * 1000 = 900000 ms
+        return now.getTime() >= (meetingTime - 900000);
+    };
 
     return (
         <div className="p-6 md:p-10 max-w-5xl mx-auto">
@@ -177,15 +190,26 @@ export default function TicketDetailPage() {
                                         </div>
                                     </div>
 
-                                    {ticket.meeting_type === 'Online' && ticket.meeting_link && (
-                                        <a 
-                                            href={ticket.meeting_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                                        >
-                                            Gabung Meeting <ArrowUpRight size={16} />
-                                        </a>
+                                    {ticket.meeting_type === 'Online' && (
+                                        <div className="flex flex-col items-end gap-2">
+                                            {isMeetingOpen() ? (
+                                                <Link
+                                                    href={`/dashboard/ticket/${ticket.id}/meet`}
+                                                    className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                                                >
+                                                    Mulai Video Call <ArrowUpRight size={16} />
+                                                </Link>
+                                            ) : (
+                                                <div className="flex flex-col items-end text-right">
+                                                    <button disabled className="flex items-center gap-2 px-6 py-3 bg-zinc-200 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-600 rounded-xl font-bold text-sm cursor-not-allowed">
+                                                        Ruangan Masih Dikunci <Clock size={16} />
+                                                    </button>
+                                                    <span className="text-[10px] text-muted-foreground mt-1 max-w-[200px]">
+                                                        {ticket.status === 'Open' ? 'Menunggu verifikasi Admin.' : 'Tombol akan aktif 15 menit sebelum waktu tabel.'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
 
                                     {ticket.meeting_type === 'Offline' && (
@@ -258,8 +282,8 @@ export default function TicketDetailPage() {
                                             <div className={`absolute left-4 top-8 w-0.5 h-10 ${isPassed ? 'bg-primary' : 'bg-zinc-100 dark:bg-zinc-800'}`} />
                                         )}
                                         <div className={`z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 ${isPassed
-                                                ? 'bg-primary border-primary text-primary-foreground'
-                                                : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-muted-foreground'
+                                            ? 'bg-primary border-primary text-primary-foreground'
+                                            : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-muted-foreground'
                                             }`}>
                                             <step.icon size={14} />
                                         </div>

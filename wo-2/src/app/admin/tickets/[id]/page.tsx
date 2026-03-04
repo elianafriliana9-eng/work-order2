@@ -16,6 +16,11 @@ import {
     XCircle,
     Palette,
     Timer,
+    Paperclip,
+    ExternalLink,
+    Video,
+    MapPin,
+    ArrowUpRight,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -31,6 +36,12 @@ export default function AdminTicketDetailPage() {
     const [role, setRole] = useState("");
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 60000); // update every minute
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         async function load() {
@@ -128,6 +139,12 @@ export default function AdminTicketDetailPage() {
 
     const availableStatuses = getAvailableStatuses();
 
+    const isMeetingOpen = () => {
+        if (!ticket.meeting_date || ticket.status === 'Open') return false;
+        const meetingTime = new Date(ticket.meeting_date).getTime();
+        return now.getTime() >= (meetingTime - 900000);
+    };
+
     return (
         <div className="p-6 md:p-10 max-w-5xl mx-auto">
             {/* Back */}
@@ -172,10 +189,10 @@ export default function AdminTicketDetailPage() {
                         return (
                             <div key={s} className="flex items-center gap-1">
                                 <div className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isCurrent
-                                        ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                                        : isDone
-                                            ? "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
-                                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
+                                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
+                                    : isDone
+                                        ? "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+                                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
                                     }`}>
                                     {s}
                                 </div>
@@ -197,10 +214,10 @@ export default function AdminTicketDetailPage() {
                                 onClick={() => updateStatus(s)}
                                 disabled={updating}
                                 className={`px-4 py-2 text-xs font-bold rounded-lg border transition-colors disabled:opacity-50 ${s === 'Rejected'
-                                        ? "border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
-                                        : s === 'Completed'
-                                            ? "border-green-200 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10"
-                                            : "border-border hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                                    ? "border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                    : s === 'Completed'
+                                        ? "border-green-200 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10"
+                                        : "border-border hover:bg-zinc-100 dark:hover:bg-zinc-700"
                                     }`}
                             >
                                 {s === 'Rejected' && <XCircle size={12} className="inline mr-1" />}
@@ -236,6 +253,54 @@ export default function AdminTicketDetailPage() {
                         <p className="text-sm font-bold">{ticket.dimension || '-'}</p>
                     </div>
                 </div>
+
+                {/* Meeting Schedule Detail Section */}
+                {ticket.meeting_date && (
+                    <div className="mb-6">
+                        <h3 className="text-lg font-bold mb-4">Jadwal Face-to-Face Meeting</h3>
+                        <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-border flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className={`p-4 rounded-2xl ${ticket.meeting_type === 'Online' ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'}`}>
+                                    {ticket.meeting_type === 'Online' ? <Video size={28} /> : <MapPin size={28} />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold">{ticket.meeting_type} Meeting</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {new Date(ticket.meeting_date).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {ticket.meeting_type === 'Online' && (
+                                <div className="flex flex-col items-end gap-2">
+                                    {isMeetingOpen() ? (
+                                        <Link
+                                            href={`/dashboard/ticket/${ticket.id}/meet`}
+                                            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                                        >
+                                            Gabung Ruangan <ArrowUpRight size={16} />
+                                        </Link>
+                                    ) : (
+                                        <div className="flex flex-col items-end text-right">
+                                            <button disabled className="flex items-center gap-2 px-6 py-3 bg-zinc-200 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-600 rounded-xl font-bold text-sm cursor-not-allowed">
+                                                Ruangan Terkunci <Clock size={16} />
+                                            </button>
+                                            <span className="text-[10px] text-muted-foreground mt-1 max-w-[200px]">
+                                                {ticket.status === 'Open' ? 'Verifikasi dulu untuk membuka sesi.' : 'Ruangan buka 15 menit sebelum jam.'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {ticket.meeting_type === 'Offline' && (
+                                <div className="px-4 py-2 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-[10px] font-black uppercase tracking-widest">
+                                    Lokasi: Kantor IT
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Description */}
                 <div className="mb-6">

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
     if (!supabaseUrl || !supabaseKey) {
         console.error("Auth Callback: Missing environment variables.");
-        return NextResponse.redirect(new URL('/login?error=env_missing', origin).toString())
+        return NextResponse.redirect(`${origin}/login?error=env_missing`)
     }
 
     if (code) {
@@ -22,34 +22,38 @@ export async function GET(request: Request) {
             supabaseKey,
             {
                 cookies: {
-                    async get(name: string) {
-                        return (await cookieStore).get(name)?.value
+                    get(name: string) {
+                        return cookieStore.get(name)?.value
                     },
-                    async set(name: string, value: string, options: CookieOptions) {
-                        (await cookieStore).set({ name, value, ...options })
+                    set(name: string, value: string, options: CookieOptions) {
+                        cookieStore.set({ name, value, ...options })
                     },
-                    async remove(name: string, options: CookieOptions) {
-                        (await cookieStore).set({ name, value: '', ...options })
+                    remove(name: string, options: CookieOptions) {
+                        cookieStore.set({ name, value: '', ...options })
                     },
                 },
             }
         )
 
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        
-        if (!error && data?.user) {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', data.user.id)
-                .maybeSingle()
+        try {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+            
+            if (!error && data?.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .maybeSingle()
 
-            const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
-            const redirectPath = isAdmin ? '/admin' : '/dashboard'
+                const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
+                const redirectPath = isAdmin ? '/admin' : '/dashboard'
 
-            return NextResponse.redirect(new URL(redirectPath, origin).toString())
+                return NextResponse.redirect(`${origin}${redirectPath}`)
+            }
+        } catch (err) {
+            console.error("Auth exchange error:", err);
         }
     }
 
-    return NextResponse.redirect(new URL('/login?error=auth_failed', origin).toString())
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }

@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AccessToken } from 'livekit-server-sdk';
 import { createClient } from '@supabase/supabase-js';
 
-// Setup admin client to bypass RLS since this is a server route and we might need to check tickets
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-// Disini kita sebaiknya pake service_role_key kalau ada, tapi sementara test pakai anon
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 export async function GET(req: NextRequest) {
     try {
         const room = req.nextUrl.searchParams.get('room');
@@ -22,6 +16,17 @@ export async function GET(req: NextRequest) {
             );
         }
 
+        // Initialize Supabase Client only when needed
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            console.error("Supabase configuration missing in API route");
+            return NextResponse.json({ error: 'Database configuration missing' }, { status: 500 });
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
         const apiKey = process.env.LIVEKIT_API_KEY;
         const apiSecret = process.env.LIVEKIT_API_SECRET;
         const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
@@ -34,13 +39,12 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        // You can add logic here to check if the ticket exists and if the user is authorized.
-        // For now, we will just mint a token for the requested room.
+        // Optional: Add logic here to verify ticket ownership via Supabase if needed
+        // const { data: ticket } = await supabase.from('work_orders').select('*').eq('id', room.replace('ticket-', '')).single();
 
         const at = new AccessToken(apiKey, apiSecret, {
             identity: userId,
             name: username,
-            // Optional: Set time to live for the token
             ttl: '1h',
         });
 

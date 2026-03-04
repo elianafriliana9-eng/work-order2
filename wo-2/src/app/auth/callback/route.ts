@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
-
     const code = searchParams.get('code')
-    // if "next" is in search params, use it as the redirection URL
+    
+    // Default fallback to dashboard
     const next = searchParams.get('next') ?? '/dashboard'
 
     if (code) {
@@ -29,27 +29,24 @@ export async function GET(request: Request) {
                 },
             }
         )
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error && data?.user) {
-            let redirectUrl = next;
 
-            // Determine role and correct dashboard
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        
+        if (!error && data?.user) {
+            // Check for admin roles
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('role')
                 .eq('id', data.user.id)
-                .single();
+                .single()
 
-            if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
-                redirectUrl = '/admin';
-            } else {
-                redirectUrl = '/dashboard';
-            }
+            const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
+            const redirectPath = isAdmin ? '/admin' : '/dashboard'
 
-            return NextResponse.redirect(`${origin}${redirectUrl}`)
+            return NextResponse.redirect(`${origin}${redirectPath}`)
         }
     }
 
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+    // If exchange fails or no code, send to login with error
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
 }

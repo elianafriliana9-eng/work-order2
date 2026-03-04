@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Layout, ArrowLeft, ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -13,14 +13,25 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [origin, setOrigin] = useState<string>("");
     const router = useRouter();
+
+    useEffect(() => {
+        // Set origin on client side to ensure correct callback URL
+        if (typeof window !== "undefined") {
+            setOrigin(window.location.origin);
+        }
+    }, []);
 
     async function handleGoogleLogin() {
         try {
+            const callbackUrl = `${origin || window.location.origin}/auth/callback`;
+            console.log("Login: Initiating Google OAuth with callback:", callbackUrl);
+            
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: callbackUrl,
                 },
             });
             if (error) throw error;
@@ -48,7 +59,7 @@ export default function LoginPage() {
                     .from('profiles')
                     .select('role')
                     .eq('id', authData.user.id)
-                    .single();
+                    .maybeSingle();
 
                 const redirectPath = (profile && ADMIN_ROLES.includes(profile.role as any))
                     ? DEFAULT_REDIRECTS.ADMIN
@@ -67,7 +78,6 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-            {/* Background Decor */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
@@ -100,7 +110,6 @@ export default function LoginPage() {
             >
                 <div className="bg-white dark:bg-zinc-900 py-10 px-6 shadow-xl shadow-zinc-200/50 dark:shadow-none sm:rounded-3xl border border-border">
                     <div className="space-y-6">
-                        {/* Google Login */}
                         <button
                             onClick={handleGoogleLogin}
                             className="w-full flex items-center justify-center gap-3 px-4 py-4 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-800 text-black dark:text-white font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm group"
@@ -125,7 +134,6 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        {/* Email/Password Form */}
                         <form onSubmit={handleEmailLogin} className="space-y-4">
                             {error && (
                                 <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl">

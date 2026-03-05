@@ -6,7 +6,9 @@ import {
     Search,
     Calendar,
     User,
-    Filter,
+    MessageSquare,
+    Send,
+    CheckCircle2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -15,23 +17,53 @@ export default function AdminReportsPage() {
     const [reports, setReports] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [dateFilter, setDateFilter] = useState("");
+    const [commentingId, setCommentingId] = useState<string | null>(null);
+    const [commentText, setCommentText] = useState("");
+    const [submittingComment, setSubmittingComment] = useState(false);
 
     useEffect(() => {
-        async function loadReports() {
-            let query = supabase
-                .from('daily_reports')
-                .select(`
-                    *,
-                    work_orders (title, brand, ticket_number)
-                `)
-                .order('created_at', { ascending: false })
-                .limit(50);
-
-            const { data } = await query;
-            if (data) setReports(data);
-        }
         loadReports();
     }, []);
+
+    async function loadReports() {
+        let query = supabase
+            .from('daily_reports')
+            .select(`
+                *,
+                work_orders (title, brand, ticket_number)
+            `)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        const { data } = await query;
+        if (data) setReports(data);
+    }
+
+    async function handleSubmitComment(reportId: string) {
+        if (!commentText.trim()) return;
+        setSubmittingComment(true);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('daily_reports')
+            .update({
+                admin_comment: commentText.trim(),
+                commented_at: new Date().toISOString(),
+                commented_by: user.id,
+            })
+            .eq('id', reportId);
+
+        if (error) {
+            alert("Gagal mengirim komentar: " + error.message);
+        } else {
+            setCommentingId(null);
+            setCommentText("");
+            await loadReports();
+        }
+        setSubmittingComment(false);
+    }
 
     const filtered = reports.filter((r: any) => {
         const matchSearch = search === '' ||
@@ -116,7 +148,64 @@ export default function AdminReportsPage() {
                                 </div>
                             )}
 
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{report.content}</p>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap mb-3">{report.content}</p>
+
+                            {/* Admin Comment Section */}
+                            {report.admin_comment ? (
+                                <div className="mt-3 p-3 bg-violet-50 dark:bg-violet-500/5 rounded-xl border border-violet-100 dark:border-violet-500/10">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <MessageSquare size={12} className="text-violet-500" />
+                                        <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest">
+                                            Komentar Head IT
+                                        </span>
+                                        {report.commented_at && (
+                                            <span className="text-[10px] text-muted-foreground ml-auto">
+                                                {new Date(report.commented_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-violet-900 dark:text-violet-300">{report.admin_comment}</p>
+                                </div>
+                            ) : commentingId === report.id ? (
+                                <div className="mt-3 flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        placeholder="Tulis komentar..."
+                                        className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-violet-500/20"
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleSubmitComment(report.id);
+                                            if (e.key === 'Escape') { setCommentingId(null); setCommentText(""); }
+                                        }}
+                                    />
+                                    <button
+                                        onClick={() => handleSubmitComment(report.id)}
+                                        disabled={submittingComment || !commentText.trim()}
+                                        className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-bold hover:bg-violet-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                                    >
+                                        {submittingComment ? (
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <Send size={14} />
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => { setCommentingId(null); setCommentText(""); }}
+                                        className="px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        Batal
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => { setCommentingId(report.id); setCommentText(""); }}
+                                    className="mt-2 text-xs font-medium text-violet-500 hover:text-violet-600 transition-colors flex items-center gap-1"
+                                >
+                                    <MessageSquare size={12} /> Beri Komentar
+                                </button>
+                            )}
                         </motion.div>
                     ))
                 ) : (

@@ -6,49 +6,31 @@ import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     Ticket,
-    FileText,
-    PieChart,
-    Image,
+    Send,
     ChevronLeft,
     LogOut,
-    Shield,
     Palette,
-    Code,
-    Headphones,
     User,
-    Send,
     ExternalLink,
+    ListOrdered,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-interface AdminSidebarProps {
+interface TeamSidebarProps {
     userName: string;
-    role: string; // 'head_it' | 'designer' | 'it_dev' | 'it_support'
+    role: string;
 }
 
-const roleConfig: Record<string, { label: string; icon: any; color: string }> = {
-    head_it: { label: "Head of IT", icon: Shield, color: "text-violet-500" },
-    designer: { label: "Designer", icon: Palette, color: "text-pink-500" },
-    it_dev: { label: "IT Developer", icon: Code, color: "text-blue-500" },
-    it_support: { label: "IT Support", icon: Headphones, color: "text-green-500" },
-};
-
-export function AdminSidebar({ userName, role }: AdminSidebarProps) {
+export function TeamSidebar({ userName, role }: TeamSidebarProps) {
     const [collapsed, setCollapsed] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
 
-    const config = roleConfig[role] || roleConfig.designer;
-    const RoleIcon = config.icon;
-
     const menuItems = [
-        { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/admin/tickets", label: "Kelola Tiket", icon: Ticket },
-        { href: "/admin/it-dev", label: "IT Development", icon: Code },
-        { href: "/admin/reports", label: "Laporan Tim", icon: FileText },
-        { href: "/admin/reporting", label: "Reporting", icon: PieChart },
-        { href: "/admin/showcase", label: "Showcase", icon: Image },
+        { href: "/team/design", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/team/design/queue", label: "Antrian Tiket", icon: ListOrdered },
+        { href: "/team/design/report", label: "Laporan Harian", icon: Send },
     ];
 
     async function handleLogout() {
@@ -65,10 +47,10 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
             <div className="p-4 border-b border-border flex items-center justify-between">
                 {!collapsed && (
                     <div className="flex items-center gap-2">
-                        <div className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 p-1.5 rounded-lg">
-                            <Shield size={18} />
+                        <div className="bg-pink-500 text-white p-1.5 rounded-lg">
+                            <Palette size={18} />
                         </div>
-                        <span className="font-bold text-sm">Admin Panel</span>
+                        <span className="font-bold text-sm">Design Team</span>
                     </div>
                 )}
                 <button
@@ -85,15 +67,15 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
             {/* Role Badge */}
             <div className={`px-4 py-3 border-b border-border ${collapsed ? "px-2" : ""}`}>
                 <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
-                    <div className={`p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 ${config.color}`}>
-                        <RoleIcon size={16} />
+                    <div className="p-1.5 rounded-lg bg-pink-50 dark:bg-pink-500/10 text-pink-500">
+                        <Palette size={16} />
                     </div>
                     {!collapsed && (
                         <div>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                 Role
                             </p>
-                            <p className="text-xs font-bold">{config.label}</p>
+                            <p className="text-xs font-bold">Designer</p>
                         </div>
                     )}
                 </div>
@@ -103,7 +85,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
             <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href ||
-                        (item.href !== "/admin" && pathname.startsWith(item.href));
+                        (item.href !== "/team/design" && pathname.startsWith(item.href));
 
                     return (
                         <Link
@@ -130,7 +112,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold truncate">{userName}</p>
-                            <p className="text-[10px] text-muted-foreground">{config.label}</p>
+                            <p className="text-[10px] text-muted-foreground">Designer</p>
                         </div>
                     </div>
                 )}

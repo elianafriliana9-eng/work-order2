@@ -44,11 +44,12 @@ export async function middleware(request: NextRequest) {
         const path = request.nextUrl.pathname
         const isAuthPage = path.startsWith('/login')
         const isAdminPage = path.startsWith('/admin')
+        const isTeamPage = path.startsWith('/team')
         const isUserPage = path.startsWith('/dashboard') || path.startsWith('/new-ticket')
 
-        if ((isAdminPage || isUserPage) && !user) {
+        // Redirect unauthenticated users to login
+        if ((isAdminPage || isTeamPage || isUserPage) && !user) {
             const redirectResponse = NextResponse.redirect(new URL('/login', request.url))
-            // Copy cookies from our local response to the redirect response
             response.cookies.getAll().forEach(cookie => {
                 redirectResponse.cookies.set(cookie.name, cookie.value, {
                     ...cookie,
@@ -59,17 +60,18 @@ export async function middleware(request: NextRequest) {
             return redirectResponse
         }
 
+        // Redirect logged-in users from login page to their dashboard
         if (isAuthPage && user) {
-            let target = '/dashboard'
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('role')
                 .eq('id', user.id)
                 .maybeSingle()
 
-            if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
-                target = '/admin'
-            }
+            let target = '/dashboard'
+            if (profile?.role === 'head_it') target = '/admin'
+            else if (profile?.role === 'designer') target = '/team/design'
+
             const redirectResponse = NextResponse.redirect(new URL(target, request.url))
             response.cookies.getAll().forEach(cookie => {
                 redirectResponse.cookies.set(cookie.name, cookie.value, {
@@ -81,6 +83,7 @@ export async function middleware(request: NextRequest) {
             return redirectResponse
         }
 
+        // Admin page: only head_it allowed
         if (isAdminPage && user) {
             const { data: profile } = await supabase
                 .from('profiles')
@@ -88,9 +91,33 @@ export async function middleware(request: NextRequest) {
                 .eq('id', user.id)
                 .maybeSingle()
 
-            const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
-            if (!isAdmin) {
-                const redirectResponse = NextResponse.redirect(new URL('/dashboard', request.url))
+            if (!profile || profile.role !== 'head_it') {
+                let target = '/dashboard'
+                if (profile?.role === 'designer') target = '/team/design'
+                const redirectResponse = NextResponse.redirect(new URL(target, request.url))
+                response.cookies.getAll().forEach(cookie => {
+                    redirectResponse.cookies.set(cookie.name, cookie.value, {
+                        ...cookie,
+                        sameSite: 'lax',
+                        secure: process.env.NODE_ENV === 'production'
+                    })
+                })
+                return redirectResponse
+            }
+        }
+
+        // Team page: only matching team role allowed
+        if (isTeamPage && user) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .maybeSingle()
+
+            if (path.startsWith('/team/design') && (!profile || profile.role !== 'designer')) {
+                let target = '/dashboard'
+                if (profile?.role === 'head_it') target = '/admin'
+                const redirectResponse = NextResponse.redirect(new URL(target, request.url))
                 response.cookies.getAll().forEach(cookie => {
                     redirectResponse.cookies.set(cookie.name, cookie.value, {
                         ...cookie,

@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminSidebar } from "@/components/admin-sidebar";
+import { TeamSidebar } from "@/components/team-sidebar";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function AdminLayout({
+export default function TeamDesignLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const [userName, setUserName] = useState<string>("Admin");
+    const [userName, setUserName] = useState<string>("Designer");
     const [role, setRole] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -18,7 +18,7 @@ export default function AdminLayout({
     useEffect(() => {
         let isMounted = true;
 
-        async function checkAdminAccess() {
+        async function checkAccess() {
             try {
                 const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -28,7 +28,7 @@ export default function AdminLayout({
                 }
 
                 if (isMounted) {
-                    setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Admin");
+                    setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Designer");
                 }
 
                 const { data: profile, error: profileError } = await supabase
@@ -39,25 +39,20 @@ export default function AdminLayout({
 
                 if (!isMounted) return;
 
-                if (profileError || !profile || profile.role !== 'head_it') {
-                    console.warn("Unauthorized access to admin panel:", profileError);
-                    if (profile?.role === 'designer') {
-                        router.push("/team/design");
-                    } else {
-                        router.push("/dashboard");
-                    }
+                if (profileError || !profile || profile.role !== 'designer') {
+                    router.push("/dashboard");
                     return;
                 }
 
                 setRole(profile.role);
                 setLoading(false);
             } catch (err) {
-                console.error("Admin layout auth check failed:", err);
+                console.error("Team layout auth check failed:", err);
                 if (isMounted) router.push("/login");
             }
         }
 
-        checkAdminAccess();
+        checkAccess();
         return () => { isMounted = false };
     }, [router]);
 
@@ -65,8 +60,8 @@ export default function AdminLayout({
         return (
             <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm font-bold animate-pulse">Loading Admin Panel...</p>
+                    <div className="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm font-bold animate-pulse">Loading Design Panel...</p>
                 </div>
             </div>
         );
@@ -74,7 +69,7 @@ export default function AdminLayout({
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-            <AdminSidebar userName={userName} role={role} />
+            <TeamSidebar userName={userName} role={role} />
             <main className="transition-all duration-300 lg:pl-64 min-h-screen">
                 {children}
             </main>

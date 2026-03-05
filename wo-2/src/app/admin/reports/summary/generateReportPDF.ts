@@ -137,14 +137,29 @@ export const generateReportPDF = async (data: any) => {
         currentY += 6;
 
         try {
+            // Pre-process SVGs in the container for html2canvas compatibility
+            const svgs = chartContainer.querySelectorAll('svg');
+            svgs.forEach((svg) => {
+                svg.setAttribute('width', svg.getBoundingClientRect().width.toString());
+                svg.setAttribute('height', svg.getBoundingClientRect().height.toString());
+                // ensure background is solid for svgs too if they don't have one
+                svg.style.backgroundColor = 'white';
+            });
+
+            // Recharts SVG rendering often requires a slight delay to fully paint, and elements out of viewport
+            // might be captured blank by html2canvas.
+            window.scrollTo(0, chartContainer.offsetTop - 100);
+            await new Promise(resolve => setTimeout(resolve, 800));
+
             const canvas = await html2canvas(chartContainer, {
                 scale: 2,
                 useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff'
+                logging: true,
+                backgroundColor: '#ffffff',
+                foreignObjectRendering: true // Better support for SVG
             });
 
-            const imgData = canvas.toDataURL('image/png');
+            const imgData = canvas.toDataURL('image/png', 1.0);
 
             // Calculate proportional height
             const imgWidth = pageWidth - (margin * 2);

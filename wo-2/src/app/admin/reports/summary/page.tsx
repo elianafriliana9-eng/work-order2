@@ -427,23 +427,6 @@ export default function ReportSummaryPage() {
                             </tbody>
                         </table>
                     </div>
-
-                    {/* Progress Bar Chart */}
-                    <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
-                        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Grafik Progress per Anggota</h3>
-
-                        <div className="h-[220px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={memberProgress} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                                    <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                                    <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
-                                    <Bar dataKey="avg" name="Progress %" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Section 3: Project Detail */}
@@ -483,140 +466,159 @@ export default function ReportSummaryPage() {
                 )}
 
                 {/* Section 4: Charts - Frequency & Distribution */}
-                <div className="mb-6 print-break-before">
-                    <h2 className="text-sm font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-border pb-2">
-                        <span className="w-1 h-4 bg-pink-500 rounded-full inline-block" />
-                        STATISTIK & ANALISIS
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Monthly Frequency */}
-                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
-                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Frekuensi Tiket per Bulan</h3>
+                <div id="charts-export-container" className="mb-6 print-break-before flex flex-col gap-6">
+                    <div>
+                        <h2 className="text-sm font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-border pb-2">
+                            <span className="w-1 h-4 bg-pink-500 rounded-full inline-block" />
+                            STATISTIK & ANALISIS
+                        </h2>
 
-                            <div className="h-[200px]">
+                        {/* Progress Bar Chart */}
+                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5 mb-4">
+                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Grafik Progress per Anggota</h3>
+
+                            <div className="h-[220px]">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={frequencyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                                        <defs>
-                                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
+                                    <BarChart data={memberProgress} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                        <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                                        <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                                        <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
                                         <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
-                                        <Area type="monotone" dataKey="count" name="Tiket Masuk" stroke="#3b82f6" strokeWidth={2} fill="url(#colorCount)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Category Pie */}
-                        {categoryData.length > 0 && (
-                            <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
-                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Distribusi Kategori</h3>
-
-                                <div className="h-[200px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={40} paddingAngle={3} label={({ name, value }) => `${name} (${value})`}>
-                                                {categoryData.map((_, idx) => (
-                                                    <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Category Frequency Bar */}
-                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
-                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Total Tiket per Kategori</h3>
-
-                            <div className="h-[200px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={catFreqData} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                                        <XAxis type="number" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
-                                        <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} width={70} />
-                                        <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
-                                        <Bar dataKey="count" name="Total" fill="#f472b6" radius={[0, 4, 4, 0]} barSize={20} />
+                                        <Bar dataKey="avg" name="Progress %" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} isAnimationActive={false} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
 
-                        {/* Status summary text */}
-                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
-                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Ringkasan Status Tiket</h3>
-                            <div className="space-y-3 mt-2">
-                                {Object.entries(catFreq).map(([cat, count]) => (
-                                    <div key={cat} className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">{cat}</span>
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-2.5 w-24 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                                <div className="progress-fill h-full rounded-full bg-pink-500" style={{ width: `${(count / allTickets.length) * 100}%` }} />
-                                            </div>
-                                            <span className="text-xs font-bold tabular-nums w-12 text-right">{count} tiket</span>
-                                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Monthly Frequency */}
+                            <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
+                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Frekuensi Tiket per Bulan</h3>
+
+                                <div className="h-[200px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={frequencyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                                            <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                                            <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
+                                            <Area type="monotone" dataKey="count" name="Tiket Masuk" stroke="#3b82f6" strokeWidth={2} fill="url(#colorCount)" isAnimationActive={false} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Category Pie */}
+                            {categoryData.length > 0 && (
+                                <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
+                                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Distribusi Kategori</h3>
+
+                                    <div className="h-[200px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={40} paddingAngle={3} label={({ name, value }) => `${name} (${value})`} isAnimationActive={false}>
+                                                    {categoryData.map((_, idx) => (
+                                                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
                                     </div>
-                                ))}
-                                <div className="pt-2 border-t border-border flex items-center justify-between">
-                                    <span className="text-sm font-bold">Total</span>
-                                    <span className="text-sm font-black tabular-nums">{allTickets.length} tiket</span>
+                                </div>
+                            )}
+
+                            {/* Category Frequency Bar */}
+                            <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
+                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Total Tiket per Kategori</h3>
+
+                                <div className="h-[200px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={catFreqData} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                                            <XAxis type="number" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                                            <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} width={70} />
+                                            <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
+                                            <Bar dataKey="count" name="Total" fill="#f472b6" radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Status summary text */}
+                            <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
+                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Ringkasan Status Tiket</h3>
+                                <div className="space-y-3 mt-2">
+                                    {Object.entries(catFreq).map(([cat, count]) => (
+                                        <div key={cat} className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">{cat}</span>
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-2.5 w-24 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                                                    <div className="progress-fill h-full rounded-full bg-pink-500" style={{ width: `${(count / allTickets.length) * 100}%` }} />
+                                                </div>
+                                                <span className="text-xs font-bold tabular-nums w-12 text-right">{count} tiket</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="pt-2 border-t border-border flex items-center justify-between">
+                                        <span className="text-sm font-bold">Total</span>
+                                        <span className="text-sm font-black tabular-nums">{allTickets.length} tiket</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                {/* END CHARTS CONTAINER */}
 
-            </div>
-            {/* END CHARTS CONTAINER */}
-
-            {/* Section 5: Individual Reports */}
-            <div className="print-break-before mt-8">
-                <h2 className="text-sm font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-border pb-2">
-                    <span className="w-1 h-4 bg-green-500 rounded-full inline-block" />
-                    LAMPIRAN — DETAIL LAPORAN HARIAN ({reports.length})
-                </h2>
-                <div className="space-y-4">
-                    {reports.map((report, i) => (
-                        <div key={report.id} className="doc-report-item bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
-                            <div className="flex items-center justify-between gap-4 mb-2">
-                                <div>
-                                    <span className="text-xs font-bold">{profiles[report.user_id]?.full_name || report.user_id?.substring(0, 8)}</span>
-                                    <span className="text-[10px] text-muted-foreground ml-2">{roleLabels[profiles[report.user_id]?.role] || ''}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2 w-14 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                        <div className="progress-fill h-full rounded-full bg-violet-500" style={{ width: `${report.progress_pct}%` }} />
+                {/* Section 5: Individual Reports */}
+                <div className="print-break-before mt-8">
+                    <h2 className="text-sm font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-border pb-2">
+                        <span className="w-1 h-4 bg-green-500 rounded-full inline-block" />
+                        LAMPIRAN — DETAIL LAPORAN HARIAN ({reports.length})
+                    </h2>
+                    <div className="space-y-4">
+                        {reports.map((report, i) => (
+                            <div key={report.id} className="doc-report-item bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
+                                <div className="flex items-center justify-between gap-4 mb-2">
+                                    <div>
+                                        <span className="text-xs font-bold">{profiles[report.user_id]?.full_name || report.user_id?.substring(0, 8)}</span>
+                                        <span className="text-[10px] text-muted-foreground ml-2">{roleLabels[profiles[report.user_id]?.role] || ''}</span>
                                     </div>
-                                    <span className="text-[10px] font-bold tabular-nums">{report.progress_pct}%</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-14 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                                            <div className="progress-fill h-full rounded-full bg-violet-500" style={{ width: `${report.progress_pct}%` }} />
+                                        </div>
+                                        <span className="text-[10px] font-bold tabular-nums">{report.progress_pct}%</span>
+                                    </div>
                                 </div>
+                                {report.work_orders && (
+                                    <p className="text-[10px] font-bold text-muted-foreground mb-1">
+                                        Tiket #{report.work_orders.ticket_number} — {report.work_orders.title} ({report.work_orders.brand})
+                                    </p>
+                                )}
+                                <p className="text-xs leading-relaxed whitespace-pre-wrap">{report.content}</p>
                             </div>
-                            {report.work_orders && (
-                                <p className="text-[10px] font-bold text-muted-foreground mb-1">
-                                    Tiket #{report.work_orders.ticket_number} — {report.work_orders.title} ({report.work_orders.brand})
-                                </p>
-                            )}
-                            <p className="text-xs leading-relaxed whitespace-pre-wrap">{report.content}</p>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
 
-            {/* Document Footer */}
-            <div className="doc-footer mt-10 border-t-2 border-zinc-900 dark:border-zinc-100 pt-4 flex items-end justify-between print-break-avoid">
-                <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Dokumen ini digenerate otomatis</p>
-                    <p className="text-[10px] text-muted-foreground">Work Order System — {generatedAt}</p>
-                </div>
-                <div className="text-center w-48">
-                    <p className="text-xs font-bold mb-12">Mengetahui,</p>
-                    <p className="text-xs border-t border-zinc-400 pt-1">Head of IT</p>
+                {/* Document Footer */}
+                <div className="doc-footer mt-10 border-t-2 border-zinc-900 dark:border-zinc-100 pt-4 flex items-end justify-between print-break-avoid">
+                    <div>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Dokumen ini digenerate otomatis</p>
+                        <p className="text-[10px] text-muted-foreground">Work Order System — {generatedAt}</p>
+                    </div>
+                    <div className="text-center w-48">
+                        <p className="text-xs font-bold mb-12">Mengetahui,</p>
+                        <p className="text-xs border-t border-zinc-400 pt-1">Head of IT</p>
+                    </div>
                 </div>
             </div>
         </>

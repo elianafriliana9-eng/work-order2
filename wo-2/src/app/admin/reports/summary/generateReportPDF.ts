@@ -1,6 +1,5 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import html2canvas from 'html2canvas';
 
 export const generateReportPDF = async (data: any) => {
     const {
@@ -119,92 +118,7 @@ export const generateReportPDF = async (data: any) => {
 
     currentY = (doc as any).lastAutoTable.finalY + 15;
 
-    // --- 4. CHARTS CAPTURE ---
-    // Instead of rendering data, we snapshot the screen charts because jspdf can't render Recharts SVG natively.
-    // We capture the container wrapping the charts.
-    const chartContainer = document.getElementById('charts-export-container');
-    if (chartContainer) {
-        // If we need to pagre break before charts to make sure they fit
-        if (currentY + 100 > pageHeight - margin) {
-            doc.addPage();
-            currentY = margin;
-        }
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
-        doc.text("GRAFIK & ANALISIS TIKET", margin, currentY);
-        currentY += 6;
-
-        try {
-            // Recharts `ResponsiveContainer` collapses to 0x0 size during `html2canvas` DOM cloning.
-            // We explicitly freeze dimensions for all wrapper elements and SVGs in absolute pixels.
-            const rechartsWrappers = chartContainer.querySelectorAll('.recharts-wrapper, .recharts-surface');
-            const originalStyles: Array<{ el: HTMLElement, cssText: string }> = [];
-
-            rechartsWrappers.forEach((wrapper) => {
-                const rect = wrapper.getBoundingClientRect();
-                const el = wrapper as HTMLElement;
-                originalStyles.push({ el, cssText: el.style.cssText });
-
-                // Only freeze if rect is valid
-                if (rect.width > 0 && rect.height > 0) {
-                    el.style.width = `${rect.width}px`;
-                    el.style.height = `${rect.height}px`;
-
-                    if (el.tagName.toLowerCase() === 'svg') {
-                        el.setAttribute('width', `${rect.width}`);
-                        el.setAttribute('height', `${rect.height}`);
-                    }
-                }
-            });
-
-            // Recharts SVG rendering often requires a slight delay to fully paint.
-            // Scrolling to the top is the safest way to prevent html2canvas blank offsets.
-            const originalScrollY = window.scrollY;
-            window.scrollTo(0, 0);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            const canvas = await html2canvas(chartContainer, {
-                scale: 2,
-                useCORS: true,
-                logging: true,
-                backgroundColor: '#ffffff',
-                scrollY: 0,
-                x: chartContainer.offsetLeft,
-                y: chartContainer.offsetTop,
-                width: chartContainer.offsetWidth,
-                height: chartContainer.offsetHeight
-            });
-
-            window.scrollTo(0, originalScrollY);
-
-            // Restore original dynamic styles
-            originalStyles.forEach(({ el, cssText }) => {
-                el.style.cssText = cssText;
-                if (el.tagName.toLowerCase() === 'svg') {
-                    el.removeAttribute('width');
-                    el.removeAttribute('height');
-                }
-            });
-
-            const imgData = canvas.toDataURL('image/png', 1.0);
-
-            // Calculate proportional height
-            const imgWidth = pageWidth - (margin * 2);
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-            // Note: If the image is very tall it might split pages, but A4 height is ~297mm. Chart container should fit.
-            doc.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
-
-            currentY += imgHeight + 15;
-
-        } catch (error) {
-            console.error("Failed to capture charts", error);
-        }
-    }
-
-    // --- 5. INDIVIDUAL REPORTS TABLE ---
+    // --- 4. INDIVIDUAL REPORTS TABLE ---
     if (currentY + 40 > pageHeight - margin) {
         doc.addPage();
         currentY = margin;
@@ -220,7 +134,7 @@ export const generateReportPDF = async (data: any) => {
         profiles[r.user_id]?.full_name || r.user_id.substring(0, 8),
         new Date(r.report_date).toLocaleDateString('id-ID'),
         `${r.progress_pct}%`,
-        r.working_on || '-',
+        r.content || r.working_on || '-',
         r.blockers || '-'
     ]);
 
@@ -232,8 +146,8 @@ export const generateReportPDF = async (data: any) => {
         headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold' },
         bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
         columnStyles: {
-            3: { cellWidth: 50 }, // make description wider
-            4: { cellWidth: 40 }
+            3: { cellWidth: 80 }, // increase description width
+            4: { cellWidth: 30 }
         },
         margin: { left: margin, right: margin },
     });

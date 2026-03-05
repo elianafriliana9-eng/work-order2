@@ -33,7 +33,7 @@ export default function AdminReportsPage() {
         loadReports();
     }, []);
 
-    const filtered = reports.filter(r => {
+    const filtered = reports.filter((r: any) => {
         const matchSearch = search === '' ||
             r.content?.toLowerCase().includes(search.toLowerCase());
         const matchDate = dateFilter === '' ||

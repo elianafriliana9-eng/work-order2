@@ -75,7 +75,7 @@ export default function LandingPage() {
           const completed = woData.filter(d => d.status === 'Completed');
           let avgDays = "0";
           if (completed.length > 0) {
-            const totalMs = completed.reduce((acc, curr) => {
+            const totalMs = completed.reduce((acc: any, curr: any) => {
               const end = new Date(curr.deadline || curr.created_at).getTime();
               const start = new Date(curr.created_at).getTime();
               return acc + (end - start);
@@ -83,7 +83,7 @@ export default function LandingPage() {
             avgDays = ((totalMs / completed.length) / (1000 * 60 * 60 * 24)).toFixed(1);
           }
 
-          const hasP1 = woData.some(d => d.status !== 'Completed' && d.priority === 'P1');
+          const hasP1 = woData.some((d: any) => d.status !== 'Completed' && d.priority === 'P1');
 
           setStatsData({
             activeTickets: activeCount.toString(),
@@ -102,7 +102,7 @@ export default function LandingPage() {
             };
           });
 
-          woData.forEach(wo => {
+          woData.forEach((wo: any) => {
             const woDate = new Date(wo.created_at).toISOString().split('T')[0];
             const found = last7Days.find(d => d.date === woDate);
             if (found) found.total += 1;

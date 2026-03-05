@@ -30,14 +30,14 @@ export default function AdminReportingAnalyticsPage() {
 
             if (orders) {
                 // Category Distribution
-                const categoriesObj = orders.reduce((acc: any, curr) => {
+                const categoriesObj = orders.reduce((acc: any, curr: any) => {
                     acc[curr.category] = (acc[curr.category] || 0) + 1;
                     return acc;
                 }, {});
                 const categoryData = Object.keys(categoriesObj).map(k => ({ name: k, value: categoriesObj[k] }));
 
                 // Priority Distribution
-                const priorityObj = orders.reduce((acc: any, curr) => {
+                const priorityObj = orders.reduce((acc: any, curr: any) => {
                     const p = curr.priority || 'P2';
                     acc[p] = (acc[p] || 0) + 1;
                     return acc;
@@ -56,7 +56,7 @@ export default function AdminReportingAnalyticsPage() {
                     { date: 'Min', tiket: Math.floor(Math.random() * 3) },
                 ];
 
-                const completed = orders.filter(o => o.status === 'Completed').length;
+                const completed = orders.filter((o: any) => o.status === 'Completed').length;
                 const resolutionRate = orders.length ? Math.round((completed / orders.length) * 100) : 0;
 
                 setStats({

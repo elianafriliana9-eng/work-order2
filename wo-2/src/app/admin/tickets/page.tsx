@@ -67,7 +67,7 @@ export default function AdminTicketsPage() {
     const statusFilters = ['all', 'Open', 'Execution', 'Review', 'Completed', 'Rejected'];
     const isHeadIT = role === 'head_it';
 
-    const filteredTickets = tickets.filter(t => {
+    const filteredTickets = tickets.filter((t: any) => {
         const matchesFilter = filter === 'all' || t.status === filter;
         const matchesSearch = search === '' ||
             t.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -83,7 +83,7 @@ export default function AdminTicketsPage() {
 
         if (!error) {
             setTickets(prev =>
-                prev.map(t => t.id === ticketId ? { ...t, status: 'Verified' } : t)
+                prev.map((t: any) => t.id === ticketId ? { ...t, status: 'Verified' } : t)
             );
         }
     }
@@ -99,7 +99,7 @@ export default function AdminTicketsPage() {
 
         if (!error) {
             setTickets(prev =>
-                prev.map(t => t.id === ticketId ? { ...t, status: 'Rejected', admin_notes: reason } : t)
+                prev.map((t: any) => t.id === ticketId ? { ...t, status: 'Rejected', admin_notes: reason } : t)
             );
         }
     }
@@ -132,8 +132,8 @@ export default function AdminTicketsPage() {
                             key={s}
                             onClick={() => setFilter(s)}
                             className={`px-3 py-2 text-xs font-bold rounded-lg border transition-colors ${filter === s
-                                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-transparent"
-                                    : "border-border text-muted-foreground hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-transparent"
+                                : "border-border text-muted-foreground hover:bg-zinc-50 dark:hover:bg-zinc-800"
                                 }`}
                         >
                             {s === 'all' ? 'Semua' : s}

@@ -92,9 +92,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                 {[
                     { label: "Total Ticket", value: tickets.length, icon: Layout, color: "text-zinc-500" },
-                    { label: "Dalam Antrian", value: tickets.filter(t => t.status === 'Open').length, icon: Clock, color: "text-amber-500" },
-                    { label: "Selesai", value: tickets.filter(t => t.status === 'Completed').length, icon: CheckCircle2, color: "text-green-500" },
-                    { label: "Urgent (P1)", value: tickets.filter(t => t.priority === 'P1').length, icon: AlertCircle, color: "text-red-500" },
+                    { label: "Dalam Antrian", value: tickets.filter((t: any) => t.status === 'Open').length, icon: Clock, color: "text-amber-500" },
+                    { label: "Selesai", value: tickets.filter((t: any) => t.status === 'Completed').length, icon: CheckCircle2, color: "text-green-500" },
+                    { label: "Urgent (P1)", value: tickets.filter((t: any) => t.priority === 'P1').length, icon: AlertCircle, color: "text-red-500" },
                 ].map((stat) => (
                     <div key={stat.label} className="p-6 rounded-2xl border border-border bg-white dark:bg-zinc-900 shadow-sm">
                         <div className="flex justify-between items-start mb-4">

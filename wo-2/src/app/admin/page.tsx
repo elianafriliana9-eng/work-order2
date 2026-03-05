@@ -140,20 +140,20 @@ export default function AdminDashboardPage() {
     const isHeadIT = role === ROLES.HEAD_IT;
     const stats = [
         { label: "Total Tiket", value: tickets.length, icon: Ticket, color: "text-zinc-500" },
-        { label: "Dikerjakan", value: tickets.filter(t => ['Execution', 'On Progress'].includes(t.status)).length, icon: Monitor, color: "text-blue-500" },
-        { label: "Selesai", value: tickets.filter(t => t.status === 'Completed').length, icon: CheckCircle2, color: "text-green-500" },
+        { label: "Dikerjakan", value: tickets.filter((t: any) => ['Execution', 'On Progress'].includes(t.status)).length, icon: Monitor, color: "text-blue-500" },
+        { label: "Selesai", value: tickets.filter((t: any) => t.status === 'Completed').length, icon: CheckCircle2, color: "text-green-500" },
         {
             label: isHeadIT ? "Perlu Approval" : "Dalam Review",
-            value: isHeadIT ? tickets.filter(t => t.status === 'Open').length : tickets.filter(t => t.status === 'Review').length,
+            value: isHeadIT ? tickets.filter((t: any) => t.status === 'Open').length : tickets.filter((t: any) => t.status === 'Review').length,
             icon: Clock,
             color: "text-amber-500"
         },
     ];
 
     const chartData = [
-        { name: 'Design', Total: tickets.filter(t => t.category === 'Design' && t.status === 'Completed').length },
-        { name: 'IT Dev', Total: tickets.filter(t => t.category === 'Programming' && t.status === 'Completed').length },
-        { name: 'IT Support', Total: tickets.filter(t => t.category === 'Asset' && t.status === 'Completed').length },
+        { name: 'Design', Total: tickets.filter((t: any) => t.category === 'Design' && t.status === 'Completed').length },
+        { name: 'IT Dev', Total: tickets.filter((t: any) => t.category === 'Programming' && t.status === 'Completed').length },
+        { name: 'IT Support', Total: tickets.filter((t: any) => t.category === 'Asset' && t.status === 'Completed').length },
     ];
 
     if (loading) return <div className="p-10 text-center animate-pulse">Loading dashboard...</div>;

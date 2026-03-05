@@ -347,12 +347,38 @@ export default function NewTicketPage() {
                                 <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                                     <div className="space-y-4">
                                         <h2 className="text-xl font-bold flex items-center gap-2"><FileUp size={20} className="text-primary" /> Lampiran & Review</h2>
-                                        <div className="border-2 border-dashed border-border rounded-3xl p-12 text-center relative hover:bg-zinc-50 transition-colors">
-                                            <input type="file" multiple onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                        <div className="border-2 border-dashed border-border rounded-3xl p-12 text-center relative hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                                            <input type="file" multiple onChange={handleFileChange} disabled={isUploading} className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed" />
                                             <FileUp size={32} className="mx-auto text-muted-foreground mb-4" />
                                             <p className="font-bold">Upload Referensi</p>
                                             <p className="text-xs text-muted-foreground mt-1">Gunakan file gambar, PDF, atau Word.</p>
                                         </div>
+
+                                        {/* File Preview List */}
+                                        {files.length > 0 && (
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-bold text-green-600 flex items-center gap-1.5">
+                                                    <CheckCircle2 size={14} /> {files.length} file terpilih
+                                                </p>
+                                                {files.map((file, index) => (
+                                                    <div key={index} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-border">
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
+                                                                <FileUp size={14} />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs font-bold truncate">{file.name}</p>
+                                                                <p className="text-[10px] text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                                                            </div>
+                                                        </div>
+                                                        <button type="button" onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                                                            Hapus
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
                                         <div className="flex items-start gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border">
                                             <input type="checkbox" {...register("confirmSOP")} className="mt-1" />
                                             <p className="text-xs text-muted-foreground">Saya mengonfirmasi bahwa pengerjaan dimulai setelah verifikasi Admin.</p>

@@ -29,7 +29,8 @@ export async function GET(req: NextRequest) {
 
         const apiKey = process.env.LIVEKIT_API_KEY;
         const apiSecret = process.env.LIVEKIT_API_SECRET;
-        const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
+        // Support both env var names (LIVEKIT_URL for server-side, NEXT_PUBLIC_ for client-side)
+        const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || process.env.LIVEKIT_URL;
 
         if (!apiKey || !apiSecret || !wsUrl) {
             console.error("LiveKit misconfiguration: Missing env variables.", { hasApiKey: !!apiKey, hasApiSecret: !!apiSecret, hasWsUrl: !!wsUrl });

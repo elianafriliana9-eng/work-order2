@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { LiveKitRoom, VideoConference, RoomAudioRenderer } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, AlertCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, AlertCircle, RefreshCw, Video, Users, Shield, Wifi, WifiOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-// LiveKit server URL - resolved at build time from env, with runtime fallback
 const LIVEKIT_SERVER_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://203.194.114.155:7880';
 
 export default function MeetingRoomPage() {
@@ -64,19 +64,15 @@ export default function MeetingRoomPage() {
     }, [id, router]);
 
     const handleDisconnected = useCallback(() => {
-        console.log("[Meeting] Disconnected from room. hasEverConnected:", hasEverConnected);
         setConnectionState('disconnected');
-        // Only auto-navigate if user had successfully connected before
-        // If never connected, it means connection failed - show error instead
         if (hasEverConnected) {
             router.back();
         } else {
-            setError("Koneksi ke server meeting gagal. Pastikan LiveKit server berjalan dan bisa diakses.");
+            setError("Koneksi ke server meeting gagal. Pastikan server berjalan dan bisa diakses.");
         }
     }, [hasEverConnected, router]);
 
     const handleConnected = useCallback(() => {
-        console.log("[Meeting] Successfully connected to room!");
         setConnectionState('connected');
         setHasEverConnected(true);
     }, []);
@@ -86,64 +82,134 @@ export default function MeetingRoomPage() {
         setToken("");
         setConnectionState('connecting');
         setHasEverConnected(false);
-        // Re-trigger the effect
         window.location.reload();
     };
 
+    // Error State
     if (error) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-zinc-950 text-white">
-                <div className="bg-red-500/10 border border-red-500 text-red-500 p-6 rounded-2xl max-w-md text-center">
-                    <AlertCircle size={48} className="mx-auto mb-4" />
-                    <h2 className="text-xl font-bold mb-2">Akses Ditolak</h2>
-                    <p className="text-sm">{error}</p>
-                    <div className="flex gap-3 mt-6 justify-center">
-                        <button
-                            onClick={handleRetry}
-                            className="px-6 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            <RefreshCw size={16} /> Coba Lagi
-                        </button>
-                        <button
-                            onClick={() => router.back()}
-                            className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            <ArrowLeft size={16} /> Kembali
-                        </button>
+            <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative max-w-md w-full"
+                >
+                    <div className="absolute inset-0 bg-red-500/10 blur-3xl rounded-full" />
+                    <div className="relative bg-zinc-900/80 backdrop-blur-xl border border-red-500/20 p-10 rounded-3xl text-center shadow-2xl">
+                        <div className="w-16 h-16 mx-auto mb-6 bg-red-500/10 rounded-2xl flex items-center justify-center">
+                            <WifiOff size={32} className="text-red-500" />
+                        </div>
+                        <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Koneksi Gagal</h2>
+                        <p className="text-sm text-zinc-400 leading-relaxed">{error}</p>
+                        <div className="flex gap-3 mt-8 justify-center">
+                            <button
+                                onClick={handleRetry}
+                                className="px-6 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all flex items-center gap-2 shadow-lg"
+                            >
+                                <RefreshCw size={16} /> Coba Lagi
+                            </button>
+                            <button
+                                onClick={() => router.back()}
+                                className="px-6 py-3 bg-zinc-800 text-zinc-300 rounded-xl font-bold text-sm hover:bg-zinc-700 transition-all flex items-center gap-2"
+                            >
+                                <ArrowLeft size={16} /> Kembali
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
         );
     }
 
+    // Loading State
     if (!token) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 text-white">
-                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                <p>Menyiapkan Ruangan Meeting...</p>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center"
+                >
+                    <div className="relative w-20 h-20 mx-auto mb-8">
+                        <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+                        <div className="relative w-20 h-20 bg-zinc-800/80 backdrop-blur rounded-full flex items-center justify-center border border-zinc-700">
+                            <Video size={32} className="text-primary" />
+                        </div>
+                    </div>
+                    <p className="text-white font-bold text-lg mb-2">Menyiapkan Ruangan</p>
+                    <p className="text-zinc-500 text-sm">Menghubungkan ke server meeting...</p>
+                    <div className="flex gap-1 justify-center mt-6">
+                        {[0, 1, 2].map((i) => (
+                            <motion.div
+                                key={i}
+                                className="w-2 h-2 bg-primary rounded-full"
+                                animate={{ opacity: [0.3, 1, 0.3] }}
+                                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                            />
+                        ))}
+                    </div>
+                </motion.div>
             </div>
         );
     }
 
+    // Meeting Room
     return (
-        <div className="h-screen w-full bg-zinc-950 flex flex-col overflow-hidden">
-            <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between z-10">
-                <div>
-                    <h1 className="text-white font-bold text-lg">{ticket?.title || "Meeting Room"}</h1>
-                    <p className="text-zinc-400 text-xs">
-                        Internal Video Conference • {ticket?.brand}
-                        {connectionState === 'connecting' && ' • Menghubungkan...'}
-                        {connectionState === 'connected' && ' • 🟢 Terhubung'}
-                    </p>
+        <div className="h-screen w-full bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex flex-col overflow-hidden">
+            {/* Premium Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="px-6 py-4 bg-zinc-900/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between z-10"
+            >
+                <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-primary/10 rounded-xl">
+                        <Video size={20} className="text-primary" />
+                    </div>
+                    <div>
+                        <h1 className="text-white font-bold text-base tracking-tight">{ticket?.title || "Meeting Room"}</h1>
+                        <div className="flex items-center gap-3 mt-0.5">
+                            <span className="text-zinc-500 text-xs font-medium">{ticket?.brand}</span>
+                            <AnimatePresence>
+                                {connectionState === 'connected' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20"
+                                    >
+                                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                                    </motion.div>
+                                )}
+                                {connectionState === 'connecting' && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 rounded-full border border-amber-500/20"
+                                    >
+                                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Connecting</span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
                 </div>
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm font-bold transition-colors"
-                >
-                    <ArrowLeft size={16} /> Keluar Ruangan
-                </button>
-            </div>
+                <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
+                        <Shield size={12} className="text-zinc-500" />
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Encrypted</span>
+                    </div>
+                    <button
+                        onClick={() => router.back()}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-xl text-xs font-bold transition-all border border-red-500/10 hover:border-red-500/20"
+                    >
+                        <ArrowLeft size={14} /> Keluar
+                    </button>
+                </div>
+            </motion.div>
 
+            {/* LiveKit Video Conference */}
             <div className="flex-1 relative">
                 <LiveKitRoom
                     video={true}
@@ -152,18 +218,21 @@ export default function MeetingRoomPage() {
                     serverUrl={LIVEKIT_SERVER_URL}
                     onConnected={handleConnected}
                     onDisconnected={handleDisconnected}
-                    onError={(err) => {
+                    onError={(err: any) => {
                         console.error("[Meeting] LiveKit Error:", err);
                         if (!hasEverConnected) {
-                            setError(`Koneksi gagal: ${err.message}. Pastikan LiveKit server di VPS aktif.`);
+                            setError(`Koneksi gagal: ${err.message}`);
                         }
                     }}
-                    className="h-full w-full custom-lk-theme"
+                    className="h-full w-full"
                 >
                     <VideoConference />
                     <RoomAudioRenderer />
                 </LiveKitRoom>
             </div>
+
+            {/* Bottom Gradient Fade */}
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-zinc-950/80 to-transparent pointer-events-none z-[5]" />
         </div>
     );
 }

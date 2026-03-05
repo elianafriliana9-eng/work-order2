@@ -145,6 +145,17 @@ export default function ReportSummaryPage() {
                     /* Hide web UI elements */
                     .no-print, nav, aside, header.app-header { display: none !important; }
 
+                    /* Reset main layout padding from AdminSidebar */
+                    main, .print-doc {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        position: absolute !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+
                     /* Reset page */
                     html, body {
                         background: white !important;
@@ -153,17 +164,20 @@ export default function ReportSummaryPage() {
                         line-height: 1.5 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                     }
 
-                    /* Page setup */
+                    /* Page setup for precise A4 print */
                     @page {
-                        size: A4;
-                        margin: 15mm 20mm;
+                        size: A4 portrait;
+                        margin: 15mm;
                     }
 
-                    /* The print container */
-                    .print-doc {
-                        max-width: 100% !important;
+                    /* Important to stop body from shrinking or shifting */
+                    #__next, body > div {
+                        display: block !important;
+                        width: 100% !important;
                         padding: 0 !important;
                         margin: 0 !important;
                     }

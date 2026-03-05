@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { LiveKitRoom, VideoConference, RoomAudioRenderer } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, RefreshCw } from "lucide-react";
+
+// LiveKit server URL - resolved at build time from env, with runtime fallback
+const LIVEKIT_SERVER_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://203.194.114.155:7880';
 
 export default function MeetingRoomPage() {
     const { id } = useParams();
@@ -13,13 +16,14 @@ export default function MeetingRoomPage() {
     const [token, setToken] = useState("");
     const [ticket, setTicket] = useState<any>(null);
     const [error, setError] = useState("");
+    const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+    const [hasEverConnected, setHasEverConnected] = useState(false);
 
     useEffect(() => {
         if (!id) return;
 
         async function initializeMeeting() {
             try {
-                // 1. Get user identity
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
                     router.push('/login');
@@ -29,7 +33,6 @@ export default function MeetingRoomPage() {
                 const username = user.user_metadata?.full_name || user.email?.split('@')[0] || "User";
                 const userId = user.id;
 
-                // 2. Verify ticket
                 const { data: woData, error: woError } = await supabase
                     .from('work_orders')
                     .select('*')
@@ -38,14 +41,12 @@ export default function MeetingRoomPage() {
 
                 if (woError || !woData) throw new Error("Tiket tidak ditemukan.");
 
-                // Add basic check if meeting is supposed to be online
                 if (woData.meeting_type !== 'Online') {
                     throw new Error("Tiket ini tidak dijadwalkan untuk Online Meeting.");
                 }
 
                 setTicket(woData);
 
-                // 3. Request LiveKit Token
                 const roomName = `ticket-${id}`;
                 const res = await fetch(`/api/livekit?room=${roomName}&username=${encodeURIComponent(username)}&userId=${encodeURIComponent(userId)}`);
                 const data = await res.json();
@@ -62,18 +63,54 @@ export default function MeetingRoomPage() {
         initializeMeeting();
     }, [id, router]);
 
+    const handleDisconnected = useCallback(() => {
+        console.log("[Meeting] Disconnected from room. hasEverConnected:", hasEverConnected);
+        setConnectionState('disconnected');
+        // Only auto-navigate if user had successfully connected before
+        // If never connected, it means connection failed - show error instead
+        if (hasEverConnected) {
+            router.back();
+        } else {
+            setError("Koneksi ke server meeting gagal. Pastikan LiveKit server berjalan dan bisa diakses.");
+        }
+    }, [hasEverConnected, router]);
+
+    const handleConnected = useCallback(() => {
+        console.log("[Meeting] Successfully connected to room!");
+        setConnectionState('connected');
+        setHasEverConnected(true);
+    }, []);
+
+    const handleRetry = () => {
+        setError("");
+        setToken("");
+        setConnectionState('connecting');
+        setHasEverConnected(false);
+        // Re-trigger the effect
+        window.location.reload();
+    };
+
     if (error) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-zinc-950 text-white">
                 <div className="bg-red-500/10 border border-red-500 text-red-500 p-6 rounded-2xl max-w-md text-center">
+                    <AlertCircle size={48} className="mx-auto mb-4" />
                     <h2 className="text-xl font-bold mb-2">Akses Ditolak</h2>
-                    <p>{error}</p>
-                    <button
-                        onClick={() => router.back()}
-                        className="mt-6 px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors flex items-center gap-2 mx-auto"
-                    >
-                        <ArrowLeft size={16} /> Kembali
-                    </button>
+                    <p className="text-sm">{error}</p>
+                    <div className="flex gap-3 mt-6 justify-center">
+                        <button
+                            onClick={handleRetry}
+                            className="px-6 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <RefreshCw size={16} /> Coba Lagi
+                        </button>
+                        <button
+                            onClick={() => router.back()}
+                            className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <ArrowLeft size={16} /> Kembali
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -93,7 +130,11 @@ export default function MeetingRoomPage() {
             <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between z-10">
                 <div>
                     <h1 className="text-white font-bold text-lg">{ticket?.title || "Meeting Room"}</h1>
-                    <p className="text-zinc-400 text-xs">Internal Video Conference • {ticket?.brand}</p>
+                    <p className="text-zinc-400 text-xs">
+                        Internal Video Conference • {ticket?.brand}
+                        {connectionState === 'connecting' && ' • Menghubungkan...'}
+                        {connectionState === 'connected' && ' • 🟢 Terhubung'}
+                    </p>
                 </div>
                 <button
                     onClick={() => router.back()}
@@ -104,29 +145,24 @@ export default function MeetingRoomPage() {
             </div>
 
             <div className="flex-1 relative">
-                {!process.env.NEXT_PUBLIC_LIVEKIT_URL ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-red-500">
-                        <AlertCircle size={48} className="mb-4" />
-                        <h2 className="text-xl font-bold">Error: Server URL is missing</h2>
-                        <p className="max-w-md text-center text-sm mt-2 opacity-80">NEXT_PUBLIC_LIVEKIT_URL environment variable is not defined on the client. Please check your .env configuration and rebuild the app.</p>
-                    </div>
-                ) : (
-                    <LiveKitRoom
-                        video={true}
-                        audio={true}
-                        token={token}
-                        serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-                        onDisconnected={() => {
-                            console.log("Disconnected from room.");
-                            alert("Anda telah terputus atau keluar dari ruangan (Disconnected).");
-                            router.back();
-                        }}
-                        className="h-full w-full custom-lk-theme"
-                    >
-                        <VideoConference />
-                        <RoomAudioRenderer />
-                    </LiveKitRoom>
-                )}
+                <LiveKitRoom
+                    video={true}
+                    audio={true}
+                    token={token}
+                    serverUrl={LIVEKIT_SERVER_URL}
+                    onConnected={handleConnected}
+                    onDisconnected={handleDisconnected}
+                    onError={(err) => {
+                        console.error("[Meeting] LiveKit Error:", err);
+                        if (!hasEverConnected) {
+                            setError(`Koneksi gagal: ${err.message}. Pastikan LiveKit server di VPS aktif.`);
+                        }
+                    }}
+                    className="h-full w-full custom-lk-theme"
+                >
+                    <VideoConference />
+                    <RoomAudioRenderer />
+                </LiveKitRoom>
             </div>
         </div>
     );

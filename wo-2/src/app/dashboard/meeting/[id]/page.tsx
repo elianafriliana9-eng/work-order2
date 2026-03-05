@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { 
-    LiveKitRoom, 
-    VideoConference, 
-    GridLayout, 
+import {
+    LiveKitRoom,
+    VideoConference,
+    GridLayout,
     ParticipantTile,
     RoomAudioRenderer,
     ControlBar,
@@ -13,8 +13,10 @@ import {
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { Track } from "livekit-client";
-import { ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldAlert, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+
+const LIVEKIT_SERVER_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://203.194.114.155:7880';
 
 export default function MeetingPage() {
     const { id: roomName } = useParams();
@@ -22,6 +24,7 @@ export default function MeetingPage() {
     const [token, setToken] = useState<string | null>(null);
     const [userName, setUserName] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
+    const [hasConnected, setHasConnected] = useState(false);
 
     useEffect(() => {
         async function prepareMeeting() {
@@ -60,7 +63,7 @@ export default function MeetingPage() {
                     <ShieldAlert className="text-red-500 mx-auto mb-4" size={48} />
                     <h2 className="text-xl font-bold text-red-400 mb-2">Waduh, Gagal Connect!</h2>
                     <p className="text-sm text-zinc-400 mb-6">{error}</p>
-                    <button 
+                    <button
                         onClick={() => router.back()}
                         className="px-6 py-3 bg-white text-black rounded-xl font-bold text-sm"
                     >
@@ -84,7 +87,7 @@ export default function MeetingPage() {
         <div className="h-screen bg-zinc-950 flex flex-col overflow-hidden">
             {/* Simple Header */}
             <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/40 backdrop-blur-md">
-                <button 
+                <button
                     onClick={() => router.back()}
                     className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm font-bold"
                 >
@@ -102,13 +105,24 @@ export default function MeetingPage() {
                     video={true}
                     audio={true}
                     token={token}
-                    serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-                    onDisconnected={() => router.back()}
+                    serverUrl={LIVEKIT_SERVER_URL}
+                    onConnected={() => setHasConnected(true)}
+                    onDisconnected={() => {
+                        if (hasConnected) {
+                            router.back();
+                        } else {
+                            setError("Koneksi ke LiveKit server gagal. Pastikan server di VPS aktif.");
+                        }
+                    }}
+                    onError={(err) => {
+                        console.error("[Meeting] LiveKit Error:", err);
+                        if (!hasConnected) setError(`Koneksi gagal: ${err.message}`);
+                    }}
                     className="h-full"
                 >
                     {/* The specialized LiveKit component for a full conference UI */}
                     <VideoConference />
-                    
+
                     {/* Audio renderer is required for audio playback */}
                     <RoomAudioRenderer />
                 </LiveKitRoom>

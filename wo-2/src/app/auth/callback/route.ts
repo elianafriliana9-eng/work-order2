@@ -7,70 +7,64 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code')
     const origin = requestUrl.origin
 
-    console.log("[Auth Callback] Request received:", request.url)
-    console.log("[Auth Callback] Code present:", !!code)
-    console.log("[Auth Callback] Origin determined:", origin)
+    if (!code) {
+        return NextResponse.redirect(new URL('/login?error=no_code', origin))
+    }
 
-    if (code) {
+    try {
         const cookieStore = await cookies()
 
-        const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
-        const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
+        // CRITICAL: Collect cookies during exchange to apply on redirect response
+        const cookiesToSet: { name: string; value: string; options: CookieOptions }[] = []
 
         const supabase = createServerClient(
-            supabaseUrl || 'https://ropwebyycwvsvdrbgnpn.supabase.co',
-            supabaseKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8',
+            process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ropwebyycwvsvdrbgnpn.supabase.co',
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcHdlYnl5Y3d2c3ZkcmJnbnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTMxNDYsImV4cCI6MjA4NzU4OTE0Nn0.5VjxWZIed4027LDggBLk63xujPPuXpxoSbva2pkI5V8',
             {
                 cookies: {
                     get(name: string) {
                         return cookieStore.get(name)?.value
                     },
                     set(name: string, value: string, options: CookieOptions) {
-                        cookieStore.set({ name, value, ...options })
+                        // DO NOT use cookieStore.set() here - it won't persist on redirect!
+                        // Instead, collect and apply to the response object later.
+                        cookiesToSet.push({ name, value, options })
                     },
                     remove(name: string, options: CookieOptions) {
-                        cookieStore.set({ name, value: '', ...options })
+                        cookiesToSet.push({ name, value: '', options: { ...options, maxAge: 0 } })
                     },
                 },
             }
         )
 
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        
-        if (error) {
-            console.error("[Auth Callback] Exchange Error:", error.message)
+
+        if (error || !data?.user) {
+            console.error('[Auth Callback] Exchange failed:', error?.message)
+            return NextResponse.redirect(new URL('/login?error=exchange_failed', origin))
         }
 
-        if (!error && data?.user) {
-            console.log("[Auth Callback] User Authenticated:", data.user.id)
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', data.user.id)
-                .maybeSingle()
+        // Determine redirect based on role
+        let redirectPath = '/dashboard'
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .maybeSingle()
 
-            console.log("[Auth Callback] Profile Role:", profile?.role)
-
-            const isAdmin = profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)
-            const redirectPath = isAdmin ? '/admin' : '/dashboard'
-
-            console.log("[Auth Callback] Redirecting to:", redirectPath)
-            const response = NextResponse.redirect(new URL(redirectPath, origin).toString())
-            
-            // Ensure cookies are correctly transferred to the redirect response
-            const allCookies = cookieStore.getAll()
-            allCookies.forEach((cookie) => {
-                response.cookies.set(cookie.name, cookie.value, {
-                    ...cookie,
-                    sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production',
-                })
-            })
-
-            return response
+        if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+            redirectPath = '/admin'
         }
+
+        // Create redirect and APPLY ALL collected cookies to the response
+        const response = NextResponse.redirect(new URL(redirectPath, origin))
+        for (const cookie of cookiesToSet) {
+            response.cookies.set(cookie.name, cookie.value, cookie.options)
+        }
+
+        return response
+    } catch (err) {
+        console.error('[Auth Callback] Fatal:', err)
+        return NextResponse.redirect(new URL('/login?error=exception', origin))
     }
-
-    console.warn("[Auth Callback] No code or user found, redirecting to login")
-    return NextResponse.redirect(new URL('/login?error=auth_failed', origin).toString())
 }

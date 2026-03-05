@@ -12,6 +12,8 @@ import {
     Timer,
     FileText,
     BarChart3,
+    Video,
+    Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -74,6 +76,7 @@ const QuickActionLink = ({ href, icon: Icon, title, description, isPrimary = fal
 export default function AdminDashboardPage() {
     const [tickets, setTickets] = useState<TicketData[]>([]);
     const [reports, setReports] = useState<ReportData[]>([]);
+    const [meetings, setMeetings] = useState<any[]>([]);
     const [role, setRole] = useState<string>("");
     const [userName, setUserName] = useState("");
     const [loading, setLoading] = useState(true);
@@ -103,7 +106,17 @@ export default function AdminDashboardPage() {
                 }
 
                 const { data: ticketData } = await ticketQuery.order('created_at', { ascending: false });
-                if (ticketData) setTickets(ticketData);
+                if (ticketData) {
+                    setTickets(ticketData);
+
+                    // Online meetings
+                    setMeetings(
+                        ticketData.filter((t: any) =>
+                            t.meeting_type === 'Online' &&
+                            !['Completed', 'Rejected'].includes(t.status)
+                        )
+                    );
+                }
 
                 // Fetch reports if not Head IT (personal)
                 if (userRole !== ROLES.HEAD_IT) {
@@ -191,6 +204,40 @@ export default function AdminDashboardPage() {
                                 <Bar dataKey="Total" fill="var(--primary)" radius={[4, 4, 0, 0]} barSize={40} />
                             </BarChart>
                         </ResponsiveContainer>
+                    </div>
+                </section>
+            )}
+
+            {/* Meeting Hari Ini */}
+            {meetings.length > 0 && (
+                <section>
+                    <div className="flex items-center gap-2 mb-5">
+                        <Video size={20} className="text-blue-500" />
+                        <h2 className="text-lg font-bold">Meeting Online</h2>
+                        <span className="text-xs font-bold px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 rounded-full">{meetings.length}</span>
+                    </div>
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-border shadow-sm overflow-hidden divide-y divide-border">
+                        {meetings.map((m: any) => (
+                            <div key={m.id} className="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-[10px] font-mono text-muted-foreground">#{m.ticket_number}</span>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getStatusColor(m.status)}`}>{m.status}</span>
+                                    </div>
+                                    <p className="text-sm font-bold truncate">{m.title}</p>
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                        <Calendar size={10} /> {m.brand}
+                                        {m.meeting_date && ` — ${new Date(m.meeting_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`}
+                                    </p>
+                                </div>
+                                <Link
+                                    href={`/dashboard/ticket/${m.id}/meet`}
+                                    className="text-xs font-bold px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-1.5 shrink-0"
+                                >
+                                    <Video size={12} /> Join
+                                </Link>
+                            </div>
+                        ))}
                     </div>
                 </section>
             )}

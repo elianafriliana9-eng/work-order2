@@ -21,6 +21,7 @@ import {
     PieChart, Pie, Cell, Area, AreaChart,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
+import { generateReportPDF } from "./generateReportPDF";
 
 const COLORS = ['#8b5cf6', '#f472b6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -30,6 +31,7 @@ export default function ReportSummaryPage() {
     const [profiles, setProfiles] = useState<Record<string, any>>({});
     const [allTickets, setAllTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
 
     useEffect(() => {
@@ -153,9 +155,32 @@ export default function ReportSummaryPage() {
     allTickets.forEach(t => { catFreq[t.category || 'Lainnya'] = (catFreq[t.category || 'Lainnya'] || 0) + 1; });
     const catFreqData = Object.entries(catFreq).map(([name, count]) => ({ name, count }));
 
-    const summaryText = `Pada tanggal ${new Date(reportDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, terdapat ${reports.length} laporan harian dari ${uniqueMembers.length} anggota tim. Rata-rata progress keseluruhan adalah ${avgProgress}%. ${tickets.length > 0 ? `Terdapat ${tickets.length} project/tiket yang sedang dikerjakan, meliputi kategori ${Object.keys(categoryCount).join(', ')}.` : 'Tidak ada tiket terkait yang dilaporkan.'} ${memberProgress.filter(m => m.avg >= 80).length > 0 ? `${memberProgress.filter(m => m.avg >= 80).map(m => m.name).join(', ')} menunjukkan progress di atas 80%.` : ''} Total tiket yang masuk sejak awal hingga saat ini adalah ${allTickets.length} tiket.`;
+    const summaryText = `Pada tanggal ${new Date(reportDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, terdapat ${reports.length} laporan harian dari ${uniqueMembers.length} anggota tim. Rata-rata progress keseluruhan adalah ${avgProgress}%. ${tickets.length > 0 ? `Terdapat ${tickets.length} project/tiket yang sedang dikerjakan, meliputi kategori ${Object.keys(categoryCount).join(', ')}.` : 'Tidak ada tiket terkait yang dilaporkan.'} ${memberProgress.filter((m: any) => m.avg >= 80).length > 0 ? `${memberProgress.filter((m: any) => m.avg >= 80).map((m: any) => m.name).join(', ')} menunjukkan progress di atas 80%.` : ''} Total tiket yang masuk sejak awal hingga saat ini adalah ${allTickets.length} tiket.`;
 
     const generatedAt = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            await generateReportPDF({
+                reportDate,
+                avgProgress,
+                reports,
+                uniqueMembers,
+                tickets,
+                categoryCount,
+                allTickets,
+                memberProgress,
+                roleLabels,
+                summaryText,
+                profiles
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     return (
         <>
@@ -312,10 +337,12 @@ export default function ReportSummaryPage() {
                         <ArrowLeft size={16} /> Kembali ke Laporan
                     </Link>
                     <button
-                        onClick={() => window.print()}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-all"
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50"
                     >
-                        <Download size={14} /> Export PDF
+                        {isExporting ? <span className="animate-spin w-4 h-4 border-2 border-white dark:border-zinc-900 border-t-transparent rounded-full" /> : <Download size={14} />}
+                        {isExporting ? 'Memproses PDF...' : 'Download PDF'}
                     </button>
                 </div>
                 <p className="text-xs text-muted-foreground">Preview di bawah ini akan terformat sebagai dokumen profesional saat di-export ke PDF.</p>
@@ -597,48 +624,50 @@ export default function ReportSummaryPage() {
                     </div>
                 </div>
 
-                {/* Section 5: Individual Reports */}
-                <div className="print-break-before mt-8">
-                    <h2 className="text-sm font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-border pb-2">
-                        <span className="w-1 h-4 bg-green-500 rounded-full inline-block" />
-                        LAMPIRAN — DETAIL LAPORAN HARIAN ({reports.length})
-                    </h2>
-                    <div className="space-y-4">
-                        {reports.map((report, i) => (
-                            <div key={report.id} className="doc-report-item bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
-                                <div className="flex items-center justify-between gap-4 mb-2">
-                                    <div>
-                                        <span className="text-xs font-bold">{profiles[report.user_id]?.full_name || report.user_id?.substring(0, 8)}</span>
-                                        <span className="text-[10px] text-muted-foreground ml-2">{roleLabels[profiles[report.user_id]?.role] || ''}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2 w-14 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                            <div className="progress-fill h-full rounded-full bg-violet-500" style={{ width: `${report.progress_pct}%` }} />
-                                        </div>
-                                        <span className="text-[10px] font-bold tabular-nums">{report.progress_pct}%</span>
-                                    </div>
-                                </div>
-                                {report.work_orders && (
-                                    <p className="text-[10px] font-bold text-muted-foreground mb-1">
-                                        Tiket #{report.work_orders.ticket_number} — {report.work_orders.title} ({report.work_orders.brand})
-                                    </p>
-                                )}
-                                <p className="text-xs leading-relaxed whitespace-pre-wrap">{report.content}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            </div>
+            {/* END CHARTS CONTAINER */}
 
-                {/* Document Footer */}
-                <div className="doc-footer mt-10 border-t-2 border-zinc-900 dark:border-zinc-100 pt-4 flex items-end justify-between print-break-avoid">
-                    <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Dokumen ini digenerate otomatis</p>
-                        <p className="text-[10px] text-muted-foreground">Work Order System — {generatedAt}</p>
-                    </div>
-                    <div className="text-center w-48">
-                        <p className="text-xs font-bold mb-12">Mengetahui,</p>
-                        <p className="text-xs border-t border-zinc-400 pt-1">Head of IT</p>
-                    </div>
+            {/* Section 5: Individual Reports */}
+            <div className="print-break-before mt-8">
+                <h2 className="text-sm font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-border pb-2">
+                    <span className="w-1 h-4 bg-green-500 rounded-full inline-block" />
+                    LAMPIRAN — DETAIL LAPORAN HARIAN ({reports.length})
+                </h2>
+                <div className="space-y-4">
+                    {reports.map((report, i) => (
+                        <div key={report.id} className="doc-report-item bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
+                            <div className="flex items-center justify-between gap-4 mb-2">
+                                <div>
+                                    <span className="text-xs font-bold">{profiles[report.user_id]?.full_name || report.user_id?.substring(0, 8)}</span>
+                                    <span className="text-[10px] text-muted-foreground ml-2">{roleLabels[profiles[report.user_id]?.role] || ''}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="h-2 w-14 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                                        <div className="progress-fill h-full rounded-full bg-violet-500" style={{ width: `${report.progress_pct}%` }} />
+                                    </div>
+                                    <span className="text-[10px] font-bold tabular-nums">{report.progress_pct}%</span>
+                                </div>
+                            </div>
+                            {report.work_orders && (
+                                <p className="text-[10px] font-bold text-muted-foreground mb-1">
+                                    Tiket #{report.work_orders.ticket_number} — {report.work_orders.title} ({report.work_orders.brand})
+                                </p>
+                            )}
+                            <p className="text-xs leading-relaxed whitespace-pre-wrap">{report.content}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Document Footer */}
+            <div className="doc-footer mt-10 border-t-2 border-zinc-900 dark:border-zinc-100 pt-4 flex items-end justify-between print-break-avoid">
+                <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Dokumen ini digenerate otomatis</p>
+                    <p className="text-[10px] text-muted-foreground">Work Order System — {generatedAt}</p>
+                </div>
+                <div className="text-center w-48">
+                    <p className="text-xs font-bold mb-12">Mengetahui,</p>
+                    <p className="text-xs border-t border-zinc-400 pt-1">Head of IT</p>
                 </div>
             </div>
         </>

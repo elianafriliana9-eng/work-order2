@@ -55,9 +55,9 @@ export default function ITDevelopmentPage() {
                     setTickets(data);
                     setStats({
                         total: data.length,
-                        active: data.filter(t => ['Open', 'Verified', 'Execution', 'Review'].includes(t.status)).length,
-                        completed: data.filter(t => t.status === 'Completed').length,
-                        bugs: data.filter(t => t.taskType === 'Bug Fix').length,
+                        active: data.filter((t: any) => ['Open', 'Verified', 'Execution', 'Review'].includes(t.status)).length,
+                        completed: data.filter((t: any) => t.status === 'Completed').length,
+                        bugs: data.filter((t: any) => t.taskType === 'Bug Fix').length,
                     });
                 }
             } catch (error) {

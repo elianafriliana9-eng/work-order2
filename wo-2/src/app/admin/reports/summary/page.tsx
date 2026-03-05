@@ -432,8 +432,7 @@ export default function ReportSummaryPage() {
                     <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
                         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Grafik Progress per Anggota</h3>
 
-                        {/* Screen Version */}
-                        <div className="no-print h-[220px]">
+                        <div className="h-[220px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={memberProgress} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
@@ -443,16 +442,6 @@ export default function ReportSummaryPage() {
                                     <Bar dataKey="avg" name="Progress %" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} />
                                 </BarChart>
                             </ResponsiveContainer>
-                        </div>
-
-                        {/* Print Version */}
-                        <div className="print-only w-full flex justify-center py-2">
-                            <BarChart width={580} height={200} data={memberProgress} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                                <Bar dataKey="avg" name="Progress %" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} isAnimationActive={false} />
-                            </BarChart>
                         </div>
                     </div>
                 </div>
@@ -504,8 +493,7 @@ export default function ReportSummaryPage() {
                         <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
                             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Frekuensi Tiket per Bulan</h3>
 
-                            {/* Screen Version */}
-                            <div className="no-print h-[200px]">
+                            <div className="h-[200px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={frequencyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                                         <defs>
@@ -522,22 +510,6 @@ export default function ReportSummaryPage() {
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
-
-                            {/* Print Version */}
-                            <div className="print-only w-full flex justify-center">
-                                <AreaChart width={270} height={160} data={frequencyData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="colorCountP" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                    <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                                    <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <Area type="monotone" dataKey="count" name="Tiket Masuk" stroke="#3b82f6" strokeWidth={2} fill="url(#colorCountP)" isAnimationActive={false} />
-                                </AreaChart>
-                            </div>
                         </div>
 
                         {/* Category Pie */}
@@ -545,8 +517,7 @@ export default function ReportSummaryPage() {
                             <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
                                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Distribusi Kategori</h3>
 
-                                {/* Screen Version */}
-                                <div className="no-print h-[200px]">
+                                <div className="h-[200px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={40} paddingAngle={3} label={({ name, value }) => `${name} (${value})`}>
@@ -558,17 +529,6 @@ export default function ReportSummaryPage() {
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-
-                                {/* Print Version */}
-                                <div className="print-only w-full flex justify-center">
-                                    <PieChart width={270} height={160} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                                        <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={30} paddingAngle={3} labelLine={false} label={({ name, value }) => `${name} (${value})`} isAnimationActive={false}>
-                                            {categoryData.map((_, idx) => (
-                                                <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                    </PieChart>
-                                </div>
                             </div>
                         )}
 
@@ -576,8 +536,7 @@ export default function ReportSummaryPage() {
                         <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4 print-break-avoid">
                             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Total Tiket per Kategori</h3>
 
-                            {/* Screen Version */}
-                            <div className="no-print h-[200px]">
+                            <div className="h-[200px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={catFreqData} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
@@ -587,16 +546,6 @@ export default function ReportSummaryPage() {
                                         <Bar dataKey="count" name="Total" fill="#f472b6" radius={[0, 4, 4, 0]} barSize={20} />
                                     </BarChart>
                                 </ResponsiveContainer>
-                            </div>
-
-                            {/* Print Version */}
-                            <div className="print-only w-full flex justify-center">
-                                <BarChart width={270} height={160} data={catFreqData} layout="vertical" margin={{ top: 5, right: 15, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                                    <XAxis type="number" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} width={60} />
-                                    <Bar dataKey="count" name="Total" fill="#f472b6" radius={[0, 4, 4, 0]} barSize={16} isAnimationActive={false} />
-                                </BarChart>
                             </div>
                         </div>
 

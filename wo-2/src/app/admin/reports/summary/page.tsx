@@ -30,9 +30,29 @@ export default function ReportSummaryPage() {
     const [profiles, setProfiles] = useState<Record<string, any>>({});
     const [allTickets, setAllTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isPrinting, setIsPrinting] = useState(false);
 
     useEffect(() => {
         loadSummaryData();
+
+        // Listen for print events to fix Recharts rendering
+        const mediaQueryList = window.matchMedia('print');
+        const printListener = (mql: MediaQueryListEvent) => setIsPrinting(mql.matches);
+
+        // Firefox/Safari back-compat
+        if (mediaQueryList.addListener) {
+            mediaQueryList.addListener(printListener);
+        } else {
+            mediaQueryList.addEventListener('change', printListener);
+        }
+
+        return () => {
+            if (mediaQueryList.removeListener) {
+                mediaQueryList.removeListener(printListener);
+            } else {
+                mediaQueryList.removeEventListener('change', printListener);
+            }
+        };
     }, []);
 
     async function loadSummaryData() {
@@ -152,17 +172,19 @@ export default function ReportSummaryPage() {
 
                     /* Reset main layout padding from AdminSidebar to prevent squeezing */
                     main {
-                        padding-left: 0 !important;
-                        margin-left: 0 !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
                         width: 100% !important;
                         max-width: 100% !important;
+                        background: white !important;
                     }
 
                     .print-doc {
-                        padding: 0 !important;
-                        margin: 0 !important;
+                        padding: 0 10mm !important;
+                        margin: 0 auto !important;
                         max-width: 100% !important;
                         width: 100% !important;
+                        background: white !important;
                     }
 
                     /* Reset page */
@@ -190,16 +212,15 @@ export default function ReportSummaryPage() {
                         width: 100% !important;
                         padding: 0 !important;
                         margin: 0 !important;
+                        background: white !important;
                     }
 
                     /* Fix chart overflows in Recharts during print */
-                    .recharts-responsive-container {
-                        width: 100% !important;
-                        min-width: 100% !important;
-                    }
                     .recharts-wrapper {
-                        width: 100% !important;
                         margin: 0 auto !important;
+                    }
+                    .recharts-surface {
+                        overflow: visible !important;
                     }
 
                     table {
@@ -380,16 +401,25 @@ export default function ReportSummaryPage() {
                     {/* Progress Bar Chart */}
                     <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
                         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Grafik Progress per Anggota</h3>
-                        <div className="h-[220px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={memberProgress} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                        <div className="w-full flex justify-center py-2" style={{ height: isPrinting ? '200px' : '220px' }}>
+                            {isPrinting ? (
+                                <BarChart width={550} height={200} data={memberProgress} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
                                     <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                                    <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
-                                    <Bar dataKey="avg" name="Progress %" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} />
+                                    <Bar dataKey="avg" name="Progress %" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} isAnimationActive={false} />
                                 </BarChart>
-                            </ResponsiveContainer>
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={memberProgress} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                                        <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                                        <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
+                                        <Bar dataKey="avg" name="Progress %" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -438,11 +468,11 @@ export default function ReportSummaryPage() {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Monthly Frequency */}
-                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
-                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Frekuensi Tiket per Bulan</h3>
-                            <div className="h-[200px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={frequencyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
+                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Frekuensi Tiket per Bulan</h3>
+                            <div className="w-full flex justify-center" style={{ height: isPrinting ? '160px' : '200px' }}>
+                                {isPrinting ? (
+                                    <AreaChart width={280} height={160} data={frequencyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
@@ -452,45 +482,79 @@ export default function ReportSummaryPage() {
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                                         <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} />
                                         <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
-                                        <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
-                                        <Area type="monotone" dataKey="count" name="Tiket Masuk" stroke="#3b82f6" strokeWidth={2} fill="url(#colorCount)" />
+                                        <Area type="monotone" dataKey="count" name="Tiket Masuk" stroke="#3b82f6" strokeWidth={2} fill="url(#colorCount)" isAnimationActive={false} />
                                     </AreaChart>
-                                </ResponsiveContainer>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={frequencyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                                            <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                                            <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
+                                            <Area type="monotone" dataKey="count" name="Tiket Masuk" stroke="#3b82f6" strokeWidth={2} fill="url(#colorCount)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
                         </div>
 
                         {/* Category Pie */}
                         {categoryData.length > 0 && (
-                            <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
-                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Distribusi Kategori</h3>
-                                <div className="h-[200px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={40} paddingAngle={3} label={({ name, value }) => `${name} (${value})`}>
+                            <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
+                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Distribusi Kategori</h3>
+                                <div className="w-full flex justify-center" style={{ height: isPrinting ? '160px' : '200px' }}>
+                                    {isPrinting ? (
+                                        <PieChart width={280} height={160}>
+                                            <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={30} paddingAngle={3} label={({ name, value }) => `${name} (${value})`} isAnimationActive={false}>
                                                 {categoryData.map((_, idx) => (
                                                     <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                                                 ))}
                                             </Pie>
-                                            <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
                                         </PieChart>
-                                    </ResponsiveContainer>
+                                    ) : (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={40} paddingAngle={3} label={({ name, value }) => `${name} (${value})`}>
+                                                    {categoryData.map((_, idx) => (
+                                                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    )}
                                 </div>
                             </div>
                         )}
 
                         {/* Category Frequency Bar */}
-                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-5">
-                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Total Tiket per Kategori</h3>
-                            <div className="h-[200px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={catFreqData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                        <div className="doc-chart bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
+                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Total Tiket per Kategori</h3>
+                            <div className="w-full flex justify-center" style={{ height: isPrinting ? '160px' : '200px' }}>
+                                {isPrinting ? (
+                                    <BarChart width={280} height={160} data={catFreqData} layout="vertical" margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
                                         <XAxis type="number" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
                                         <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} width={70} />
-                                        <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
-                                        <Bar dataKey="count" name="Total" fill="#f472b6" radius={[0, 4, 4, 0]} barSize={20} />
+                                        <Bar dataKey="count" name="Total" fill="#f472b6" radius={[0, 4, 4, 0]} barSize={16} isAnimationActive={false} />
                                     </BarChart>
-                                </ResponsiveContainer>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={catFreqData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                                            <XAxis type="number" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                                            <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} width={70} />
+                                            <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }} />
+                                            <Bar dataKey="count" name="Total" fill="#f472b6" radius={[0, 4, 4, 0]} barSize={20} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
                         </div>
 
@@ -519,12 +583,12 @@ export default function ReportSummaryPage() {
                 </div>
 
                 {/* Section 5: Individual Reports */}
-                <div className="print-break-before">
+                <div className="print-break-before mt-8">
                     <h2 className="text-sm font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-border pb-2">
                         <span className="w-1 h-4 bg-green-500 rounded-full inline-block" />
                         LAMPIRAN — DETAIL LAPORAN HARIAN ({reports.length})
                     </h2>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {reports.map((report, i) => (
                             <div key={report.id} className="doc-report-item bg-white dark:bg-zinc-900 rounded-xl border border-border shadow-sm p-4">
                                 <div className="flex items-center justify-between gap-4 mb-2">

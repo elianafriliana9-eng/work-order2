@@ -71,8 +71,8 @@ export default function LandingPage() {
         if (error) {
           console.warn("Stats restricted by RLS, using defaults.");
         } else if (woData) {
-          const activeCount = woData.filter(d => d.status !== 'Completed' && d.status !== 'Rejected').length;
-          const completed = woData.filter(d => d.status === 'Completed');
+          const activeCount = woData.filter((d: any) => d.status !== 'Completed' && d.status !== 'Rejected').length;
+          const completed = woData.filter((d: any) => d.status === 'Completed');
           let avgDays = "0";
           if (completed.length > 0) {
             const totalMs = completed.reduce((acc: any, curr: any) => {

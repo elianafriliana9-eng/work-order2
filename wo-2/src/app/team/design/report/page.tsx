@@ -15,6 +15,7 @@ export default function DesignReportPage() {
     const [tickets, setTickets] = useState<any[]>([]);
     const [selectedTicket, setSelectedTicket] = useState("");
     const [content, setContent] = useState("");
+    const [blockers, setBlockers] = useState("");
     const [progress, setProgress] = useState(0);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -54,6 +55,7 @@ export default function DesignReportPage() {
                 user_id: user.id,
                 wo_id: selectedTicket || null,
                 content: content.trim(),
+                blockers: blockers.trim() || null,
                 progress_pct: progress,
             }]);
 
@@ -135,10 +137,24 @@ export default function DesignReportPage() {
                     <textarea
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        rows={6}
-                        placeholder="Apa saja yang Anda kerjakan hari ini? Jelaskan progress, kendala, dan rencana selanjutnya..."
+                        rows={5}
+                        placeholder="Apa saja yang Anda kerjakan hari ini? Jelaskan progress, dan rencana selanjutnya..."
                         className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                         required
+                    />
+                </div>
+
+                {/* Blockers */}
+                <div>
+                    <label className="block text-sm font-bold mb-2">
+                        Kendala (Blockers) <span className="text-muted-foreground font-normal">(opsional)</span>
+                    </label>
+                    <textarea
+                        value={blockers}
+                        onChange={(e) => setBlockers(e.target.value)}
+                        rows={3}
+                        placeholder="Sebutkan kendala atau tantangan jika ada..."
+                        className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                     />
                 </div>
 

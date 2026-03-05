@@ -44,11 +44,11 @@ export default function DesignTeamDashboard() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
 
-                // Fetch tickets assigned to designer
-                const { data: assigned } = await supabase
+                // Fetch ALL design category tickets for real stats
+                const { data: allDesign } = await supabase
                     .from('work_orders')
                     .select('*')
-                    .or(`assigned_to.eq.${user.id},assigned_role.eq.designer`)
+                    .eq('category', 'Design')
                     .order('created_at', { ascending: false });
 
                 // Fetch design queue (verified, ready to work)
@@ -59,7 +59,7 @@ export default function DesignTeamDashboard() {
                     .eq('status', 'Verified')
                     .order('created_at', { ascending: false });
 
-                const tickets = assigned || [];
+                const tickets = allDesign || [];
                 const queueTickets = queue || [];
 
                 setStats({
@@ -69,7 +69,7 @@ export default function DesignTeamDashboard() {
                     queue: queueTickets.length,
                 });
 
-                // My active tickets
+                // Active tickets (not completed/rejected)
                 setMyTickets(
                     tickets.filter((t: any) => ['Execution', 'Verified', 'Review', 'Open'].includes(t.status)).slice(0, 5)
                 );
@@ -79,7 +79,6 @@ export default function DesignTeamDashboard() {
                 setMeetings(
                     tickets.filter((t: any) =>
                         t.meeting_type === 'Online' &&
-                        t.meeting_date?.startsWith(today) &&
                         !['Completed', 'Rejected'].includes(t.status)
                     )
                 );
@@ -147,32 +146,32 @@ export default function DesignTeamDashboard() {
                         </div>
                         <div className="divide-y divide-border">
                             {myTickets.length > 0 ? myTickets.map((ticket, i) => (
-                                <motion.div
+                                <Link
                                     key={ticket.id}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: i * 0.05 }}
-                                    className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                                    href={`/team/design/ticket/${ticket.id}`}
+                                    className="block"
                                 >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-[10px] font-bold text-muted-foreground">#{ticket.ticket_number}</span>
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getStatusColor(ticket.status)}`}>
-                                                    {ticket.status}
-                                                </span>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-[10px] font-bold text-muted-foreground">#{ticket.ticket_number}</span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getStatusColor(ticket.status)}`}>
+                                                        {ticket.status}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm font-bold truncate">{ticket.title}</p>
+                                                <p className="text-xs text-muted-foreground">{ticket.brand}</p>
                                             </div>
-                                            <p className="text-sm font-bold truncate">{ticket.title}</p>
-                                            <p className="text-xs text-muted-foreground">{ticket.brand}</p>
+                                            <ArrowRight size={14} className="text-muted-foreground shrink-0" />
                                         </div>
-                                        <Link
-                                            href={`/team/design/queue`}
-                                            className="text-xs font-bold text-primary hover:underline shrink-0"
-                                        >
-                                            Detail
-                                        </Link>
-                                    </div>
-                                </motion.div>
+                                    </motion.div>
+                                </Link>
                             )) : (
                                 <div className="p-8 text-center">
                                     <Ticket size={32} className="mx-auto mb-2 text-zinc-300" />

@@ -152,7 +152,7 @@ export default function DesignQueuePage() {
                             className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-border shadow-sm"
                         >
                             <div className="flex items-start justify-between gap-4">
-                                <div className="min-w-0 flex-1">
+                                <Link href={`/team/design/ticket/${ticket.id}`} className="min-w-0 flex-1 cursor-pointer group">
                                     <div className="flex items-center gap-2 flex-wrap mb-2">
                                         <span className="text-[10px] font-mono text-muted-foreground">#{ticket.ticket_number}</span>
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getStatusColor(ticket.status)}`}>
@@ -162,7 +162,7 @@ export default function DesignQueuePage() {
                                             {ticket.priority}
                                         </span>
                                     </div>
-                                    <h3 className="font-bold text-sm mb-1">{ticket.title}</h3>
+                                    <h3 className="font-bold text-sm mb-1 group-hover:text-primary transition-colors">{ticket.title}</h3>
                                     <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{ticket.description}</p>
                                     <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
                                         <span className="flex items-center gap-1"><Palette size={10} /> {ticket.brand}</span>
@@ -176,7 +176,7 @@ export default function DesignQueuePage() {
                                             <span className="flex items-center gap-1 text-blue-500"><Video size={10} /> Online Meeting</span>
                                         )}
                                     </div>
-                                </div>
+                                </Link>
                                 <div className="flex flex-col gap-2 shrink-0">
                                     {nextStatus && (
                                         <button

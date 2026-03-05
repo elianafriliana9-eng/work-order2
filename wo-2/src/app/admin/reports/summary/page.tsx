@@ -142,18 +142,27 @@ export default function ReportSummaryPage() {
             {/* Print-Optimized Styles */}
             <style jsx global>{`
                 @media print {
+                    /* Basic resets for accurate printing */
+                    *, *::before, *::after {
+                        box-sizing: border-box !important;
+                    }
+
                     /* Hide web UI elements */
                     .no-print, nav, aside, header.app-header { display: none !important; }
 
-                    /* Reset main layout padding from AdminSidebar */
-                    main, .print-doc {
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        position: absolute !important;
-                        top: 0 !important;
-                        left: 0 !important;
+                    /* Reset main layout padding from AdminSidebar to prevent squeezing */
+                    main {
+                        padding-left: 0 !important;
+                        margin-left: 0 !important;
                         width: 100% !important;
                         max-width: 100% !important;
+                    }
+
+                    .print-doc {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        max-width: 100% !important;
+                        width: 100% !important;
                     }
 
                     /* Reset page */
@@ -166,6 +175,7 @@ export default function ReportSummaryPage() {
                         print-color-adjust: exact !important;
                         margin: 0 !important;
                         padding: 0 !important;
+                        width: 100% !important;
                     }
 
                     /* Page setup for precise A4 print */
@@ -180,6 +190,24 @@ export default function ReportSummaryPage() {
                         width: 100% !important;
                         padding: 0 !important;
                         margin: 0 !important;
+                    }
+
+                    /* Fix chart overflows in Recharts during print */
+                    .recharts-responsive-container {
+                        width: 100% !important;
+                        min-width: 100% !important;
+                    }
+                    .recharts-wrapper {
+                        width: 100% !important;
+                        margin: 0 auto !important;
+                    }
+
+                    table {
+                        width: 100% !important;
+                        table-layout: fixed !important;
+                    }
+                    th, td {
+                        word-wrap: break-word !important;
                     }
 
                     /* Document header */
@@ -523,14 +551,14 @@ export default function ReportSummaryPage() {
                 </div>
 
                 {/* Document Footer */}
-                <div className="doc-footer mt-10 border-t-2 border-zinc-900 dark:border-zinc-100 pt-4 flex items-end justify-between">
+                <div className="doc-footer mt-10 border-t-2 border-zinc-900 dark:border-zinc-100 pt-4 flex items-end justify-between print-break-avoid">
                     <div>
                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Dokumen ini digenerate otomatis</p>
                         <p className="text-[10px] text-muted-foreground">Work Order System — {generatedAt}</p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-xs font-bold mb-6">Mengetahui,</p>
-                        <p className="text-xs border-t border-zinc-400 pt-1 px-8">Head of IT</p>
+                    <div className="text-center w-48">
+                        <p className="text-xs font-bold mb-12">Mengetahui,</p>
+                        <p className="text-xs border-t border-zinc-400 pt-1">Head of IT</p>
                     </div>
                 </div>
             </div>

@@ -137,26 +137,55 @@ export const generateReportPDF = async (data: any) => {
         currentY += 6;
 
         try {
-            // Pre-process SVGs in the container for html2canvas compatibility
-            const svgs = chartContainer.querySelectorAll('svg');
-            svgs.forEach((svg) => {
-                svg.setAttribute('width', svg.getBoundingClientRect().width.toString());
-                svg.setAttribute('height', svg.getBoundingClientRect().height.toString());
-                // ensure background is solid for svgs too if they don't have one
-                svg.style.backgroundColor = 'white';
+            // Recharts `ResponsiveContainer` collapses to 0x0 size during `html2canvas` DOM cloning.
+            // We explicitly freeze dimensions for all wrapper elements and SVGs in absolute pixels.
+            const rechartsWrappers = chartContainer.querySelectorAll('.recharts-wrapper, .recharts-surface');
+            const originalStyles: Array<{ el: HTMLElement, cssText: string }> = [];
+
+            rechartsWrappers.forEach((wrapper) => {
+                const rect = wrapper.getBoundingClientRect();
+                const el = wrapper as HTMLElement;
+                originalStyles.push({ el, cssText: el.style.cssText });
+
+                // Only freeze if rect is valid
+                if (rect.width > 0 && rect.height > 0) {
+                    el.style.width = `${rect.width}px`;
+                    el.style.height = `${rect.height}px`;
+
+                    if (el.tagName.toLowerCase() === 'svg') {
+                        el.setAttribute('width', `${rect.width}`);
+                        el.setAttribute('height', `${rect.height}`);
+                    }
+                }
             });
 
-            // Recharts SVG rendering often requires a slight delay to fully paint, and elements out of viewport
-            // might be captured blank by html2canvas.
-            window.scrollTo(0, chartContainer.offsetTop - 100);
-            await new Promise(resolve => setTimeout(resolve, 800));
+            // Recharts SVG rendering often requires a slight delay to fully paint.
+            // Scrolling to the top is the safest way to prevent html2canvas blank offsets.
+            const originalScrollY = window.scrollY;
+            window.scrollTo(0, 0);
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             const canvas = await html2canvas(chartContainer, {
                 scale: 2,
                 useCORS: true,
                 logging: true,
                 backgroundColor: '#ffffff',
-                foreignObjectRendering: true // Better support for SVG
+                scrollY: 0,
+                x: chartContainer.offsetLeft,
+                y: chartContainer.offsetTop,
+                width: chartContainer.offsetWidth,
+                height: chartContainer.offsetHeight
+            });
+
+            window.scrollTo(0, originalScrollY);
+
+            // Restore original dynamic styles
+            originalStyles.forEach(({ el, cssText }) => {
+                el.style.cssText = cssText;
+                if (el.tagName.toLowerCase() === 'svg') {
+                    el.removeAttribute('width');
+                    el.removeAttribute('height');
+                }
             });
 
             const imgData = canvas.toDataURL('image/png', 1.0);

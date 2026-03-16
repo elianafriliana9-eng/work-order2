@@ -22,6 +22,7 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import RevisionHistory from "@/components/revision-history";
 
 export default function DesignTicketDetailPage() {
     const { id } = useParams();
@@ -265,6 +266,11 @@ export default function DesignTicketDetailPage() {
                         </div>
                     </div>
                 )}
+
+                {/* Revision History */}
+                <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-border">
+                    <RevisionHistory ticketId={id as string} canRespond={true} />
+                </div>
             </motion.div>
         </div>
     );

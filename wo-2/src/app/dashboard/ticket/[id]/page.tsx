@@ -22,6 +22,8 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import RevisionSubmission from "@/components/revision-submission";
+import RevisionHistory from "@/components/revision-history";
 
 export default function TicketDetailPage() {
     const { id } = useParams();
@@ -260,6 +262,19 @@ export default function TicketDetailPage() {
                                 <p className="text-muted-foreground text-sm font-medium italic">Tidak ada lampiran terunggah.</p>
                             </div>
                         )}
+                    </section>
+
+                    {/* Revision Submission (Only for requester when status is Review) */}
+                    <RevisionSubmission
+                        ticketId={id as string}
+                        ticketStatus={ticket.status}
+                        reviewStartedAt={ticket.review_started_at}
+                        revisionWindowExpiresAt={ticket.revision_window_expires_at}
+                    />
+
+                    {/* Revision History */}
+                    <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-border shadow-sm">
+                        <RevisionHistory ticketId={id as string} />
                     </section>
                 </div>
 

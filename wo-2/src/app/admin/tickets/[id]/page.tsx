@@ -25,6 +25,7 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import RevisionHistory from "@/components/revision-history";
 
 const STATUS_FLOW = ['Open', 'Verified', 'Execution', 'Review', 'Completed'];
 
@@ -366,6 +367,16 @@ export default function AdminTicketDetailPage() {
                     </div>
                 </motion.div>
             )}
+
+            {/* Revision History */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-white dark:bg-zinc-900 rounded-2xl border border-border shadow-sm p-6 md:p-8 mt-6"
+            >
+                <RevisionHistory ticketId={id as string} canRespond={true} />
+            </motion.div>
         </div>
     );
 }

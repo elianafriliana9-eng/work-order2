@@ -157,7 +157,9 @@ export default function AdminDashboardPage() {
         { label: "Selesai", value: tickets.filter((t: any) => t.status === 'Completed').length, icon: CheckCircle2, color: "text-green-500" },
         {
             label: isHeadIT ? "Perlu Approval" : "Dalam Review",
-            value: isHeadIT ? tickets.filter((t: any) => t.status === 'Open').length : tickets.filter((t: any) => t.status === 'Review').length,
+            value: isHeadIT 
+                ? tickets.filter((t: any) => t.status === 'Review' && t.head_it_approval_status === 'pending').length 
+                : tickets.filter((t: any) => t.status === 'Review').length,
             icon: Clock,
             color: "text-amber-500"
         },
@@ -238,6 +240,57 @@ export default function AdminDashboardPage() {
                                 </Link>
                             </div>
                         ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Design Pending Approval (Head IT only) */}
+            {isHeadIT && (
+                <section>
+                    <div className="flex items-center gap-2 mb-5">
+                        <CheckCircle2 size={20} className="text-purple-500" />
+                        <h2 className="text-lg font-bold">Design Menunggu Approval</h2>
+                        <span className="text-xs font-bold px-2 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 rounded-full">
+                            {tickets.filter((t: any) => t.status === 'Review' && t.head_it_approval_status === 'pending').length}
+                        </span>
+                    </div>
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-border shadow-sm overflow-hidden divide-y divide-border">
+                        {tickets.filter((t: any) => t.status === 'Review' && t.head_it_approval_status === 'pending').length > 0 ? (
+                            tickets.filter((t: any) => t.status === 'Review' && t.head_it_approval_status === 'pending').map((ticket: any) => (
+                                <Link
+                                    key={ticket.id}
+                                    href={`/admin/tickets/${ticket.id}`}
+                                    className="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[10px] font-mono text-muted-foreground">#{ticket.ticket_number}</span>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400">
+                                                Review
+                                            </span>
+                                        </div>
+                                        <p className="text-sm font-bold truncate">{ticket.title}</p>
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                            <Calendar size={10} /> {ticket.brand} • {ticket.category}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {ticket.final_design_urls && ticket.final_design_urls.length > 0 && (
+                                            <span className="text-[10px] font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 rounded-lg">
+                                                {ticket.final_design_urls.length} File
+                                            </span>
+                                        )}
+                                        <ArrowRight size={14} className="text-muted-foreground" />
+                                    </div>
+                                </Link>
+                            ))
+                        ) : (
+                            <div className="p-8 text-center">
+                                <CheckCircle2 size={32} className="mx-auto mb-2 text-green-500" />
+                                <p className="text-sm font-bold">Semua design sudah diapprove</p>
+                                <p className="text-xs text-muted-foreground mt-1">Tidak ada design yang menunggu approval.</p>
+                            </div>
+                        )}
                     </div>
                 </section>
             )}

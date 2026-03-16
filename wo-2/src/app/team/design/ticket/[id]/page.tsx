@@ -18,11 +18,14 @@ import {
     MapPin,
     ArrowRight,
     Palette,
+    Image,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import RevisionHistory from "@/components/revision-history";
+import SubmitForReviewModal from "@/components/submit-for-review-modal";
+import { Eye } from "lucide-react";
 
 export default function DesignTicketDetailPage() {
     const { id } = useParams();
@@ -31,6 +34,7 @@ export default function DesignTicketDetailPage() {
     const [attachments, setAttachments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -63,6 +67,12 @@ export default function DesignTicketDetailPage() {
     }, [id]);
 
     async function handleStatusUpdate(newStatus: string) {
+        // If changing to Review, show modal for file upload
+        if (newStatus === 'Review') {
+            setShowReviewModal(true);
+            return;
+        }
+        
         setUpdating(true);
         try {
             const { error } = await supabase
@@ -171,7 +181,17 @@ export default function DesignTicketDetailPage() {
                                 </button>
                             )}
                             {ticket.status === 'Review' && (
-                                <span className="text-xs text-center font-medium text-purple-500">Menunggu Approval Head IT</span>
+                                <div className="flex flex-col gap-2 items-end">
+                                    <span className="text-xs font-bold px-3 py-1.5 bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 rounded-full flex items-center gap-1.5">
+                                        <Eye size={12} />
+                                        Menunggu Approval Head IT
+                                    </span>
+                                    {ticket.head_it_approval_status === 'pending' && (
+                                        <span className="text-[10px] text-purple-600 dark:text-purple-400">
+                                            Design sedang ditinjau
+                                        </span>
+                                    )}
+                                </div>
                             )}
                             {ticket.meeting_type === 'Online' && !['Completed', 'Rejected'].includes(ticket.status) && (
                                 <Link
@@ -267,10 +287,68 @@ export default function DesignTicketDetailPage() {
                     </div>
                 )}
 
+                {/* Final Design (Submitted for Review) */}
+                {ticket.final_design_urls && ticket.final_design_urls.length > 0 && (
+                    <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-border">
+                        <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <Image size={12} />
+                            Design Final ({ticket.final_design_urls.length})
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {ticket.final_design_urls.map((url: string, index: number) => (
+                                <a
+                                    key={index}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group relative aspect-square rounded-xl overflow-hidden border-2 border-purple-200 dark:border-purple-500/20 bg-zinc-100 dark:bg-zinc-800"
+                                >
+                                    <img
+                                        src={url}
+                                        alt={`Final Design ${index + 1}`}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <ExternalLink size={20} className="text-white" />
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                        {ticket.final_design_gdrive_link && (
+                            <a
+                                href={ticket.final_design_gdrive_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 flex items-center gap-2 text-xs font-bold text-primary hover:underline"
+                            >
+                                <FileText size={12} />
+                                Lihat Google Drive
+                            </a>
+                        )}
+                        {ticket.design_submitted_at && (
+                            <p className="text-[10px] text-muted-foreground mt-2">
+                                Disubmit: {new Date(ticket.design_submitted_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 {/* Revision History */}
                 <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-border">
                     <RevisionHistory ticketId={id as string} canRespond={true} />
                 </div>
+
+                {/* Submit for Review Modal */}
+                <SubmitForReviewModal
+                    ticketId={id as string}
+                    isOpen={showReviewModal}
+                    onClose={() => setShowReviewModal(false)}
+                    onSuccess={() => {
+                        setShowReviewModal(false);
+                        setTicket({ ...ticket, status: 'Review' });
+                        alert("Design berhasil disubmit untuk review! Menunggu approval Head IT.");
+                    }}
+                />
             </motion.div>
         </div>
     );

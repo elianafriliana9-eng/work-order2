@@ -26,6 +26,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import RevisionHistory from "@/components/revision-history";
+import DesignApprovalModal from "@/components/design-approval-modal";
 
 const STATUS_FLOW = ['Open', 'Verified', 'Execution', 'Review', 'Completed'];
 
@@ -38,6 +39,7 @@ export default function AdminTicketDetailPage() {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [now, setNow] = useState(new Date());
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 60000); // update every minute
@@ -232,6 +234,40 @@ export default function AdminTicketDetailPage() {
                     </div>
                 )}
 
+                {/* Head IT Approval Section (When status is Review) */}
+                {isHeadIT && ticket.status === 'Review' && ticket.final_design_urls && ticket.final_design_urls.length > 0 && (
+                    <div className="mb-6 p-4 rounded-xl bg-purple-50 dark:bg-purple-500/10 border-2 border-purple-200 dark:border-purple-500/20">
+                        <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-xl">
+                                    <CheckCircle2 size={20} className="text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-purple-800 dark:text-purple-300">
+                                        Design Menunggu Approval
+                                    </p>
+                                    <p className="text-xs text-purple-700 dark:text-purple-400">
+                                        Designer telah submit design final. Silakan tinjau dan approve.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowApprovalModal(true)}
+                                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2"
+                            >
+                                <Eye size={16} />
+                                Tinjau Design
+                            </button>
+                        </div>
+                        {ticket.head_it_approval_notes && (
+                            <div className="mt-3 p-3 bg-white dark:bg-zinc-800 rounded-lg border border-purple-200 dark:border-purple-500/20">
+                                <p className="text-xs font-bold text-purple-600 dark:text-purple-400 mb-1">Catatan Previous:</p>
+                                <p className="text-sm text-zinc-700 dark:text-zinc-300">{ticket.head_it_approval_notes}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Details Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800">
@@ -377,6 +413,24 @@ export default function AdminTicketDetailPage() {
             >
                 <RevisionHistory ticketId={id as string} canRespond={true} />
             </motion.div>
+
+            {/* Design Approval Modal */}
+            <DesignApprovalModal
+                ticketId={id as string}
+                finalDesignUrls={ticket.final_design_urls || []}
+                gdriveLink={ticket.final_design_gdrive_link}
+                isOpen={showApprovalModal}
+                onClose={() => setShowApprovalModal(false)}
+                onApproved={() => {
+                    setShowApprovalModal(false);
+                    setTicket({ 
+                        ...ticket, 
+                        status: 'Completed',
+                        head_it_approval_status: 'approved'
+                    });
+                    alert("Design approved! Status tiket berubah menjadi Completed.");
+                }}
+            />
         </div>
     );
 }

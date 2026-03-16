@@ -49,14 +49,18 @@ export default function SimpleRevisionForm({
 
     // Check if revision window is still open
     const isRevisionWindowOpen = () => {
-        if (ticketStatus !== 'Review') return false;
-        if (!revisionWindowExpiresAt) return false;
+        if (ticketStatus !== 'Review' && ticketStatus !== 'Completed') return false;
+        // If no expiration data yet, assume window is open (for existing tickets)
+        if (!revisionWindowExpiresAt) return ticketStatus === 'Review';
         return isBefore(now, new Date(revisionWindowExpiresAt));
     };
 
     // Calculate time remaining
     const getTimeRemaining = () => {
-        if (!revisionWindowExpiresAt) return null;
+        if (!revisionWindowExpiresAt) {
+            // If no expiration set, show -- : --
+            return { hours: 0, minutes: 0, expired: false, noData: true };
+        }
         const expires = new Date(revisionWindowExpiresAt);
         const remaining = expires.getTime() - now.getTime();
 
@@ -72,6 +76,19 @@ export default function SimpleRevisionForm({
     const canSubmitRevision = ticketStatus === 'Review' && isRevisionWindowOpen() && revisionCount < MAX_REVISIONS;
     const hasReachedLimit = revisionCount >= MAX_REVISIONS;
     const isWindowExpired = timeRemaining?.expired || !isRevisionWindowOpen();
+
+    // Debug log
+    useEffect(() => {
+        console.log('Revision Form Debug:', {
+            ticketStatus,
+            revisionCount,
+            canSubmitRevision,
+            hasReachedLimit,
+            isWindowExpired,
+            reviewStartedAt,
+            revisionWindowExpiresAt,
+        });
+    }, [ticketStatus, revisionCount, canSubmitRevision, hasReachedLimit, isWindowExpired]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -180,8 +197,8 @@ export default function SimpleRevisionForm({
         }
     };
 
-    // Don't render if not in Review status
-    if (ticketStatus !== 'Review') {
+    // Show form for Review and Completed status (for viewing after 24h)
+    if (ticketStatus !== 'Review' && ticketStatus !== 'Completed') {
         return null;
     }
 
@@ -227,14 +244,16 @@ export default function SimpleRevisionForm({
                     {canSubmitRevision && timeRemaining && !timeRemaining.expired && (
                         <div className="text-right">
                             <div className={`text-3xl font-black tabular-nums ${
-                                timeRemaining.hours < 2 
-                                    ? 'text-red-600 dark:text-red-400' 
-                                    : 'text-amber-600 dark:text-amber-400'
+                                timeRemaining.noData
+                                    ? 'text-zinc-400'
+                                    : timeRemaining.hours < 2 
+                                        ? 'text-red-600 dark:text-red-400' 
+                                        : 'text-amber-600 dark:text-amber-400'
                             }`}>
-                                {timeRemaining.hours}j {timeRemaining.minutes}m
+                                {timeRemaining.noData ? '-- : --' : `${timeRemaining.hours}j ${timeRemaining.minutes}m`}
                             </div>
                             <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                                Waktu Tersisa
+                                {timeRemaining.noData ? 'Window Aktif' : 'Waktu Tersisa'}
                             </div>
                         </div>
                     )}

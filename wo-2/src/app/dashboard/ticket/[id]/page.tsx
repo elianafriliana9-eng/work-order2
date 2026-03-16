@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import RevisionSubmission from "@/components/revision-submission";
 import RevisionHistory from "@/components/revision-history";
+import UserRevisionSubmission from "@/components/user-revision-submission";
 
 export default function TicketDetailPage() {
     const { id } = useParams();
@@ -32,6 +33,7 @@ export default function TicketDetailPage() {
     const [attachments, setAttachments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [now, setNow] = useState(new Date());
+    const [revisionCount, setRevisionCount] = useState(0);
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 60000); // update every minute
@@ -51,6 +53,16 @@ export default function TicketDetailPage() {
 
                 if (woError) throw woError;
                 setTicket(woData);
+
+                // Fetch revision count
+                const { count, error: revError } = await supabase
+                    .from('work_order_revisions')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('wo_id', id);
+
+                if (!revError && count !== null) {
+                    setRevisionCount(count);
+                }
 
                 const { data: attachData, error: attachError } = await supabase
                     .from('work_order_attachments')
@@ -265,11 +277,15 @@ export default function TicketDetailPage() {
                     </section>
 
                     {/* Revision Submission (Only for requester when status is Review) */}
-                    <RevisionSubmission
+                    <UserRevisionSubmission
                         ticketId={id as string}
                         ticketStatus={ticket.status}
                         reviewStartedAt={ticket.review_started_at}
                         revisionWindowExpiresAt={ticket.revision_window_expires_at}
+                        revisionCount={revisionCount}
+                        onRevisionSubmitted={() => {
+                            setRevisionCount(prev => prev + 1);
+                        }}
                     />
 
                     {/* Revision History */}

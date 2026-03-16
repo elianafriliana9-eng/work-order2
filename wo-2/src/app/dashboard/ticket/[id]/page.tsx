@@ -22,9 +22,8 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import RevisionSubmission from "@/components/revision-submission";
 import RevisionHistory from "@/components/revision-history";
-import UserRevisionSubmission from "@/components/user-revision-submission";
+import SimpleRevisionForm from "@/components/simple-revision-form";
 
 export default function TicketDetailPage() {
     const { id } = useParams();
@@ -276,8 +275,8 @@ export default function TicketDetailPage() {
                         )}
                     </section>
 
-                    {/* Revision Submission (Only for requester when status is Review) */}
-                    <UserRevisionSubmission
+                    {/* Revision Form (Only for requester when status is Review) */}
+                    <SimpleRevisionForm
                         ticketId={id as string}
                         ticketStatus={ticket.status}
                         reviewStartedAt={ticket.review_started_at}

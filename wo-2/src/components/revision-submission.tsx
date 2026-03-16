@@ -13,6 +13,7 @@ import {
     AlertTriangle,
     ChevronDown,
     ChevronUp,
+    Send,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { format, formatDistanceToNow, isBefore, addHours } from "date-fns";

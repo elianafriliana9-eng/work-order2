@@ -77,26 +77,6 @@ CREATE TRIGGER trg_update_revision_count
     FOR EACH ROW
     EXECUTE FUNCTION update_work_order_revision_count();
 
--- Function to set review window when status changes to Review
-CREATE OR REPLACE FUNCTION set_review_window_on_review()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.status = 'Review' AND (OLD.status IS NULL OR OLD.status != 'Review') THEN
-        NEW.review_started_at = NOW();
-        NEW.revision_window_expires_at = NOW() + INTERVAL '24 hours';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to set review window
-DROP TRIGGER IF EXISTS trg_set_review_window ON work_orders;
-CREATE TRIGGER trg_set_review_window
-    BEFORE UPDATE ON work_orders
-    FOR EACH ROW
-    WHEN (NEW.status = 'Review' AND (OLD.status IS NULL OR OLD.status != 'Review'))
-    EXECUTE FUNCTION set_review_window_on_review();
-
 -- Row Level Security (RLS)
 ALTER TABLE work_order_revisions ENABLE ROW LEVEL SECURITY;
 
@@ -140,18 +120,6 @@ CREATE POLICY "Staff can update revisions"
             SELECT 1 FROM profiles p
             WHERE p.id = auth.uid()
             AND p.role IN ('head_it', 'designer')
-        )
-    );
-
--- Policy: Staff can view all revisions
-CREATE POLICY "Staff can view all revisions"
-    ON work_order_revisions
-    FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM profiles p
-            WHERE p.id = auth.uid()
-            AND p.role IN ('head_it', 'designer', 'it_dev', 'it_support')
         )
     );
 

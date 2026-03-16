@@ -53,7 +53,6 @@ export default function TicketDetailPage() {
                 if (woError) throw woError;
                 setTicket(woData);
 
-                // Fetch revision count
                 const { count, error: revError } = await supabase
                     .from('work_order_revisions')
                     .select('*', { count: 'exact', head: true })

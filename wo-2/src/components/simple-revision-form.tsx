@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     AlertCircle,
+    CheckCircle2,
     Clock,
     FileText,
     Upload,
     X,
     Info,
     AlertTriangle,
-    CheckCircle2,
+    ChevronDown,
+    ChevronUp,
     Send,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -50,7 +52,6 @@ export default function SimpleRevisionForm({
     // Check if revision window is still open
     const isRevisionWindowOpen = () => {
         if (ticketStatus !== 'Review' && ticketStatus !== 'Completed') return false;
-        // If no expiration data yet, assume window is open (for existing tickets)
         if (!revisionWindowExpiresAt) return ticketStatus === 'Review';
         return isBefore(now, new Date(revisionWindowExpiresAt));
     };
@@ -58,8 +59,7 @@ export default function SimpleRevisionForm({
     // Calculate time remaining
     const getTimeRemaining = () => {
         if (!revisionWindowExpiresAt) {
-            // If no expiration set, show -- : --
-            return { hours: 0, minutes: 0, expired: false, noData: true };
+            return { hours: 24, minutes: 0, expired: false, noData: true };
         }
         const expires = new Date(revisionWindowExpiresAt);
         const remaining = expires.getTime() - now.getTime();
@@ -76,19 +76,6 @@ export default function SimpleRevisionForm({
     const canSubmitRevision = ticketStatus === 'Review' && isRevisionWindowOpen() && revisionCount < MAX_REVISIONS;
     const hasReachedLimit = revisionCount >= MAX_REVISIONS;
     const isWindowExpired = timeRemaining?.expired || !isRevisionWindowOpen();
-
-    // Debug log
-    useEffect(() => {
-        console.log('Revision Form Debug:', {
-            ticketStatus,
-            revisionCount,
-            canSubmitRevision,
-            hasReachedLimit,
-            isWindowExpired,
-            reviewStartedAt,
-            revisionWindowExpiresAt,
-        });
-    }, [ticketStatus, revisionCount, canSubmitRevision, hasReachedLimit, isWindowExpired]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -127,7 +114,6 @@ export default function SimpleRevisionForm({
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not authenticated");
 
-            // Get current revision count to determine revision number
             const { data: existingRevisions } = await supabase
                 .from('work_order_revisions')
                 .select('revision_number')
@@ -139,7 +125,6 @@ export default function SimpleRevisionForm({
                 ? existingRevisions[0].revision_number 
                 : 0;
 
-            // Upload files first
             const attachmentUrls: string[] = [];
             if (files.length > 0) {
                 for (const file of files) {
@@ -161,7 +146,6 @@ export default function SimpleRevisionForm({
                 }
             }
 
-            // Submit revision
             const { error: revisionError } = await supabase
                 .from('work_order_revisions')
                 .insert([{
@@ -181,7 +165,6 @@ export default function SimpleRevisionForm({
 
             alert("Revisi berhasil diajukan! Tim design akan meninjau permintaan Anda.");
             
-            // Reset form
             setDescription('');
             setChangesRequested('');
             setFiles([]);
@@ -197,7 +180,6 @@ export default function SimpleRevisionForm({
         }
     };
 
-    // Show form for Review and Completed status (for viewing after 24h)
     if (ticketStatus !== 'Review' && ticketStatus !== 'Completed') {
         return null;
     }
@@ -259,7 +241,6 @@ export default function SimpleRevisionForm({
                     )}
                 </div>
 
-                {/* Status Messages */}
                 {hasReachedLimit && (
                     <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
                         <div className="flex items-start gap-3">
@@ -277,12 +258,10 @@ export default function SimpleRevisionForm({
                     </div>
                 )}
 
-                {isWindowExpired && (
+                {isWindowExpired && !hasReachedLimit && (
                     <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
                         <div className="flex items-start gap-3">
-                            <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-xl shrink-0">
-                                <Clock size={20} className="text-red-600 dark:text-red-400" />
-                            </div>
+                            <Clock size={20} className="text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
                             <div>
                                 <p className="text-sm font-bold text-red-800 dark:text-red-300">
                                     Batas Waktu Revisi Lewat
@@ -292,16 +271,6 @@ export default function SimpleRevisionForm({
                                     Waktu telah berakhir dan tiket otomatis dianggap <strong>Completed</strong>.
                                     Jika ada perubahan tambahan, silakan buat tiket WO baru.
                                 </p>
-                                {timeRemaining && !timeRemaining.expired === false && timeRemaining.hours !== undefined && (
-                                    <p className="text-[10px] text-red-600 dark:text-red-400 mt-2 font-mono">
-                                    Waktu habis: {new Date(revisionWindowExpiresAt!).toLocaleString('id-ID', { 
-                                        day: 'numeric', 
-                                        month: 'short', 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                    })}
-                                </p>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -309,7 +278,6 @@ export default function SimpleRevisionForm({
 
                 {canSubmitRevision && (
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Info Box */}
                         <div className="p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl">
                             <div className="flex items-start gap-3">
                                 <Info size={18} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
@@ -327,7 +295,6 @@ export default function SimpleRevisionForm({
                             </div>
                         </div>
 
-                        {/* Description (Required) */}
                         <div>
                             <label className="block text-sm font-bold mb-2 text-zinc-700 dark:text-zinc-300">
                                 Keterangan Revisi <span className="text-red-500">*</span>
@@ -342,7 +309,6 @@ export default function SimpleRevisionForm({
                             />
                         </div>
 
-                        {/* Changes Requested (Required) */}
                         <div>
                             <label className="block text-sm font-bold mb-2 text-zinc-700 dark:text-zinc-300">
                                 Perubahan yang Diminta <span className="text-red-500">*</span>
@@ -360,7 +326,6 @@ export default function SimpleRevisionForm({
                             />
                         </div>
 
-                        {/* File Upload (Optional) */}
                         <div>
                             <label className="block text-sm font-bold mb-2 text-zinc-700 dark:text-zinc-300">
                                 Upload File Referensi <span className="text-zinc-400 font-normal">(Opsional)</span>
@@ -420,7 +385,6 @@ export default function SimpleRevisionForm({
                             )}
                         </div>
 
-                        {/* Submit Button */}
                         <button
                             type="submit"
                             disabled={isSubmitting}
@@ -439,7 +403,6 @@ export default function SimpleRevisionForm({
                             )}
                         </button>
 
-                        {/* Info Note */}
                         <p className="text-[10px] text-center text-zinc-500">
                             <Info size={10} className="inline mr-1" />
                             Revisi akan ditinjau oleh tim design dalam 1-2 hari kerja. 

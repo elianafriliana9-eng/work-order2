@@ -11,6 +11,7 @@ import {
     XCircle,
     Timer,
     Eye,
+    FileCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -21,6 +22,9 @@ export default function AdminTicketsPage() {
     const [role, setRole] = useState("");
     const [filter, setFilter] = useState("all");
     const [search, setSearch] = useState("");
+    const [approvingTicket, setApprovingTicket] = useState<string | null>(null);
+    const [approvalAction, setApprovalAction] = useState<'approve' | 'reject' | null>(null);
+    const [rejectionNotes, setRejectionNotes] = useState('');
 
     useEffect(() => {
         async function loadTickets() {
@@ -101,6 +105,48 @@ export default function AdminTicketsPage() {
             setTickets(prev =>
                 prev.map((t: any) => t.id === ticketId ? { ...t, status: 'Rejected', admin_notes: reason } : t)
             );
+        }
+    }
+
+    async function handleDesignApprove(ticketId: string, action: 'approved' | 'rejected') {
+        if (action === 'rejected' && !rejectionNotes.trim()) {
+            alert("Mohon isi alasan penolakan.");
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('work_orders')
+                .update({
+                    status: action === 'approved' ? 'Completed' : 'Execution',
+                    head_it_approval_status: action,
+                    head_it_approval_at: new Date().toISOString(),
+                    head_it_approval_notes: action === 'rejected' ? rejectionNotes : null,
+                })
+                .eq('id', ticketId);
+
+            if (error) throw error;
+
+            setTickets(prev =>
+                prev.map((t: any) => {
+                    if (t.id === ticketId) {
+                        return {
+                            ...t,
+                            status: action === 'approved' ? 'Completed' : 'Execution',
+                            head_it_approval_status: action,
+                            head_it_approval_notes: action === 'rejected' ? rejectionNotes : null,
+                        };
+                    }
+                    return t;
+                })
+            );
+
+            setRejectionNotes('');
+            setApprovingTicket(null);
+            setApprovalAction(null);
+            alert(`Design ${action === 'approved' ? 'diapprove' : 'ditolak'}!`);
+        } catch (err: any) {
+            alert("Gagal memproses approval: " + err.message);
         }
     }
 
@@ -212,6 +258,31 @@ export default function AdminTicketsPage() {
                                                         </button>
                                                     </>
                                                 )}
+                                                {isHeadIT && ticket.status === 'Review' && (
+                                                    <>
+                                                        {ticket.head_it_approval_status === 'pending' || !ticket.head_it_approval_status ? (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setApprovingTicket(ticket.id);
+                                                                    setApprovalAction(null);
+                                                                }}
+                                                                className="p-1.5 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-500/10 text-purple-600 transition-colors flex items-center gap-1"
+                                                                title="Review Design"
+                                                            >
+                                                                <FileCheck size={16} />
+                                                                <span className="text-[10px] font-bold">Review</span>
+                                                            </button>
+                                                        ) : (
+                                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
+                                                                ticket.head_it_approval_status === 'approved'
+                                                                    ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
+                                                                    : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+                                                            }`}>
+                                                                {ticket.head_it_approval_status === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                                            </span>
+                                                        )}
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </motion.tr>
@@ -227,6 +298,108 @@ export default function AdminTicketsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Design Approval Modal */}
+            {approvingTicket && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-border shadow-2xl max-w-md w-full p-6">
+                        <h3 className="text-lg font-bold mb-4">Review Design</h3>
+                        
+                        {approvalAction === null ? (
+                            <>
+                                <p className="text-sm text-muted-foreground mb-6">
+                                    Pilih aksi untuk design ini:
+                                </p>
+                                <div className="flex gap-3 mb-4">
+                                    <button
+                                        onClick={() => setApprovalAction('approve')}
+                                        className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle2 size={16} />
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => setApprovalAction('reject')}
+                                        className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <XCircle size={16} />
+                                        Reject
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setApprovingTicket(null);
+                                        setApprovalAction(null);
+                                    }}
+                                    className="w-full py-2.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    Batal
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                {approvalAction === 'approve' ? (
+                                    <>
+                                        <div className="p-4 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl mb-4">
+                                            <p className="text-sm font-bold text-green-800 dark:text-green-300">
+                                                Konfirmasi Approval
+                                            </p>
+                                            <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+                                                Design akan diapprove dan status tiket berubah menjadi Completed.
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => handleDesignApprove(approvingTicket, 'approved')}
+                                                className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <CheckCircle2 size={16} />
+                                                Ya, Approve
+                                            </button>
+                                            <button
+                                                onClick={() => setApprovalAction(null)}
+                                                className="flex-1 py-3 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl font-bold text-sm transition-all"
+                                            >
+                                                Kembali
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-bold mb-2">
+                                                Alasan Penolakan <span className="text-red-500">*</span>
+                                            </label>
+                                            <textarea
+                                                value={rejectionNotes}
+                                                onChange={(e) => setRejectionNotes(e.target.value)}
+                                                rows={4}
+                                                placeholder="Jelaskan apa yang perlu diperbaiki..."
+                                                className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => handleDesignApprove(approvingTicket, 'rejected')}
+                                                className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <XCircle size={16} />
+                                                Kirim Penolakan
+                                            </button>
+                                            <button
+                                                onClick={() => setApprovalAction(null)}
+                                                className="flex-1 py-3 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl font-bold text-sm transition-all"
+                                            >
+                                                Kembali
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

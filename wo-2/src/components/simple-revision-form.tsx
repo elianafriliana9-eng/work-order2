@@ -245,15 +245,15 @@ export default function SimpleRevisionForm({
                         <div className="text-right">
                             <div className={`text-3xl font-black tabular-nums ${
                                 timeRemaining.noData
-                                    ? 'text-zinc-400'
+                                    ? 'text-amber-600 dark:text-amber-400'
                                     : timeRemaining.hours < 2 
                                         ? 'text-red-600 dark:text-red-400' 
                                         : 'text-amber-600 dark:text-amber-400'
                             }`}>
-                                {timeRemaining.noData ? '-- : --' : `${timeRemaining.hours}j ${timeRemaining.minutes}m`}
+                                {timeRemaining.noData ? '24j 00m' : `${timeRemaining.hours}j ${timeRemaining.minutes}m`}
                             </div>
                             <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                                {timeRemaining.noData ? 'Window Aktif' : 'Waktu Tersisa'}
+                                Waktu Tersisa
                             </div>
                         </div>
                     )}
@@ -277,18 +277,31 @@ export default function SimpleRevisionForm({
                     </div>
                 )}
 
-                {isWindowExpired && !hasReachedLimit && (
+                {isWindowExpired && (
                     <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
                         <div className="flex items-start gap-3">
-                            <Clock size={20} className="text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                            <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-xl shrink-0">
+                                <Clock size={20} className="text-red-600 dark:text-red-400" />
+                            </div>
                             <div>
                                 <p className="text-sm font-bold text-red-800 dark:text-red-300">
                                     Batas Waktu Revisi Lewat
                                 </p>
                                 <p className="text-xs text-red-700 dark:text-red-400 mt-1">
-                                    Batas waktu pengajuan revisi adalah 24 jam setelah status Review. 
-                                    Waktu telah berakhir dan tiket dianggap sudah sesuai.
+                                    Batas waktu pengajuan revisi adalah <strong>24 jam</strong> setelah status Review. 
+                                    Waktu telah berakhir dan tiket otomatis dianggap <strong>Completed</strong>.
+                                    Jika ada perubahan tambahan, silakan buat tiket WO baru.
                                 </p>
+                                {timeRemaining && !timeRemaining.expired === false && timeRemaining.hours !== undefined && (
+                                    <p className="text-[10px] text-red-600 dark:text-red-400 mt-2 font-mono">
+                                    Waktu habis: {new Date(revisionWindowExpiresAt!).toLocaleString('id-ID', { 
+                                        day: 'numeric', 
+                                        month: 'short', 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                    })}
+                                </p>
+                                )}
                             </div>
                         </div>
                     </div>

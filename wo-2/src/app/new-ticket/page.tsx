@@ -142,26 +142,34 @@ export default function NewTicketPage() {
             }
 
             // 1. Create Work Order
+            const insertData: any = {
+                user_id: user.id,
+                title: data.title,
+                brand: data.brand,
+                category: data.category,
+                description: data.description,
+                deadline: data.deadline,
+                priority: isUrgent() ? 'P1' : 'P2',
+                urgent_reason: data.urgentReason,
+                status: 'Open',
+                platform: data.platform,
+                dimension: data.dimension,
+                meeting_type: data.meetingType,
+                meeting_date: data.meetingDate ? `${data.meetingDate}:00+07:00` : null,
+                meeting_link: meetingLink,
+            };
+
+            // Programming-specific fields
+            if (data.category === 'Programming') {
+                insertData.task_type = data.taskType || null;
+                insertData.module_affected = data.moduleAffected || null;
+                insertData.reproduction_steps = data.reproductionSteps || null;
+                insertData.credentials = data.credentials || null;
+            }
+
             const { data: woData, error: woError } = await supabase
                 .from('work_orders')
-                .insert([
-                    {
-                        user_id: user.id,
-                        title: data.title,
-                        brand: data.brand,
-                        category: data.category,
-                        description: data.description,
-                        deadline: data.deadline,
-                        priority: isUrgent() ? 'P1' : 'P2',
-                        urgent_reason: data.urgentReason,
-                        status: 'Open',
-                        platform: data.platform,
-                        dimension: data.dimension,
-                        meeting_type: data.meetingType,
-                        meeting_date: data.meetingDate ? `${data.meetingDate}:00+07:00` : null,
-                        meeting_link: meetingLink
-                    }
-                ])
+                .insert([insertData])
                 .select()
                 .single();
 
@@ -279,6 +287,39 @@ export default function NewTicketPage() {
                                                     <label className="block text-sm font-semibold mb-2">Dimensi / Ukuran (Opsional)</label>
                                                     <input {...register("dimension")} placeholder="Contoh: 1080x1080px (Instagram)" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none" />
                                                 </div>
+                                            )}
+                                            {selectedCategory === "Programming" && (
+                                                <>
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Tipe Pekerjaan</label>
+                                                        <select {...register("taskType")} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all">
+                                                            <option value="">Pilih tipe pekerjaan...</option>
+                                                            <option value="Bug Fix">Bug Fix</option>
+                                                            <option value="New Feature">New Feature</option>
+                                                            <option value="Maintenance">Maintenance</option>
+                                                            <option value="Develop New System">Develop New System</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Platform</label>
+                                                        <input {...register("platform")} placeholder="Contoh: Web / Mobile / Database Internal" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Modul yang Terkena</label>
+                                                        <input {...register("moduleAffected")} placeholder="Contoh: Modul Login, Halaman Dashboard, API Payment" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
+                                                    </div>
+                                                    {watch("taskType") === "Bug Fix" && (
+                                                        <div>
+                                                            <label className="block text-sm font-semibold mb-2">Langkah Reproduksi Bug</label>
+                                                            <textarea {...register("reproductionSteps")} rows={4} placeholder="Jelaskan langkah-langkah untuk mereproduksi bug:&#10;1. Buka halaman ...&#10;2. Klik tombol ...&#10;3. Muncul error ..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Kredensial / Akses (Opsional)</label>
+                                                        <textarea {...register("credentials")} rows={3} placeholder="URL staging, login test, atau akses lain yang diperlukan tim dev..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                        <p className="text-xs text-muted-foreground mt-1">Info ini hanya dapat dilihat oleh tim IT.</p>
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
                                     </div>

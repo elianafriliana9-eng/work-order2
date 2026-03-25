@@ -380,6 +380,41 @@ export default function AdminTicketDetailPage() {
                     </div>
                 </div>
 
+                {/* Programming Detail */}
+                {ticket.category === 'Programming' && (ticket.task_type || ticket.module_affected || ticket.reproduction_steps || ticket.credentials) && (
+                    <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
+                        <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
+                            <Monitor size={14} /> Detail Permintaan IT
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {ticket.task_type && (
+                                <div>
+                                    <p className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase tracking-widest mb-0.5">Tipe Pekerjaan</p>
+                                    <p className="text-sm font-semibold">{ticket.task_type}</p>
+                                </div>
+                            )}
+                            {ticket.module_affected && (
+                                <div>
+                                    <p className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase tracking-widest mb-0.5">Modul yang Terkena</p>
+                                    <p className="text-sm font-semibold">{ticket.module_affected}</p>
+                                </div>
+                            )}
+                        </div>
+                        {ticket.reproduction_steps && (
+                            <div className="mt-3">
+                                <p className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase tracking-widest mb-1">Langkah Reproduksi Bug</p>
+                                <p className="text-sm whitespace-pre-wrap leading-relaxed">{ticket.reproduction_steps}</p>
+                            </div>
+                        )}
+                        {ticket.credentials && (
+                            <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                                <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Kredensial / Akses</p>
+                                <p className="text-sm whitespace-pre-wrap font-mono text-amber-800 dark:text-amber-300">{ticket.credentials}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Urgent Reason */}
                 {ticket.urgent_reason && (
                     <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10">

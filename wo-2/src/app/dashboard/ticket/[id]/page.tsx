@@ -207,6 +207,41 @@ export default function TicketDetailPage() {
                             </div>
                         )}
 
+                        {ticket.category === 'Programming' && (ticket.task_type || ticket.module_affected || ticket.reproduction_steps || ticket.credentials) && (
+                            <div className="mt-8 border-t pt-8">
+                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <Monitor size={20} className="text-primary" />
+                                    Detail Permintaan IT
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {ticket.task_type && (
+                                        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border">
+                                            <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Tipe Pekerjaan</p>
+                                            <p className="font-semibold">{ticket.task_type}</p>
+                                        </div>
+                                    )}
+                                    {ticket.module_affected && (
+                                        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border">
+                                            <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Modul yang Terkena</p>
+                                            <p className="font-semibold">{ticket.module_affected}</p>
+                                        </div>
+                                    )}
+                                </div>
+                                {ticket.reproduction_steps && (
+                                    <div className="mt-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border">
+                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">Langkah Reproduksi Bug</p>
+                                        <p className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">{ticket.reproduction_steps}</p>
+                                    </div>
+                                )}
+                                {ticket.credentials && (
+                                    <div className="mt-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                                        <p className="text-xs text-amber-700 dark:text-amber-400 uppercase font-bold tracking-wider mb-2">Kredensial / Akses</p>
+                                        <p className="whitespace-pre-wrap text-sm text-amber-800 dark:text-amber-300">{ticket.credentials}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Meeting Schedule Detail Section */}
                         {ticket.meeting_date && (
                             <div className="mt-8 border-t pt-8">

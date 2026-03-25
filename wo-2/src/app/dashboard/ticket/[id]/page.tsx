@@ -207,7 +207,7 @@ export default function TicketDetailPage() {
                             </div>
                         )}
 
-                        {ticket.category === 'Programming' && (ticket.task_type || ticket.module_affected || ticket.reproduction_steps || ticket.credentials) && (
+                        {ticket.category === 'Programming' && (ticket.task_type || ticket.module_affected || ticket.reproduction_steps || ticket.user_flow || ticket.credentials) && (
                             <div className="mt-8 border-t pt-8">
                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                     <Monitor size={20} className="text-primary" />
@@ -231,6 +231,12 @@ export default function TicketDetailPage() {
                                     <div className="mt-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border">
                                         <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">Langkah Reproduksi Bug</p>
                                         <p className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">{ticket.reproduction_steps}</p>
+                                    </div>
+                                )}
+                                {ticket.user_flow && (
+                                    <div className="mt-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border">
+                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">Alur Kerja / User Flow</p>
+                                        <p className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">{ticket.user_flow}</p>
                                     </div>
                                 )}
                                 {ticket.credentials && (

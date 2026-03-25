@@ -381,7 +381,7 @@ export default function AdminTicketDetailPage() {
                 </div>
 
                 {/* Programming Detail */}
-                {ticket.category === 'Programming' && (ticket.task_type || ticket.module_affected || ticket.reproduction_steps || ticket.credentials) && (
+                {ticket.category === 'Programming' && (ticket.task_type || ticket.module_affected || ticket.reproduction_steps || ticket.user_flow || ticket.credentials) && (
                     <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
                         <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
                             <Monitor size={14} /> Detail Permintaan IT
@@ -404,6 +404,12 @@ export default function AdminTicketDetailPage() {
                             <div className="mt-3">
                                 <p className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase tracking-widest mb-1">Langkah Reproduksi Bug</p>
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{ticket.reproduction_steps}</p>
+                            </div>
+                        )}
+                        {ticket.user_flow && (
+                            <div className="mt-3">
+                                <p className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase tracking-widest mb-1">Alur Kerja / User Flow</p>
+                                <p className="text-sm whitespace-pre-wrap leading-relaxed">{ticket.user_flow}</p>
                             </div>
                         )}
                         {ticket.credentials && (

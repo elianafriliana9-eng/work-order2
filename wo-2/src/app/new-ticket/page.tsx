@@ -39,6 +39,7 @@ const formSchema = z.object({
     taskType: z.enum(["Bug Fix", "New Feature", "Maintenance", "Develop New System"]).optional(),
     moduleAffected: z.string().optional(),
     reproductionSteps: z.string().optional(),
+    userFlow: z.string().optional(),
     credentials: z.string().optional(),
     // Step 3: Meeting integration (Placeholder for LiveKit later)
     meetingType: z.enum(["Offline", "Online"]),
@@ -164,6 +165,7 @@ export default function NewTicketPage() {
                 insertData.task_type = data.taskType || null;
                 insertData.module_affected = data.moduleAffected || null;
                 insertData.reproduction_steps = data.reproductionSteps || null;
+                insertData.user_flow = data.userFlow || null;
                 insertData.credentials = data.credentials || null;
             }
 
@@ -292,33 +294,78 @@ export default function NewTicketPage() {
                                                 <>
                                                     <div>
                                                         <label className="block text-sm font-semibold mb-2">Tipe Pekerjaan</label>
-                                                        <select {...register("taskType")} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all">
-                                                            <option value="">Pilih tipe pekerjaan...</option>
-                                                            <option value="Bug Fix">Bug Fix</option>
-                                                            <option value="New Feature">New Feature</option>
-                                                            <option value="Maintenance">Maintenance</option>
-                                                            <option value="Develop New System">Develop New System</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-semibold mb-2">Platform</label>
-                                                        <input {...register("platform")} placeholder="Contoh: Web / Mobile / Database Internal" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-semibold mb-2">Modul yang Terkena</label>
-                                                        <input {...register("moduleAffected")} placeholder="Contoh: Modul Login, Halaman Dashboard, API Payment" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
-                                                    </div>
-                                                    {watch("taskType") === "Bug Fix" && (
-                                                        <div>
-                                                            <label className="block text-sm font-semibold mb-2">Langkah Reproduksi Bug</label>
-                                                            <textarea {...register("reproductionSteps")} rows={4} placeholder="Jelaskan langkah-langkah untuk mereproduksi bug:&#10;1. Buka halaman ...&#10;2. Klik tombol ...&#10;3. Muncul error ..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            {[
+                                                                { id: "Bug Fix", label: "Bug Fix", desc: "Perbaikan error/bug pada sistem" },
+                                                                { id: "New Feature", label: "New Feature", desc: "Tambah fitur baru ke sistem yang ada" },
+                                                                { id: "Maintenance", label: "Maintenance", desc: "Pemeliharaan & update rutin" },
+                                                                { id: "Develop New System", label: "Develop New System", desc: "Bangun sistem/aplikasi baru" },
+                                                            ].map((type) => (
+                                                                <button
+                                                                    key={type.id}
+                                                                    type="button"
+                                                                    onClick={() => setValue("taskType", type.id as any)}
+                                                                    className={`p-4 rounded-xl border-2 text-left transition-all ${watch("taskType") === type.id ? "border-primary bg-primary/5 text-primary" : "border-border hover:border-zinc-300 dark:hover:border-zinc-700"}`}
+                                                                >
+                                                                    <span className="text-sm font-bold block">{type.label}</span>
+                                                                    <span className="text-[10px] text-muted-foreground">{type.desc}</span>
+                                                                </button>
+                                                            ))}
                                                         </div>
-                                                    )}
-                                                    <div>
-                                                        <label className="block text-sm font-semibold mb-2">Kredensial / Akses (Opsional)</label>
-                                                        <textarea {...register("credentials")} rows={3} placeholder="URL staging, login test, atau akses lain yang diperlukan tim dev..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
-                                                        <p className="text-xs text-muted-foreground mt-1">Info ini hanya dapat dilihat oleh tim IT.</p>
                                                     </div>
+
+                                                    {watch("taskType") && (
+                                                        <>
+                                                            <div>
+                                                                <label className="block text-sm font-semibold mb-2">Platform</label>
+                                                                <input {...register("platform")} placeholder="Contoh: Web / Mobile / Database Internal" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
+                                                            </div>
+
+                                                            {/* Bug Fix: Modul + Langkah Reproduksi */}
+                                                            {watch("taskType") === "Bug Fix" && (
+                                                                <>
+                                                                    <div>
+                                                                        <label className="block text-sm font-semibold mb-2">Modul yang Terkena</label>
+                                                                        <input {...register("moduleAffected")} placeholder="Contoh: Modul Login, Halaman Dashboard, API Payment" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-semibold mb-2">Langkah Reproduksi Bug</label>
+                                                                        <textarea {...register("reproductionSteps")} rows={4} placeholder={"Jelaskan langkah-langkah untuk mereproduksi bug:\n1. Buka halaman ...\n2. Klik tombol ...\n3. Muncul error ..."} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                                    </div>
+                                                                </>
+                                                            )}
+
+                                                            {/* New Feature: User Flow */}
+                                                            {watch("taskType") === "New Feature" && (
+                                                                <div>
+                                                                    <label className="block text-sm font-semibold mb-2">Alur Kerja / User Flow</label>
+                                                                    <textarea {...register("userFlow")} rows={4} placeholder={"Jelaskan alur penggunaan fitur dari sisi pengguna:\n1. User membuka halaman ...\n2. User mengisi form ...\n3. Sistem memproses dan menampilkan ..."} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                                </div>
+                                                            )}
+
+                                                            {/* Maintenance: Modul */}
+                                                            {watch("taskType") === "Maintenance" && (
+                                                                <div>
+                                                                    <label className="block text-sm font-semibold mb-2">Modul / Sistem yang Perlu Maintenance</label>
+                                                                    <input {...register("moduleAffected")} placeholder="Contoh: Server Database, API Gateway, CMS Backend" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
+                                                                </div>
+                                                            )}
+
+                                                            {/* Develop New System: User Flow */}
+                                                            {watch("taskType") === "Develop New System" && (
+                                                                <div>
+                                                                    <label className="block text-sm font-semibold mb-2">Alur Kerja / User Flow Sistem Baru</label>
+                                                                    <textarea {...register("userFlow")} rows={4} placeholder={"Jelaskan alur kerja sistem yang diinginkan:\n1. Admin login ke dashboard ...\n2. Admin bisa mengelola data ...\n3. User bisa melihat ..."} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                                </div>
+                                                            )}
+
+                                                            <div>
+                                                                <label className="block text-sm font-semibold mb-2">Kredensial / Akses (Opsional)</label>
+                                                                <textarea {...register("credentials")} rows={3} placeholder="URL staging, login test, atau akses lain yang diperlukan tim dev..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                                <p className="text-xs text-muted-foreground mt-1">Info ini hanya dapat dilihat oleh tim IT.</p>
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </>
                                             )}
                                         </div>

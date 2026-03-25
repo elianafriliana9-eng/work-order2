@@ -63,6 +63,29 @@ export default function AdminTicketDetailPage() {
                 .select('*')
                 .eq('id', id)
                 .single();
+
+            // Auto-complete if revision window has expired
+            if (
+                woData &&
+                woData.status === 'Review' &&
+                woData.revision_window_expires_at &&
+                new Date() >= new Date(woData.revision_window_expires_at)
+            ) {
+                const { error: autoCompleteError } = await supabase
+                    .from('work_orders')
+                    .update({
+                        status: 'Completed',
+                        head_it_approval_status: 'approved',
+                        head_it_approval_notes: 'Auto-completed: Jendela revisi 24 jam telah berakhir tanpa pengajuan revisi.',
+                    })
+                    .eq('id', id)
+                    .eq('status', 'Review');
+
+                if (!autoCompleteError) {
+                    woData.status = 'Completed';
+                }
+            }
+
             if (woData) setTicket(woData);
 
             const { data: attachData } = await supabase
@@ -90,13 +113,23 @@ export default function AdminTicketDetailPage() {
 
     async function updateStatus(newStatus: string) {
         setUpdating(true);
+        const updateData: any = { status: newStatus };
+
+        // Set revision window when transitioning to Review
+        if (newStatus === 'Review') {
+            const now = new Date();
+            const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            updateData.review_started_at = now.toISOString();
+            updateData.revision_window_expires_at = expiresAt.toISOString();
+        }
+
         const { error } = await supabase
             .from('work_orders')
-            .update({ status: newStatus })
+            .update(updateData)
             .eq('id', id);
 
         if (!error) {
-            setTicket((prev: any) => ({ ...prev, status: newStatus }));
+            setTicket((prev: any) => ({ ...prev, ...updateData }));
         } else {
             alert("Gagal update status: " + error.message);
         }

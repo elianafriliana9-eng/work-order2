@@ -51,6 +51,28 @@ export default function TicketDetailPage() {
                     .single();
 
                 if (woError) throw woError;
+
+                // Auto-complete if revision window has expired
+                if (
+                    woData.status === 'Review' &&
+                    woData.revision_window_expires_at &&
+                    new Date() >= new Date(woData.revision_window_expires_at)
+                ) {
+                    const { error: autoCompleteError } = await supabase
+                        .from('work_orders')
+                        .update({
+                            status: 'Completed',
+                            head_it_approval_status: 'approved',
+                            head_it_approval_notes: 'Auto-completed: Jendela revisi 24 jam telah berakhir tanpa pengajuan revisi.',
+                        })
+                        .eq('id', id)
+                        .eq('status', 'Review');
+
+                    if (!autoCompleteError) {
+                        woData.status = 'Completed';
+                    }
+                }
+
                 setTicket(woData);
 
                 const { count, error: revError } = await supabase

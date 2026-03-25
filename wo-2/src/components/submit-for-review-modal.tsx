@@ -108,10 +108,14 @@ export default function SubmitForReviewModal({
             }
 
             // Update work order with final design and change status to Review
+            const now = new Date();
+            const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
             const updateData: any = {
                 status: 'Review',
                 final_design_urls: finalDesignUrls,
                 design_submitted_by: user.id,
+                review_started_at: now.toISOString(),
+                revision_window_expires_at: expiresAt.toISOString(),
             };
 
             if (gdriveLink.trim()) {

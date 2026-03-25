@@ -78,67 +78,83 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Check revision limit (max 2)
+        const MAX_REVISIONS = 2;
+        const { count: existingCount } = await supabase
+            .from('work_order_revisions')
+            .select('*', { count: 'exact', head: true })
+            .eq('wo_id', wo_id);
+
+        if (existingCount !== null && existingCount >= MAX_REVISIONS) {
+            return NextResponse.json(
+                { error: `Batas maksimal revisi (${MAX_REVISIONS}) telah tercapai` },
+                { status: 400 }
+            );
+        }
+
         // Check 24-hour window
         if (wo.revision_window_expires_at) {
             const now = new Date();
             const expiresAt = new Date(wo.revision_window_expires_at);
-            
+
             if (now >= expiresAt) {
                 return NextResponse.json(
-                    { 
+                    {
                         error: 'Batas waktu pengajuan revisi telah berakhir (24 jam)',
                         expired_at: wo.revision_window_expires_at
                     },
                     { status: 400 }
                 );
             }
-
-            // Calculate remaining time
-            const remainingHours = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60));
-            const remainingMinutes = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60)) % 60;
-
-            // Warning if less than 2 hours remaining
-            const timeWarning = remainingHours < 2 
-                ? `Peringatan: Waktu tersisa kurang dari 2 jam (${remainingHours}j ${remainingMinutes}m)`
-                : null;
-
-            // Submit revision
-            const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] 
-                || request.headers.get('x-real-ip') 
-                || 'unknown';
-
-            const { data: revision, error: revisionError } = await supabase
-                .from('work_order_revisions')
-                .insert([{
-                    wo_id,
-                    requester_id: user.id,
-                    ...revisionData,
-                    status: 'pending',
-                    submitted_from_ip: clientIp,
-                    user_agent: request.headers.get('user-agent'),
-                }])
-                .select()
-                .single();
-
-            if (revisionError) {
-                throw revisionError;
-            }
-
-            return NextResponse.json({
-                success: true,
-                revision,
-                time_warning: timeWarning,
-                remaining_time: {
-                    hours: remainingHours,
-                    minutes: remainingMinutes,
-                },
-            });
         }
 
-        return NextResponse.json(
-            { error: 'Jendela revisi belum dibuka' },
-            { status: 400 }
-        );
+        // Calculate remaining time for response
+        let timeWarning: string | null = null;
+        let remainingHours = 24;
+        let remainingMinutes = 0;
+
+        if (wo.revision_window_expires_at) {
+            const now = new Date();
+            const expiresAt = new Date(wo.revision_window_expires_at);
+            remainingHours = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60));
+            remainingMinutes = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60)) % 60;
+
+            if (remainingHours < 2) {
+                timeWarning = `Peringatan: Waktu tersisa kurang dari 2 jam (${remainingHours}j ${remainingMinutes}m)`;
+            }
+        }
+
+        // Submit revision
+        const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]
+            || request.headers.get('x-real-ip')
+            || 'unknown';
+
+        const { data: revision, error: revisionError } = await supabase
+            .from('work_order_revisions')
+            .insert([{
+                wo_id,
+                requester_id: user.id,
+                ...revisionData,
+                status: 'pending',
+                submitted_from_ip: clientIp,
+                user_agent: request.headers.get('user-agent'),
+            }])
+            .select()
+            .single();
+
+        if (revisionError) {
+            throw revisionError;
+        }
+
+        return NextResponse.json({
+            success: true,
+            revision,
+            time_warning: timeWarning,
+            remaining_time: {
+                hours: remainingHours,
+                minutes: remainingMinutes,
+            },
+        });
 
     } catch (error: any) {
         console.error('Revision submission error:', error);

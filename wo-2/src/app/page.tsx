@@ -138,7 +138,7 @@ export default function LandingPage() {
 
   const sopPoints = [
     { title: "Discussion Policy", desc: "Instruksi lisan/WA hanya bersifat diskusi, bukan perintah kerja.", icon: MessageSquare, color: "from-blue-500/20 to-blue-600/5", iconColor: "text-blue-500" },
-    { title: "Clocking System", desc: "Waktu pengerjaan resmi dihitung sejak tiket diterbitkan di sistem.", icon: Clock, color: "from-[#49FFB8]/20 to-[#49FFB8]/5", iconColor: "text-[#49FFB8]" },
+    { title: "Clocking System", desc: "Waktu pengerjaan resmi dihitung sejak tiket diterbitkan di sistem.", icon: Clock, color: "from-[#00B7FD]/20 to-[#00B7FD]/5", iconColor: "text-[#00B7FD]" },
     { title: "Traceable Revisions", desc: "Seluruh riwayat revisi wajib tercatat dalam history tiket yang sama.", icon: History, color: "from-indigo-500/20 to-indigo-600/5", iconColor: "text-indigo-500" },
     { title: "Auto Closing", desc: "Tiket ditutup otomatis setelah 1x24 jam tanpa feedback tambahan.", icon: MousePointerClick, color: "from-rose-500/20 to-rose-600/5", iconColor: "text-rose-500" },
   ];
@@ -146,8 +146,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden text-foreground">
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#49FFB8]/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#1C3ECA]/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00B7FD]/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#05599F]/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <nav className="fixed top-0 z-50 w-full glass border-b border-border/50">
@@ -173,11 +173,11 @@ export default function LandingPage() {
               <Zap size={10} fill="currentColor" /> Digital Technology Division
             </div>
             <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 leading-[1.1] sm:leading-[0.9]">
-              CRAFTING THE <br /> <span className="relative inline-block">FUTURE<div className="absolute bottom-1 sm:bottom-2 left-0 w-full h-2 sm:h-3 bg-[#49FFB8]/30 -z-10 rounded-full blur-sm" /></span> OF TECH
+              CRAFTING THE <br /> <span className="relative inline-block">FUTURE<div className="absolute bottom-1 sm:bottom-2 left-0 w-full h-2 sm:h-3 bg-[#00B7FD]/30 -z-10 rounded-full blur-sm" /></span> OF TECH
             </h1>
             <p className="max-w-2xl mx-auto text-sm sm:text-lg md:text-xl text-muted-foreground mb-10 sm:mb-12 leading-relaxed font-medium">
               Satu pintu untuk seluruh ekosistem layanan teknologi. <br className="hidden md:block" />
-              <span className="text-foreground font-bold underline decoration-[#49FFB8]/50 decoration-2">Design</span> • <span className="text-foreground font-bold underline decoration-[#1C3ECA]/50 decoration-2">Development</span> • <span className="text-foreground font-bold">Support</span>
+              <span className="text-foreground font-bold underline decoration-[#00B7FD]/50 decoration-2">Design</span> • <span className="text-foreground font-bold underline decoration-[#05599F]/50 decoration-2">Development</span> • <span className="text-foreground font-bold underline decoration-[#00B7FD]/30 decoration-2">Support</span>
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
               <Link href="/login" className="w-full sm:w-auto group flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/25">
@@ -292,7 +292,7 @@ export default function LandingPage() {
       </section>
 
       {/* SYSTEM PIPELINE SECTION */}
-      <section id="workflow" className="py-20 sm:py-32 bg-zinc-950 text-white relative">
+      <section id="workflow" className="py-20 sm:py-32 bg-[#031b33] text-white relative">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl sm:text-5xl font-black mb-16 tracking-tighter uppercase">SYSTEM PIPELINE</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
@@ -300,7 +300,7 @@ export default function LandingPage() {
               <div key={i} className="relative group">
                 <div className="flex flex-col items-center">
                   <div className="p-6 sm:p-8 rounded-[2rem] bg-white/5 border border-white/10 mb-6 group-hover:bg-primary transition-all relative">
-                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-black">0{i + 1}</div>
+                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-[#05599F] rounded-full flex items-center justify-center text-[10px] font-black text-white">0{i + 1}</div>
                     <step.icon size={32} className="text-primary group-hover:text-white" />
                   </div>
                   <h4 className="text-lg font-black mb-2 uppercase tracking-tight">{step.title}</h4>

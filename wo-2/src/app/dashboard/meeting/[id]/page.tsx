@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-    LiveKitRoom,
-    VideoConference,
-    RoomAudioRenderer,
-} from "@livekit/components-react";
+import { LiveKitRoom } from "@livekit/components-react";
 import "@livekit/components-styles";
-import { ArrowLeft, Loader2, ShieldAlert, RefreshCw, Video, Shield, WifiOff } from "lucide-react";
+import { ArrowLeft, RefreshCw, Video, Shield, WifiOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import CustomVideoConference from "@/components/custom-video-conference";
 import { motion, AnimatePresence } from "framer-motion";
 
 const LIVEKIT_SERVER_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://203.194.114.155:7880';
@@ -200,8 +197,7 @@ export default function MeetingPage() {
                     }}
                     className="h-full"
                 >
-                    <VideoConference />
-                    <RoomAudioRenderer />
+                    <CustomVideoConference onLeave={() => router.back()} />
                 </LiveKitRoom>
             </main>
 

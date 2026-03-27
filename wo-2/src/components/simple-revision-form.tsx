@@ -14,6 +14,9 @@ import {
     ChevronDown,
     ChevronUp,
     Send,
+    Video,
+    MapPin,
+    Calendar,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isBefore } from "date-fns";
@@ -42,6 +45,8 @@ export default function SimpleRevisionForm({
     const [files, setFiles] = useState<File[]>([]);
     const [description, setDescription] = useState('');
     const [changesRequested, setChangesRequested] = useState('');
+    const [meetingType, setMeetingType] = useState<'Online' | 'Offline'>('Online');
+    const [meetingDate, setMeetingDate] = useState('');
 
     // Update timer every minute
     useEffect(() => {
@@ -108,6 +113,11 @@ export default function SimpleRevisionForm({
             return;
         }
 
+        if (!meetingDate) {
+            alert("Mohon pilih jadwal meeting untuk diskusi revisi.");
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -146,6 +156,11 @@ export default function SimpleRevisionForm({
                 }
             }
 
+            // Generate meeting link for online meetings
+            const revisionMeetingLink = meetingType === 'Online'
+                ? `/dashboard/meeting/rev-${ticketId}-${lastRevisionNumber + 1}-${Math.random().toString(36).substring(2, 8)}`
+                : null;
+
             const { error: revisionError } = await supabase
                 .from('work_order_revisions')
                 .insert([{
@@ -159,6 +174,9 @@ export default function SimpleRevisionForm({
                     requires_new_ticket: false,
                     attachment_urls: attachmentUrls,
                     status: 'pending',
+                    meeting_type: meetingType,
+                    meeting_date: meetingDate ? `${meetingDate}:00+07:00` : null,
+                    meeting_link: revisionMeetingLink,
                 }]);
 
             if (revisionError) throw revisionError;
@@ -168,6 +186,8 @@ export default function SimpleRevisionForm({
             setDescription('');
             setChangesRequested('');
             setFiles([]);
+            setMeetingType('Online');
+            setMeetingDate('');
             
             if (onRevisionSubmitted) {
                 onRevisionSubmitted();
@@ -383,6 +403,74 @@ export default function SimpleRevisionForm({
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Meeting Selection for Revision Discussion */}
+                        <div className="p-4 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl space-y-4">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Calendar size={18} className="text-violet-600 dark:text-violet-400" />
+                                <p className="text-sm font-bold text-violet-800 dark:text-violet-300">
+                                    Jadwal Meeting Diskusi Revisi <span className="text-red-500">*</span>
+                                </p>
+                            </div>
+                            <p className="text-xs text-violet-700 dark:text-violet-400">
+                                Pilih tipe dan jadwal meeting untuk mendiskusikan revisi dengan tim design.
+                            </p>
+
+                            {/* Meeting Type Toggle */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setMeetingType('Online')}
+                                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-bold ${
+                                        meetingType === 'Online'
+                                            ? 'border-violet-500 bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300'
+                                            : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 hover:border-zinc-300'
+                                    }`}
+                                >
+                                    <Video size={18} />
+                                    Online Meeting
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setMeetingType('Offline')}
+                                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-bold ${
+                                        meetingType === 'Offline'
+                                            ? 'border-violet-500 bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300'
+                                            : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 hover:border-zinc-300'
+                                    }`}
+                                >
+                                    <MapPin size={18} />
+                                    Offline / Tatap Muka
+                                </button>
+                            </div>
+
+                            {meetingType === 'Online' && (
+                                <p className="text-xs text-violet-600 dark:text-violet-400 flex items-center gap-1.5">
+                                    <Video size={12} />
+                                    Room video call (LiveKit) akan otomatis dibuat untuk revisi ini
+                                </p>
+                            )}
+                            {meetingType === 'Offline' && (
+                                <p className="text-xs text-violet-600 dark:text-violet-400 flex items-center gap-1.5">
+                                    <MapPin size={12} />
+                                    Meeting akan dilakukan di Kantor IT
+                                </p>
+                            )}
+
+                            {/* Meeting Date */}
+                            <div>
+                                <label className="block text-xs font-bold mb-1.5 text-violet-700 dark:text-violet-300">
+                                    Tanggal & Waktu Meeting
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={meetingDate}
+                                    onChange={(e) => setMeetingDate(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl border border-violet-200 dark:border-violet-500/30 bg-white dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-violet-500 transition-all text-sm"
+                                    required
+                                />
+                            </div>
                         </div>
 
                         <button

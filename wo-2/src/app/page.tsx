@@ -14,6 +14,9 @@ import {
   TrendingUp,
   Zap,
   PenTool,
+  Palette,
+  Monitor,
+  Headphones,
   Download,
   MessageSquare,
   History,
@@ -166,30 +169,95 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 text-center">
+      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20">
         <div className="container mx-auto px-6">
-          <motion.div {...fadeIn}>
+          {/* Top: Division Identity */}
+          <motion.div {...fadeIn} className="text-center">
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 mb-6 sm:mb-8 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] uppercase rounded-full bg-primary/10 text-primary border border-primary/20 backdrop-blur-md">
               <Zap size={10} fill="currentColor" /> Digital Technology Division
             </div>
             <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 leading-[1.1] sm:leading-[0.9]">
-              CRAFTING THE <br /> <span className="relative inline-block">FUTURE<div className="absolute bottom-1 sm:bottom-2 left-0 w-full h-2 sm:h-3 bg-[#00B7FD]/30 -z-10 rounded-full blur-sm" /></span> OF TECH
+              WE BUILD <br /> <span className="relative inline-block">DIGITAL<div className="absolute bottom-1 sm:bottom-2 left-0 w-full h-2 sm:h-3 bg-[#00B7FD]/30 -z-10 rounded-full blur-sm" /></span> THINGS
             </h1>
             <p className="max-w-2xl mx-auto text-sm sm:text-lg md:text-xl text-muted-foreground mb-10 sm:mb-12 leading-relaxed font-medium">
-              Satu pintu untuk seluruh ekosistem layanan teknologi. <br className="hidden md:block" />
-              <span className="text-foreground font-bold underline decoration-[#00B7FD]/50 decoration-2">Design</span> • <span className="text-foreground font-bold underline decoration-[#05599F]/50 decoration-2">Development</span> • <span className="text-foreground font-bold underline decoration-[#00B7FD]/30 decoration-2">Support</span>
+              Tim di balik layar yang merancang, membangun, dan mengelola <br className="hidden md:block" />
+              seluruh kebutuhan teknologi & kreatif perusahaan.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
-              <Link href="/login" className="w-full sm:w-auto group flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/25">
-                Launch Work Order <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link href="#sop" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-secondary/50 backdrop-blur-md text-secondary-foreground border border-border rounded-2xl font-bold hover:bg-secondary transition-all">
-                System SOP
-              </Link>
+          </motion.div>
+
+          {/* Three Pillars of Digital Tech */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-8 max-w-5xl mx-auto"
+          >
+            <div className="group relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-border bg-white dark:bg-zinc-900 shadow-xl overflow-hidden text-left hover:border-[#00B7FD]/40 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#00B7FD]/5 blur-[60px] rounded-full pointer-events-none" />
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#00B7FD]/10 w-fit mb-5 sm:mb-6">
+                <Palette size={28} className="text-[#00B7FD]" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight mb-2">Creative Design</h3>
+              <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
+                Visual branding, marketing collateral, UI/UX design, dan seluruh kebutuhan kreatif visual.
+              </p>
+              <div className="mt-4 sm:mt-6 flex flex-wrap gap-2">
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#00B7FD]/10 text-[#00B7FD]">Branding</span>
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#00B7FD]/10 text-[#00B7FD]">UI/UX</span>
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#00B7FD]/10 text-[#00B7FD]">Marketing</span>
+              </div>
             </div>
+
+            <div className="group relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-border bg-white dark:bg-zinc-900 shadow-xl overflow-hidden text-left hover:border-[#05599F]/40 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#05599F]/5 blur-[60px] rounded-full pointer-events-none" />
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#05599F]/10 w-fit mb-5 sm:mb-6">
+                <Monitor size={28} className="text-[#05599F]" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight mb-2">IT Development</h3>
+              <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
+                Pengembangan sistem, aplikasi internal, web platform, dan solusi teknologi custom.
+              </p>
+              <div className="mt-4 sm:mt-6 flex flex-wrap gap-2">
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#05599F]/10 text-[#05599F]">Web App</span>
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#05599F]/10 text-[#05599F]">System</span>
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#05599F]/10 text-[#05599F]">Automation</span>
+              </div>
+            </div>
+
+            <div className="group relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-border bg-white dark:bg-zinc-900 shadow-xl overflow-hidden text-left hover:border-emerald-500/40 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[60px] rounded-full pointer-events-none" />
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-500/10 w-fit mb-5 sm:mb-6">
+                <Headphones size={28} className="text-emerald-500" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight mb-2">IT Support</h3>
+              <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
+                Troubleshooting, manajemen aset digital, infrastruktur jaringan, dan dukungan teknis harian.
+              </p>
+              <div className="mt-4 sm:mt-6 flex flex-wrap gap-2">
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-500">Helpdesk</span>
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-500">Network</span>
+                <span className="px-2.5 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-500">Asset</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5 mt-12 sm:mt-16"
+          >
+            <Link href="/login" className="w-full sm:w-auto group flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/25">
+              Launch Work Order <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link href="#sop" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-secondary/50 backdrop-blur-md text-secondary-foreground border border-border rounded-2xl font-bold hover:bg-secondary transition-all">
+              System SOP
+            </Link>
           </motion.div>
         </div>
 
+        {/* Stats + Chart below hero */}
         <div className="container mx-auto px-4 sm:px-6 mt-20 sm:mt-32">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
             <div className="lg:col-span-8 p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-border bg-white dark:bg-zinc-900 shadow-2xl relative overflow-hidden text-left">

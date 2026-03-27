@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
     ArrowLeft,
-    Calendar,
     Clock,
     CheckCircle2,
     AlertCircle,
@@ -12,12 +11,13 @@ import {
     ExternalLink,
     Paperclip,
     User,
-    Building2,
     Monitor,
     Maximize2,
     Video,
     MapPin,
-    ArrowUpRight
+    ArrowUpRight,
+    Plane,
+    QrCode,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -167,22 +167,160 @@ export default function TicketDetailPage() {
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
-                    <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-border shadow-sm">
-                        <div className="mb-6">
-                            <h1 className="text-3xl font-bold tracking-tight mb-2">{ticket.title}</h1>
-                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-3 py-1 rounded-full">
-                                    <Building2 size={14} /> {ticket.brand}
+                    {/* ===== BOARDING PASS TICKET ===== */}
+                    <section className="relative">
+                        {/* Ticket body */}
+                        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-border shadow-sm overflow-hidden">
+                            {/* Top colored strip */}
+                            <div className={`h-2 ${
+                                ticket.priority === 'P1' ? 'bg-gradient-to-r from-red-500 to-orange-500' :
+                                ticket.priority === 'P2' ? 'bg-gradient-to-r from-amber-500 to-yellow-500' :
+                                'bg-gradient-to-r from-primary to-blue-500'
+                            }`} />
+
+                            <div className="flex flex-col lg:flex-row">
+                                {/* LEFT: Main ticket info */}
+                                <div className="flex-1 p-8">
+                                    {/* Airline-style header */}
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                <Plane size={20} className="text-primary -rotate-45" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Work Order</p>
+                                                <p className="text-xs font-bold text-primary font-mono">WO-{ticket.id?.slice(0, 8).toUpperCase()}</p>
+                                            </div>
+                                        </div>
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusInfo.color}`}>
+                                            {statusInfo.label}
+                                        </span>
+                                    </div>
+
+                                    {/* Title */}
+                                    <h1 className="text-2xl font-black tracking-tight mb-4 leading-tight">{ticket.title}</h1>
+
+                                    {/* Route-style info: FROM → TO */}
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Brand</p>
+                                            <p className="text-lg font-black tracking-tight">{ticket.brand}</p>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-1 px-4">
+                                            <div className="flex items-center gap-1">
+                                                <div className="w-2 h-2 rounded-full bg-primary" />
+                                                <div className="w-16 h-px bg-zinc-300 dark:bg-zinc-700 relative">
+                                                    <Plane size={12} className="text-primary absolute -top-1.5 left-1/2 -translate-x-1/2" />
+                                                </div>
+                                                <div className="w-2 h-2 rounded-full border-2 border-primary" />
+                                            </div>
+                                            <p className="text-[8px] font-bold text-muted-foreground uppercase">{ticket.category}</p>
+                                        </div>
+                                        <div className="flex-1 text-right">
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Deadline</p>
+                                            <p className="text-lg font-black tracking-tight">
+                                                {new Date(ticket.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Detail grid */}
+                                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-dashed border-zinc-200 dark:border-zinc-700">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Kategori</p>
+                                            <p className="text-sm font-bold">{ticket.category}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Prioritas</p>
+                                            <p className={`text-sm font-bold ${ticket.priority === 'P1' ? 'text-red-500' : ticket.priority === 'P2' ? 'text-amber-500' : 'text-blue-500'}`}>
+                                                {ticket.priority}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Tanggal Buat</p>
+                                            <p className="text-sm font-bold">
+                                                {new Date(ticket.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-3 py-1 rounded-full">
-                                    <FileText size={14} /> {ticket.category}
+
+                                {/* PERFORATED LINE (divider) */}
+                                <div className="relative lg:w-0 h-0 lg:h-auto">
+                                    {/* Horizontal for mobile */}
+                                    <div className="block lg:hidden relative h-8">
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-950 border border-border" />
+                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-950 border border-border" />
+                                        <div className="absolute inset-x-8 top-1/2 border-t-2 border-dashed border-zinc-300 dark:border-zinc-700" />
+                                    </div>
+                                    {/* Vertical for desktop */}
+                                    <div className="hidden lg:block relative h-full">
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-950 border border-border z-10" />
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-950 border border-border z-10" />
+                                        <div className="absolute inset-y-8 left-1/2 border-l-2 border-dashed border-zinc-300 dark:border-zinc-700" />
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-3 py-1 rounded-full">
-                                    <Calendar size={14} /> {new Date(ticket.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+                                {/* RIGHT: Stub / Tear-off */}
+                                <div className="lg:w-56 p-6 lg:p-8 flex flex-col items-center justify-center text-center gap-4">
+                                    {/* QR-like decorative element */}
+                                    <div className="w-24 h-24 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-200 dark:border-zinc-700 flex items-center justify-center relative">
+                                        <QrCode size={48} className="text-zinc-300 dark:text-zinc-600" />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                                ticket.priority === 'P1' ? 'bg-red-500' :
+                                                ticket.priority === 'P2' ? 'bg-amber-500' :
+                                                'bg-primary'
+                                            }`}>
+                                                <p className="text-white text-xs font-black">{ticket.priority}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Nomor Tiket</p>
+                                        <p className="text-sm font-mono font-black text-foreground mt-0.5">
+                                            #{ticket.id?.slice(0, 8).toUpperCase()}
+                                        </p>
+                                    </div>
+
+                                    <div className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${statusInfo.color}`}>
+                                        {statusInfo.label}
+                                    </div>
+
+                                    {ticket.meeting_type && (
+                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                            {ticket.meeting_type === 'Online' ? <Video size={12} /> : <MapPin size={12} />}
+                                            <span className="font-bold">{ticket.meeting_type}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
 
+                            {/* Bottom barcode strip */}
+                            <div className="px-8 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                                <div className="flex gap-[2px]">
+                                    {Array.from({ length: 40 }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="bg-zinc-800 dark:bg-zinc-300"
+                                            style={{
+                                                width: Math.random() > 0.5 ? '2px' : '1px',
+                                                height: '20px',
+                                                opacity: 0.3 + Math.random() * 0.5,
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                                <p className="text-[9px] font-mono font-bold text-muted-foreground tracking-wider ml-4 shrink-0">
+                                    WO-{ticket.id?.slice(0, 12).toUpperCase()}
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* ===== DESCRIPTION & DETAILS (below boarding pass) ===== */}
+                    <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-border shadow-sm">
                         <div className="prose prose-zinc dark:prose-invert max-w-none">
                             <h3 className="text-lg font-bold mb-3 border-b pb-2">Deskripsi / Brief</h3>
                             <p className="whitespace-pre-wrap leading-relaxed text-zinc-600 dark:text-zinc-400">

@@ -51,70 +51,26 @@ export default function LandingPage() {
     setIsClient(true);
     async function loadData() {
       try {
-        // Load Showcases
+        // Load Showcases (public table, accessible via anon key)
         const { data: showcaseData } = await supabase
           .from('showcase_items')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(6);
 
-        console.log("Showcase Data:", showcaseData);
         if (showcaseData && showcaseData.length > 0) {
           setShowcases(showcaseData);
-        } else {
-          // Fallback to manual check if query returns nothing
-          console.warn("No showcase data found in Supabase.");
         }
 
-        // Fetch basic counts from work_orders
-        const { data: woData, error } = await supabase
-          .from('work_orders')
-          .select('status, priority, created_at, deadline');
-
-        if (error) {
-          console.warn("Stats restricted by RLS, using defaults.");
-        } else if (woData) {
-          const activeCount = woData.filter((d: any) => d.status !== 'Completed' && d.status !== 'Rejected').length;
-          const completed = woData.filter((d: any) => d.status === 'Completed');
-          let avgDays = "0";
-          if (completed.length > 0) {
-            const totalMs = completed.reduce((acc: any, curr: any) => {
-              const end = new Date(curr.deadline || curr.created_at).getTime();
-              const start = new Date(curr.created_at).getTime();
-              return acc + (end - start);
-            }, 0);
-            avgDays = ((totalMs / completed.length) / (1000 * 60 * 60 * 24)).toFixed(1);
-          }
-
-          const hasP1 = woData.some((d: any) => d.status !== 'Completed' && d.priority === 'P1');
-
-          setStatsData({
-            activeTickets: activeCount.toString(),
-            avgCompletion: `${avgDays} Hari`,
-            highestPriority: hasP1 ? "P1 (Urgent)" : "P2 (Standar)"
-          });
-
-          // Calculate Last 7 Days Chart Data
-          const last7Days = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (6 - i));
-            return {
-              date: d.toISOString().split('T')[0],
-              dayName: d.toLocaleDateString('id-ID', { weekday: 'short' }),
-              total: 0
-            };
-          });
-
-          woData.forEach((wo: any) => {
-            const woDate = new Date(wo.created_at).toISOString().split('T')[0];
-            const found = last7Days.find(d => d.date === woDate);
-            if (found) found.total += 1;
-          });
-          setChartData(last7Days);
+        // Fetch stats from server-side API (bypasses RLS)
+        const res = await fetch('/api/landing-stats');
+        if (res.ok) {
+          const data = await res.json();
+          setStatsData(data.stats);
+          setChartData(data.chartData);
         }
-
       } catch (err) {
-        console.error("Supabase load error:", err);
+        console.error("Landing data load error:", err);
       }
     }
     loadData();

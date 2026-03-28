@@ -18,6 +18,7 @@ import {
     User,
     Send,
     ExternalLink,
+    MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -49,6 +50,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
         { href: "/admin/reports", label: "Laporan Tim", icon: FileText },
         { href: "/admin/reporting", label: "Reporting", icon: PieChart },
         { href: "/admin/showcase", label: "Showcase", icon: Image },
+        { href: "/admin/chat", label: "Team Chat", icon: MessageCircle },
     ];
 
     async function handleLogout() {

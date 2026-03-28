@@ -21,4 +21,6 @@ export const supabase = {
     get storage() { return getClient().storage },
     from(table: string) { return getClient().from(table) },
     rpc(fn: string, params?: any) { return getClient().rpc(fn, params) },
+    channel(name: string) { return getClient().channel(name) },
+    removeChannel(channel: any) { return getClient().removeChannel(channel) },
 }

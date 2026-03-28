@@ -290,8 +290,8 @@ export default function LandingPage() {
         <div className="container mx-auto px-6">
           <div className="max-w-xl mb-12 sm:mb-20 mx-auto md:mx-0">
             <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 block">Creative Portfolio</span>
-            <h2 className="text-4xl sm:text-7xl font-black tracking-tighter uppercase leading-[1.1] sm:leading-[0.8]">DESIGN <br />SHOWCASE</h2>
-            <p className="mt-6 text-muted-foreground text-sm sm:text-lg">Kumpulan karya visual terbaik dari tim Creative.</p>
+            <h2 className="text-4xl sm:text-7xl font-black tracking-tighter uppercase leading-[1.1] sm:leading-[0.8]">OUR <br />WORKS</h2>
+            <p className="mt-6 text-muted-foreground text-sm sm:text-lg">Hasil Pekerjaan Dari Tim Digital Technology.</p>
           </div>
           <div className="flex justify-center items-center w-full min-h-[300px] sm:min-h-[500px] relative">
             {showcases.length > 0 ? (

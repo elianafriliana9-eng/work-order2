@@ -38,6 +38,7 @@ import {
 
 export default function LandingPage() {
   const [showcases, setShowcases] = useState<any[]>([]);
+  const [appShowcases, setAppShowcases] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [statsData, setStatsData] = useState({
@@ -60,6 +61,17 @@ export default function LandingPage() {
 
         if (showcaseData && showcaseData.length > 0) {
           setShowcases(showcaseData);
+        }
+
+        // Load App Showcases (system development)
+        const { data: appData } = await supabase
+          .from('app_showcase')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (appData && appData.length > 0) {
+          setAppShowcases(appData);
         }
 
         // Fetch stats from server-side API (bypasses RLS)
@@ -312,6 +324,116 @@ export default function LandingPage() {
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* APP SHOWCASE / SYSTEM DEVELOPMENT SECTION */}
+      <section id="app-showcase" className="py-20 sm:py-32 bg-zinc-50 dark:bg-zinc-900/50 overflow-hidden">
+        <div className="container mx-auto px-6">
+          <div className="max-w-xl mb-12 sm:mb-16 text-center mx-auto">
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 block">System Development</span>
+            <h2 className="text-4xl sm:text-7xl font-black tracking-tighter uppercase leading-[1.1] sm:leading-[0.8]">OUR<br />APPS</h2>
+            <p className="mt-6 text-muted-foreground text-sm sm:text-lg">Aplikasi & sistem yang dikembangkan oleh Tim IT Development.</p>
+          </div>
+
+          {appShowcases.length > 0 ? (
+            <div className="space-y-10">
+              {appShowcases.map((app, idx) => (
+                <motion.div
+                  key={app.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  className="bg-white dark:bg-zinc-900 rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
+                >
+                  {/* Screenshots Carousel */}
+                  <div className="relative">
+                    <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700">
+                      {(app.screenshots || []).map((url: string, si: number) => (
+                        <div
+                          key={si}
+                          className="snap-center shrink-0 w-full sm:w-1/2 lg:w-1/3 aspect-video relative cursor-pointer group/ss"
+                          onClick={() => setSelectedImage(url)}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt={`${app.app_name} screenshot ${si + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => (e.currentTarget.src = "https://placehold.co/800x450/27272a/fafafa?text=Screenshot")}
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/ss:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-white text-xs font-bold px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/20">
+                              Lihat
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* App Info */}
+                  <div className="p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-xl sm:text-2xl font-black tracking-tight">{app.app_name}</h3>
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                            app.platform === 'android' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                            app.platform === 'ios' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                            app.platform === 'web' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                            'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                          }`}>
+                            {app.platform === 'cross-platform' ? 'Cross Platform' : app.platform === 'ios' ? 'iOS' : app.platform === 'web' ? 'Web App' : 'Android'}
+                          </span>
+                        </div>
+                        <p className="text-sm sm:text-base text-muted-foreground max-w-xl">{app.description}</p>
+                      </div>
+
+                      {/* Download / Demo Links */}
+                      <div className="flex flex-wrap gap-2 shrink-0">
+                        {app.play_store_url && (
+                          <a
+                            href={app.play_store_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:opacity-90 transition-opacity"
+                          >
+                            <Download size={16} /> Play Store
+                          </a>
+                        )}
+                        {app.app_store_url && (
+                          <a
+                            href={app.app_store_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:opacity-90 transition-opacity"
+                          >
+                            <Download size={16} /> App Store
+                          </a>
+                        )}
+                        {app.demo_url && (
+                          <a
+                            href={app.demo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 text-sm font-bold hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-all"
+                          >
+                            <Monitor size={16} /> Coba Sekarang
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="w-full max-w-2xl mx-auto p-20 border-2 border-dashed border-border rounded-[3rem] text-center opacity-50">
+              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Waiting for development showcase...</p>
+            </div>
+          )}
         </div>
       </section>
 

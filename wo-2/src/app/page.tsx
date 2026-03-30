@@ -40,6 +40,7 @@ export default function LandingPage() {
   const [showcases, setShowcases] = useState<any[]>([]);
   const [appShowcases, setAppShowcases] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [statsData, setStatsData] = useState({
     activeTickets: "0",
@@ -337,93 +338,42 @@ export default function LandingPage() {
           </div>
 
           {appShowcases.length > 0 ? (
-            <div className="space-y-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {appShowcases.map((app, idx) => (
                 <motion.div
                   key={app.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className="bg-white dark:bg-zinc-900 rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ duration: 0.4, delay: idx * 0.07 }}
+                  className="group cursor-pointer"
+                  onClick={() => setSelectedApp(app)}
                 >
-                  {/* Screenshots Carousel */}
-                  <div className="relative">
-                    <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700">
-                      {(app.screenshots || []).map((url: string, si: number) => (
-                        <div
-                          key={si}
-                          className="snap-center shrink-0 w-full sm:w-1/2 lg:w-1/3 aspect-video relative cursor-pointer group/ss"
-                          onClick={() => setSelectedImage(url)}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={url}
-                            alt={`${app.app_name} screenshot ${si + 1}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => (e.currentTarget.src = "https://placehold.co/800x450/27272a/fafafa?text=Screenshot")}
-                          />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/ss:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="text-white text-xs font-bold px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/20">
-                              Lihat
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* App Info */}
-                  <div className="p-6 sm:p-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl sm:text-2xl font-black tracking-tight">{app.app_name}</h3>
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                            app.platform === 'android' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                            app.platform === 'ios' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                            app.platform === 'web' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
-                            'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                          }`}>
-                            {app.platform === 'cross-platform' ? 'Cross Platform' : app.platform === 'ios' ? 'iOS' : app.platform === 'web' ? 'Web App' : 'Android'}
+                  <div className="relative overflow-hidden rounded-2xl border border-border bg-white dark:bg-zinc-900 shadow-sm group-hover:shadow-xl group-hover:border-primary/30 transition-all duration-300">
+                    {/* First screenshot — natural aspect ratio */}
+                    {app.screenshots && app.screenshots.length > 0 ? (
+                      <div className="relative overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={app.screenshots[0]}
+                          alt={app.app_name}
+                          className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => (e.currentTarget.src = "https://placehold.co/400x600/27272a/fafafa?text=App")}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                          <span className="text-white text-xs font-bold px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20">
+                            Lihat Detail
                           </span>
                         </div>
-                        <p className="text-sm sm:text-base text-muted-foreground max-w-xl">{app.description}</p>
                       </div>
-
-                      {/* Download / Demo Links */}
-                      <div className="flex flex-wrap gap-2 shrink-0">
-                        {app.play_store_url && (
-                          <a
-                            href={app.play_store_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:opacity-90 transition-opacity"
-                          >
-                            <Download size={16} /> Play Store
-                          </a>
-                        )}
-                        {app.app_store_url && (
-                          <a
-                            href={app.app_store_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:opacity-90 transition-opacity"
-                          >
-                            <Download size={16} /> App Store
-                          </a>
-                        )}
-                        {app.demo_url && (
-                          <a
-                            href={app.demo_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 text-sm font-bold hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-all"
-                          >
-                            <Monitor size={16} /> Coba Sekarang
-                          </a>
-                        )}
+                    ) : (
+                      <div className="aspect-[9/16] bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                        <Monitor size={32} className="text-zinc-300" />
                       </div>
+                    )}
+                    {/* App Name Overlay */}
+                    <div className="p-3 sm:p-4">
+                      <h3 className="font-black text-sm sm:text-base tracking-tight text-center line-clamp-1">{app.app_name}</h3>
                     </div>
                   </div>
                 </motion.div>
@@ -436,6 +386,120 @@ export default function LandingPage() {
           )}
         </div>
       </section>
+
+      {/* APP DETAIL MODAL */}
+      <AnimatePresence>
+        {selectedApp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedApp(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-zinc-900 rounded-3xl border border-border shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto my-auto"
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-border px-6 sm:px-8 py-5 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl sm:text-2xl font-black tracking-tight">{selectedApp.app_name}</h3>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                      selectedApp.platform === 'android' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                      selectedApp.platform === 'ios' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                      selectedApp.platform === 'web' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                    }`}>
+                      {selectedApp.platform === 'cross-platform' ? 'Cross Platform' : selectedApp.platform === 'ios' ? 'iOS' : selectedApp.platform === 'web' ? 'Web App' : 'Android'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedApp(null)}
+                  className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Screenshots Gallery */}
+              {selectedApp.screenshots && selectedApp.screenshots.length > 0 && (
+                <div className="px-6 sm:px-8 pt-6">
+                  <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700">
+                    {selectedApp.screenshots.map((url: string, si: number) => (
+                      <div
+                        key={si}
+                        className="snap-start shrink-0 relative rounded-xl overflow-hidden border border-border cursor-pointer group/ss hover:ring-2 hover:ring-primary/30 transition-all"
+                        onClick={() => setSelectedImage(url)}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`${selectedApp.app_name} screenshot ${si + 1}`}
+                          className="h-64 sm:h-80 w-auto object-contain"
+                          onError={(e) => (e.currentTarget.src = "https://placehold.co/300x500/27272a/fafafa?text=Screenshot")}
+                        />
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/ss:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-xs font-bold px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/20">
+                            Perbesar
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              <div className="px-6 sm:px-8 py-5">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{selectedApp.description}</p>
+              </div>
+
+              {/* Download / Demo Links */}
+              {(selectedApp.play_store_url || selectedApp.app_store_url || selectedApp.demo_url) && (
+                <div className="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-wrap gap-3">
+                  {selectedApp.play_store_url && (
+                    <a
+                      href={selectedApp.play_store_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:opacity-90 transition-opacity"
+                    >
+                      <Download size={16} /> Google Play
+                    </a>
+                  )}
+                  {selectedApp.app_store_url && (
+                    <a
+                      href={selectedApp.app_store_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:opacity-90 transition-opacity"
+                    >
+                      <Download size={16} /> App Store
+                    </a>
+                  )}
+                  {selectedApp.demo_url && (
+                    <a
+                      href={selectedApp.demo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 text-sm font-bold hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-all"
+                    >
+                      <Monitor size={16} /> Coba Sekarang
+                    </a>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* SYSTEM PIPELINE SECTION */}
       <section id="workflow" className="py-20 sm:py-32 bg-[#031b33] text-white relative">

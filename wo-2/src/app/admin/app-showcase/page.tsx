@@ -5,11 +5,10 @@ import {
     Smartphone,
     Plus,
     Trash2,
-    Upload,
     X,
     ExternalLink,
     Globe,
-    Image as ImageIcon,
+    Pencil,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -53,12 +52,14 @@ function PlatformBadge({ platform }: { platform: string }) {
     );
 }
 
+const inputClass = "w-full px-3 py-2 text-sm rounded-lg border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20";
+
 export default function AdminAppShowcasePage() {
     const [items, setItems] = useState<AppShowcase[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
-    // Form states
+    // Form states (add new)
     const [appName, setAppName] = useState("");
     const [description, setDescription] = useState("");
     const [platform, setPlatform] = useState("android");
@@ -67,6 +68,19 @@ export default function AdminAppShowcasePage() {
     const [demoUrl, setDemoUrl] = useState("");
     const [files, setFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+    // Edit modal
+    const [editItem, setEditItem] = useState<AppShowcase | null>(null);
+    const [editName, setEditName] = useState("");
+    const [editDesc, setEditDesc] = useState("");
+    const [editPlatform, setEditPlatform] = useState("android");
+    const [editPlayStore, setEditPlayStore] = useState("");
+    const [editAppStore, setEditAppStore] = useState("");
+    const [editDemo, setEditDemo] = useState("");
+    const [editScreenshots, setEditScreenshots] = useState<string[]>([]);
+    const [editNewFiles, setEditNewFiles] = useState<File[]>([]);
+    const [editNewPreviews, setEditNewPreviews] = useState<string[]>([]);
+    const [editSubmitting, setEditSubmitting] = useState(false);
 
     // Preview modal
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -85,6 +99,8 @@ export default function AdminAppShowcasePage() {
     useEffect(() => {
         loadItems();
     }, []);
+
+    // ── Add Form Handlers ──
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const selected = Array.from(e.target.files || []);
@@ -122,26 +138,8 @@ export default function AdminAppShowcasePage() {
 
         setSubmitting(true);
         try {
-            // Upload all screenshots
-            const uploadedUrls: string[] = [];
-            for (const file of files) {
-                const fileExt = file.name.split(".").pop();
-                const fileName = `app-showcase/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const uploadedUrls = await uploadFiles(files);
 
-                const { error: uploadError } = await supabase.storage
-                    .from("attachments")
-                    .upload(fileName, file, { cacheControl: "3600", upsert: false });
-
-                if (uploadError) throw uploadError;
-
-                const { data: { publicUrl } } = supabase.storage
-                    .from("attachments")
-                    .getPublicUrl(fileName);
-
-                uploadedUrls.push(publicUrl);
-            }
-
-            // Insert to Database
             const { error: dbError } = await supabase
                 .from("app_showcase")
                 .insert([{
@@ -156,7 +154,6 @@ export default function AdminAppShowcasePage() {
 
             if (dbError) throw dbError;
 
-            // Reset form
             setAppName("");
             setDescription("");
             setPlatform("android");
@@ -176,16 +173,132 @@ export default function AdminAppShowcasePage() {
     async function handleDelete(id: string) {
         if (!confirm("Yakin ingin menghapus app showcase ini?")) return;
 
-        const { error } = await supabase
-            .from("app_showcase")
-            .delete()
-            .eq("id", id);
-
+        const { error } = await supabase.from("app_showcase").delete().eq("id", id);
         if (error) {
             alert("Gagal menghapus: " + error.message);
         } else {
             setItems(items.filter((item) => item.id !== id));
         }
+    }
+
+    // ── Edit Modal Handlers ──
+
+    function openEdit(item: AppShowcase) {
+        setEditItem(item);
+        setEditName(item.app_name);
+        setEditDesc(item.description || "");
+        setEditPlatform(item.platform);
+        setEditPlayStore(item.play_store_url || "");
+        setEditAppStore(item.app_store_url || "");
+        setEditDemo(item.demo_url || "");
+        setEditScreenshots([...(item.screenshots || [])]);
+        setEditNewFiles([]);
+        setEditNewPreviews([]);
+    }
+
+    function closeEdit() {
+        setEditItem(null);
+        setEditNewFiles([]);
+        setEditNewPreviews([]);
+    }
+
+    function removeExistingScreenshot(index: number) {
+        setEditScreenshots(editScreenshots.filter((_, i) => i !== index));
+    }
+
+    function handleEditFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const selected = Array.from(e.target.files || []);
+        const valid: File[] = [];
+        for (const f of selected) {
+            if (f.size > 5 * 1024 * 1024) {
+                alert(`File "${f.name}" melebihi 5MB, dilewati.`);
+                continue;
+            }
+            valid.push(f);
+        }
+        const totalCount = editScreenshots.length + editNewFiles.length + valid.length;
+        if (totalCount > 6) {
+            alert("Maksimal 6 screenshot per aplikasi.");
+            return;
+        }
+        const newFiles = [...editNewFiles, ...valid];
+        setEditNewFiles(newFiles);
+        setEditNewPreviews(newFiles.map((f) => URL.createObjectURL(f)));
+        e.target.value = "";
+    }
+
+    function removeEditNewFile(index: number) {
+        const newFiles = editNewFiles.filter((_, i) => i !== index);
+        setEditNewFiles(newFiles);
+        setEditNewPreviews(newFiles.map((f) => URL.createObjectURL(f)));
+    }
+
+    async function handleEditSave() {
+        if (!editItem) return;
+        if (!editName.trim()) {
+            alert("Nama aplikasi wajib diisi.");
+            return;
+        }
+        if (editScreenshots.length === 0 && editNewFiles.length === 0) {
+            alert("Minimal 1 screenshot diperlukan.");
+            return;
+        }
+
+        setEditSubmitting(true);
+        try {
+            // Upload new files if any
+            let newUrls: string[] = [];
+            if (editNewFiles.length > 0) {
+                newUrls = await uploadFiles(editNewFiles);
+            }
+
+            const allScreenshots = [...editScreenshots, ...newUrls];
+
+            const { error } = await supabase
+                .from("app_showcase")
+                .update({
+                    app_name: editName,
+                    description: editDesc,
+                    platform: editPlatform,
+                    play_store_url: editPlayStore || null,
+                    app_store_url: editAppStore || null,
+                    demo_url: editDemo || null,
+                    screenshots: allScreenshots,
+                })
+                .eq("id", editItem.id);
+
+            if (error) throw error;
+
+            closeEdit();
+            loadItems();
+        } catch (error: any) {
+            alert("Gagal menyimpan perubahan: " + error.message);
+        } finally {
+            setEditSubmitting(false);
+        }
+    }
+
+    // ── Shared upload helper ──
+
+    async function uploadFiles(filesToUpload: File[]): Promise<string[]> {
+        const urls: string[] = [];
+        for (const file of filesToUpload) {
+            const fileExt = file.name.split(".").pop();
+            const fileName = `app-showcase/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from("attachments")
+                .upload(fileName, file, { cacheControl: "3600", upsert: false });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from("attachments")
+                .getPublicUrl(fileName);
+
+            urls.push(publicUrl);
+        }
+        return urls;
     }
 
     return (
@@ -209,103 +322,49 @@ export default function AdminAppShowcasePage() {
                         <form onSubmit={handleAdd} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold mb-1.5 text-muted-foreground">Nama Aplikasi</label>
-                                <input
-                                    required
-                                    value={appName}
-                                    onChange={(e) => setAppName(e.target.value)}
-                                    placeholder="Contoh: WorkOrder System"
-                                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20"
-                                />
+                                <input required value={appName} onChange={(e) => setAppName(e.target.value)} placeholder="Contoh: WorkOrder System" className={inputClass} />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold mb-1.5 text-muted-foreground">Deskripsi</label>
-                                <textarea
-                                    required
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="Deskripsi singkat tentang aplikasi..."
-                                    rows={3}
-                                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                                />
+                                <textarea required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Deskripsi singkat tentang aplikasi..." rows={3} className={`${inputClass} resize-none`} />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold mb-1.5 text-muted-foreground">Platform</label>
-                                <select
-                                    value={platform}
-                                    onChange={(e) => setPlatform(e.target.value)}
-                                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20"
-                                >
-                                    {PLATFORMS.map((p) => (
-                                        <option key={p.value} value={p.value}>{p.label}</option>
-                                    ))}
+                                <select value={platform} onChange={(e) => setPlatform(e.target.value)} className={inputClass}>
+                                    {PLATFORMS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
                                 </select>
                             </div>
 
-                            {/* Store Links */}
                             <div className="space-y-3 pt-2 border-t border-border">
                                 <p className="text-xs font-bold text-muted-foreground pt-1">Link Download / Demo (opsional)</p>
                                 {(platform === "android" || platform === "cross-platform") && (
                                     <div>
-                                        <label className="block text-[10px] font-bold mb-1 text-green-600 dark:text-green-400 uppercase tracking-wider">
-                                            Google Play Store
-                                        </label>
-                                        <input
-                                            value={playStoreUrl}
-                                            onChange={(e) => setPlayStoreUrl(e.target.value)}
-                                            placeholder="https://play.google.com/store/apps/..."
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20"
-                                        />
+                                        <label className="block text-[10px] font-bold mb-1 text-green-600 dark:text-green-400 uppercase tracking-wider">Google Play Store</label>
+                                        <input value={playStoreUrl} onChange={(e) => setPlayStoreUrl(e.target.value)} placeholder="https://play.google.com/store/apps/..." className={inputClass} />
                                     </div>
                                 )}
                                 {(platform === "ios" || platform === "cross-platform") && (
                                     <div>
-                                        <label className="block text-[10px] font-bold mb-1 text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                                            Apple App Store
-                                        </label>
-                                        <input
-                                            value={appStoreUrl}
-                                            onChange={(e) => setAppStoreUrl(e.target.value)}
-                                            placeholder="https://apps.apple.com/app/..."
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20"
-                                        />
+                                        <label className="block text-[10px] font-bold mb-1 text-blue-600 dark:text-blue-400 uppercase tracking-wider">Apple App Store</label>
+                                        <input value={appStoreUrl} onChange={(e) => setAppStoreUrl(e.target.value)} placeholder="https://apps.apple.com/app/..." className={inputClass} />
                                     </div>
                                 )}
                                 <div>
-                                    <label className="block text-[10px] font-bold mb-1 text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-                                        Demo / Web URL
-                                    </label>
-                                    <input
-                                        value={demoUrl}
-                                        onChange={(e) => setDemoUrl(e.target.value)}
-                                        placeholder="https://example.com"
-                                        className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20"
-                                    />
+                                    <label className="block text-[10px] font-bold mb-1 text-purple-600 dark:text-purple-400 uppercase tracking-wider">Demo / Web URL</label>
+                                    <input value={demoUrl} onChange={(e) => setDemoUrl(e.target.value)} placeholder="https://example.com" className={inputClass} />
                                 </div>
                             </div>
 
-                            {/* Screenshot Upload */}
                             <div>
-                                <label className="block text-xs font-bold mb-1.5 text-muted-foreground">
-                                    Screenshots (Max 6, masing-masing max 5MB)
-                                </label>
-                                <input
-                                    type="file"
-                                    accept="image/png, image/jpeg, image/webp"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    className="w-full text-sm text-muted-foreground file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all cursor-pointer bg-zinc-50 dark:bg-zinc-800 rounded-xl"
-                                />
+                                <label className="block text-xs font-bold mb-1.5 text-muted-foreground">Screenshots (Max 6, masing-masing max 5MB)</label>
+                                <input type="file" accept="image/png, image/jpeg, image/webp" multiple onChange={handleFileChange} className="w-full text-sm text-muted-foreground file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all cursor-pointer bg-zinc-50 dark:bg-zinc-800 rounded-xl" />
                                 {previewUrls.length > 0 && (
                                     <div className="mt-3 grid grid-cols-3 gap-2">
                                         {previewUrls.map((url, i) => (
                                             <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-border group">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={url} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeFile(i)}
-                                                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
+                                                <button type="button" onClick={() => removeFile(i)} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <X size={10} />
                                                 </button>
                                             </div>
@@ -314,11 +373,7 @@ export default function AdminAppShowcasePage() {
                                 )}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full mt-4 py-2.5 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                            >
+                            <button type="submit" disabled={submitting} className="w-full mt-4 py-2.5 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
                                 {submitting ? "Menyimpan..." : "Simpan Aplikasi"}
                             </button>
                         </form>
@@ -356,12 +411,22 @@ export default function AdminAppShowcasePage() {
                                                 </div>
                                                 <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
                                             </div>
-                                            <button
-                                                onClick={() => handleDelete(item.id)}
-                                                className="p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-md shrink-0 ml-4"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-4">
+                                                <button
+                                                    onClick={() => openEdit(item)}
+                                                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 shadow-md"
+                                                    title="Edit"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(item.id)}
+                                                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md"
+                                                    title="Hapus"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* Screenshots Grid */}
@@ -374,12 +439,7 @@ export default function AdminAppShowcasePage() {
                                                         onClick={() => setSelectedImage(url)}
                                                     >
                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img
-                                                            src={url}
-                                                            alt={`${item.app_name} screenshot ${si + 1}`}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => (e.currentTarget.src = "https://placehold.co/400x225/27272a/fafafa?text=Image+Broken")}
-                                                        />
+                                                        <img src={url} alt={`${item.app_name} screenshot ${si + 1}`} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "https://placehold.co/400x225/27272a/fafafa?text=Image+Broken")} />
                                                     </div>
                                                 ))}
                                             </div>
@@ -388,32 +448,17 @@ export default function AdminAppShowcasePage() {
                                         {/* Links */}
                                         <div className="flex flex-wrap gap-2">
                                             {item.play_store_url && (
-                                                <a
-                                                    href={item.play_store_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                                                >
+                                                <a href={item.play_store_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
                                                     <ExternalLink size={12} /> Play Store
                                                 </a>
                                             )}
                                             {item.app_store_url && (
-                                                <a
-                                                    href={item.app_store_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                                                >
+                                                <a href={item.app_store_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                                                     <ExternalLink size={12} /> App Store
                                                 </a>
                                             )}
                                             {item.demo_url && (
-                                                <a
-                                                    href={item.demo_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
-                                                >
+                                                <a href={item.demo_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors">
                                                     <Globe size={12} /> Demo
                                                 </a>
                                             )}
@@ -429,7 +474,162 @@ export default function AdminAppShowcasePage() {
                 </div>
             </div>
 
-            {/* Image Preview Modal */}
+            {/* ── Edit Modal ── */}
+            <AnimatePresence>
+                {editItem && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={closeEdit}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-zinc-900 rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto my-auto"
+                        >
+                            {/* Modal Header */}
+                            <div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-b border-border px-6 py-4 flex items-center justify-between">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <Pencil size={18} /> Edit Aplikasi
+                                </h3>
+                                <button onClick={closeEdit} className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-6 space-y-5">
+                                {/* Name */}
+                                <div>
+                                    <label className="block text-xs font-bold mb-1.5 text-muted-foreground">Nama Aplikasi</label>
+                                    <input value={editName} onChange={(e) => setEditName(e.target.value)} className={inputClass} />
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-xs font-bold mb-1.5 text-muted-foreground">Deskripsi</label>
+                                    <textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={3} className={`${inputClass} resize-none`} />
+                                </div>
+
+                                {/* Platform */}
+                                <div>
+                                    <label className="block text-xs font-bold mb-1.5 text-muted-foreground">Platform</label>
+                                    <select value={editPlatform} onChange={(e) => setEditPlatform(e.target.value)} className={inputClass}>
+                                        {PLATFORMS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                    </select>
+                                </div>
+
+                                {/* Links */}
+                                <div className="space-y-3 pt-2 border-t border-border">
+                                    <p className="text-xs font-bold text-muted-foreground pt-1">Link Download / Demo</p>
+                                    {(editPlatform === "android" || editPlatform === "cross-platform") && (
+                                        <div>
+                                            <label className="block text-[10px] font-bold mb-1 text-green-600 dark:text-green-400 uppercase tracking-wider">Google Play Store</label>
+                                            <input value={editPlayStore} onChange={(e) => setEditPlayStore(e.target.value)} placeholder="https://play.google.com/store/apps/..." className={inputClass} />
+                                        </div>
+                                    )}
+                                    {(editPlatform === "ios" || editPlatform === "cross-platform") && (
+                                        <div>
+                                            <label className="block text-[10px] font-bold mb-1 text-blue-600 dark:text-blue-400 uppercase tracking-wider">Apple App Store</label>
+                                            <input value={editAppStore} onChange={(e) => setEditAppStore(e.target.value)} placeholder="https://apps.apple.com/app/..." className={inputClass} />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className="block text-[10px] font-bold mb-1 text-purple-600 dark:text-purple-400 uppercase tracking-wider">Demo / Web URL</label>
+                                        <input value={editDemo} onChange={(e) => setEditDemo(e.target.value)} placeholder="https://example.com" className={inputClass} />
+                                    </div>
+                                </div>
+
+                                {/* Existing Screenshots */}
+                                <div className="pt-2 border-t border-border">
+                                    <label className="block text-xs font-bold mb-2 text-muted-foreground">
+                                        Screenshots ({editScreenshots.length + editNewFiles.length}/6)
+                                    </label>
+
+                                    {editScreenshots.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2 mb-3">
+                                            {editScreenshots.map((url, i) => (
+                                                <div key={`existing-${i}`} className="relative aspect-video rounded-lg overflow-hidden border border-border group">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "https://placehold.co/400x225/27272a/fafafa?text=Broken")} />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeExistingScreenshot(i)}
+                                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Hapus screenshot"
+                                                    >
+                                                        <X size={10} />
+                                                    </button>
+                                                    <div className="absolute bottom-1 left-1 text-[9px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                                                        Existing
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* New file previews */}
+                                    {editNewPreviews.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2 mb-3">
+                                            {editNewPreviews.map((url, i) => (
+                                                <div key={`new-${i}`} className="relative aspect-video rounded-lg overflow-hidden border-2 border-dashed border-primary/30 group">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={url} alt={`New ${i + 1}`} className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeEditNewFile(i)}
+                                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X size={10} />
+                                                    </button>
+                                                    <div className="absolute bottom-1 left-1 text-[9px] font-bold text-white bg-primary/70 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                                                        Baru
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Upload more */}
+                                    {(editScreenshots.length + editNewFiles.length) < 6 && (
+                                        <input
+                                            type="file"
+                                            accept="image/png, image/jpeg, image/webp"
+                                            multiple
+                                            onChange={handleEditFileChange}
+                                            className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all cursor-pointer bg-zinc-50 dark:bg-zinc-800 rounded-xl"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="sticky bottom-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-border px-6 py-4 flex items-center gap-3">
+                                <button
+                                    onClick={closeEdit}
+                                    className="flex-1 py-2.5 rounded-lg border border-border font-bold text-sm text-muted-foreground hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleEditSave}
+                                    disabled={editSubmitting}
+                                    className="flex-1 py-2.5 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                                >
+                                    {editSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Image Preview Modal ── */}
             <AnimatePresence>
                 {selectedImage && (
                     <motion.div
@@ -437,7 +637,7 @@ export default function AdminAppShowcasePage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setSelectedImage(null)}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
                     >
                         <motion.button
                             initial={{ opacity: 0, scale: 0.8 }}

@@ -408,12 +408,11 @@ export default function LandingPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl sm:text-2xl font-black tracking-tight">{selectedApp.app_name}</h3>
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                      selectedApp.platform === 'android' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                      selectedApp.platform === 'ios' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                      selectedApp.platform === 'web' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
-                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                    }`}>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${selectedApp.platform === 'android' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        selectedApp.platform === 'ios' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                          selectedApp.platform === 'web' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                            'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                      }`}>
                       {selectedApp.platform === 'cross-platform' ? 'Cross Platform' : selectedApp.platform === 'ios' ? 'iOS' : selectedApp.platform === 'web' ? 'Web App' : 'Android'}
                     </span>
                   </div>
@@ -523,7 +522,7 @@ export default function LandingPage() {
       <footer className="py-12 sm:py-20 border-t border-border bg-zinc-50 dark:bg-black/20 text-center">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-center mb-4">
-            <Image src="/logo.png" alt="Digital Technology" width={360} height={90} className="h-20 sm:h-24 w-auto object-contain" />
+            <Image src="/logo.png" alt="Digital Technology" width={500} height={125} className="h-20 sm:h-24 w-auto object-contain" />
           </div>
           <p className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-[0.3em]">© 2026 SRT CORPORATION INDONESIA</p>
         </div>

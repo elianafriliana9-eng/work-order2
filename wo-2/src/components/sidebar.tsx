@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-    Layout,
     Ticket,
     PlusCircle,
     Settings,
@@ -42,17 +42,14 @@ export function Sidebar({ userName }: { userName: string }) {
             {/* Header */}
             <div className="p-6 flex items-center justify-between">
                 {!isCollapsed && (
-                    <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl overflow-hidden whitespace-nowrap">
-                        <div className="bg-primary text-primary-foreground p-1 rounded shrink-0">
-                            <Layout size={20} />
-                        </div>
-                        <span className="text-zinc-900 dark:text-zinc-100">WorkOrder</span>
+                    <Link href="/dashboard" className="flex items-center overflow-hidden">
+                        <Image src="/logo.png" alt="Digital Technology" width={140} height={35} className="h-8 w-auto object-contain" />
                     </Link>
                 )}
                 {isCollapsed && (
-                    <div className="bg-primary text-primary-foreground p-1 rounded mx-auto">
-                        <Layout size={20} />
-                    </div>
+                    <Link href="/dashboard" className="mx-auto">
+                        <Image src="/logo.png" alt="Digital Technology" width={36} height={36} className="h-8 w-8 object-contain" />
+                    </Link>
                 )}
 
                 <button

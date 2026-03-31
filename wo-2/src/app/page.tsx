@@ -8,7 +8,6 @@ import {
   Clock,
   AlertCircle,
   ArrowRight,
-  Layout,
   Code2,
   ShieldCheck,
   TrendingUp,
@@ -23,6 +22,7 @@ import {
   MousePointerClick,
   X
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import BounceCards from "@/components/BounceCards";
@@ -125,11 +125,8 @@ export default function LandingPage() {
 
       <nav className="fixed top-0 z-50 w-full glass border-b border-border/50">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-2 font-bold text-lg sm:text-xl shrink-0">
-            <div className="bg-primary text-primary-foreground p-1 rounded shadow-lg">
-              <Layout size={18} />
-            </div>
-            <span className="whitespace-nowrap">WorkOrder <span className="text-muted-foreground font-normal italic">System</span></span>
+          <div className="flex items-center gap-2 shrink-0">
+            <Image src="/logo.png" alt="Digital Technology" width={160} height={40} className="h-8 sm:h-10 w-auto object-contain" priority />
           </div>
           <div className="flex items-center gap-2 sm:gap-8">
             <Link href="/login" className="px-4 sm:px-6 py-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all flex items-center gap-2 text-[10px] sm:text-xs font-bold whitespace-nowrap">
@@ -525,8 +522,8 @@ export default function LandingPage() {
 
       <footer className="py-12 sm:py-20 border-t border-border bg-zinc-50 dark:bg-black/20 text-center">
         <div className="container mx-auto px-6">
-          <div className="flex items-center justify-center gap-2 font-black text-2xl sm:text-3xl mb-4 text-primary">
-            <Layout size={24} /> <span>WO.2026</span>
+          <div className="flex items-center justify-center mb-4">
+            <Image src="/logo.png" alt="Digital Technology" width={200} height={50} className="h-10 sm:h-12 w-auto object-contain" />
           </div>
           <p className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-[0.3em]">© 2026 SRT CORPORATION INDONESIA</p>
         </div>

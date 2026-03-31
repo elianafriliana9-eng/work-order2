@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Layout, ArrowLeft, ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -91,11 +92,9 @@ export default function LoginPage() {
                     <ArrowLeft size={16} /> Kembali ke Landing Page
                 </Link>
                 <div className="flex justify-center mb-6">
-                    <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-lg ring-4 ring-primary/10">
-                        <Layout size={32} />
-                    </div>
+                    <Image src="/logo.png" alt="Digital Technology" width={200} height={50} className="h-12 w-auto object-contain" priority />
                 </div>
-                <h2 className="text-center text-3xl font-extrabold tracking-tight text-foreground">
+                <h2 className="text-center text-2xl font-extrabold tracking-tight text-foreground">
                     Work Order System
                 </h2>
                 <p className="mt-2 text-center text-sm text-muted-foreground">

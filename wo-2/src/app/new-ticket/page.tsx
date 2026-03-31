@@ -18,6 +18,7 @@ import {
     Users,
     MapPin
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -209,9 +210,8 @@ export default function NewTicketPage() {
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-20">
             <nav className="fixed top-0 z-50 w-full glass border-b border-border">
                 <div className="container mx-auto flex h-16 items-center justify-between px-6">
-                    <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl">
-                        <div className="bg-primary text-primary-foreground p-1 rounded"><Layout size={20} /></div>
-                        <span>WorkOrder <span className="text-muted-foreground font-normal">System</span></span>
+                    <Link href="/dashboard" className="flex items-center">
+                        <Image src="/logo.png" alt="Digital Technology" width={160} height={40} className="h-8 w-auto object-contain" />
                     </Link>
                     <Link href="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">Batal & Keluar</Link>
                 </div>

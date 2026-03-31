@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     Ticket,
     FileText,
     PieChart,
-    Image,
+    Image as ImageIcon,
     ChevronLeft,
     LogOut,
     Shield,
@@ -50,7 +51,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
         { href: "/admin/it-dev", label: "IT Development", icon: Code },
         { href: "/admin/reports", label: "Laporan Tim", icon: FileText },
         { href: "/admin/reporting", label: "Reporting", icon: PieChart },
-        { href: "/admin/showcase", label: "Showcase", icon: Image },
+        { href: "/admin/showcase", label: "Showcase", icon: ImageIcon },
         { href: "/admin/app-showcase", label: "App Showcase", icon: Smartphone },
         { href: "/admin/archive", label: "Arsip Tiket", icon: Archive },
         { href: "/admin/chat", label: "Team Chat", icon: MessageCircle },
@@ -69,11 +70,8 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
             {/* Header */}
             <div className="p-4 border-b border-border flex items-center justify-between">
                 {!collapsed && (
-                    <div className="flex items-center gap-2">
-                        <div className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 p-1.5 rounded-lg">
-                            <Shield size={18} />
-                        </div>
-                        <span className="font-bold text-sm">Admin Panel</span>
+                    <div className="flex items-center">
+                        <Image src="/logo.png" alt="Digital Technology" width={130} height={32} className="h-7 w-auto object-contain" />
                     </div>
                 )}
                 <button

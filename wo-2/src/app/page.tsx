@@ -68,8 +68,9 @@ export default function LandingPage() {
         const { data: appData } = await supabase
           .from('app_showcase')
           .select('*')
+          .order('display_order', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false })
-          .limit(6);
+          .limit(8);
 
         if (appData && appData.length > 0) {
           setAppShowcases(appData);

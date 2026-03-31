@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Fitur — WorkOrder System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        *{margin:0;padding:0;box-sizing:border-box}
+
+        body{
+            font-family:'Inter',sans-serif;
+            background:#f4f5f7;
+            color:#1a1a2e;
+            min-height:100vh;
+        }
+
+        /* ── Toolbar ── */
+        .toolbar{
+            position:fixed;top:0;left:0;right:0;z-index:100;
+            background:rgba(255,255,255,.85);backdrop-filter:blur(16px);
+            border-bottom:1px solid #e2e4e9;padding:12px 24px;
+            display:flex;align-items:center;justify-content:space-between;
+        }
+        .toolbar-title{font-weight:800;font-size:14px;letter-spacing:-0.02em}
+        .toolbar-title span{color:#6366f1}
+        .toolbar-actions{display:flex;gap:8px}
+        .btn{
+            display:inline-flex;align-items:center;gap:6px;
+            padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;
+            cursor:pointer;border:none;transition:all .2s;
+        }
+        .btn svg{width:16px;height:16px}
+        .btn-primary{background:#18181b;color:#fff}
+        .btn-primary:hover{background:#3f3f46}
+        .btn-outline{background:#fff;color:#18181b;border:1.5px solid #d4d4d8}
+        .btn-outline:hover{background:#f4f4f5}
+
+        /* ── Canvas ── */
+        .canvas-wrapper{padding:80px 24px 60px;display:flex;justify-content:center}
+        #guide-canvas{
+            background:#fff;border-radius:24px;border:1px solid #e2e4e9;
+            box-shadow:0 4px 40px rgba(0,0,0,.06);padding:60px 48px 48px;
+            max-width:1000px;width:100%;
+        }
+
+        /* ── Header ── */
+        .guide-header{text-align:center;margin-bottom:48px}
+        .guide-header .badge{
+            display:inline-block;font-size:10px;font-weight:800;
+            letter-spacing:.25em;text-transform:uppercase;color:#6366f1;
+            background:#eef2ff;padding:6px 14px;border-radius:100px;margin-bottom:12px;
+        }
+        .guide-header h1{font-size:28px;font-weight:900;letter-spacing:-0.03em;margin-bottom:6px}
+        .guide-header p{font-size:13px;color:#71717a}
+
+        /* ── Table of Contents ── */
+        .toc{
+            background:#f8fafc;border:1.5px solid #e2e4e9;border-radius:16px;
+            padding:24px 28px;margin-bottom:40px;
+        }
+        .toc h3{font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+        .toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+        .toc a{
+            display:flex;align-items:center;gap:8px;
+            font-size:13px;font-weight:600;color:#3b82f6;text-decoration:none;
+            padding:6px 10px;border-radius:8px;transition:all .15s;
+        }
+        .toc a:hover{background:#eff6ff}
+        .toc a .num{
+            width:22px;height:22px;border-radius:6px;background:#eff6ff;color:#3b82f6;
+            display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;
+            flex-shrink:0;
+        }
+
+        /* ── Section ── */
+        .section{margin-bottom:40px}
+        .section-anchor{scroll-margin-top:80px}
+        .section-header{
+            display:flex;align-items:center;gap:12px;margin-bottom:16px;
+            padding-bottom:12px;border-bottom:2px solid #f1f5f9;
+        }
+        .section-icon{
+            width:40px;height:40px;border-radius:12px;display:flex;
+            align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+        }
+        .section-title{font-size:18px;font-weight:800;letter-spacing:-0.02em}
+        .section-subtitle{font-size:12px;color:#71717a;font-weight:500}
+
+        /* ── Feature Card ── */
+        .feature-card{
+            border:1.5px solid #e2e4e9;border-radius:14px;padding:20px 24px;
+            margin-bottom:12px;transition:all .2s;
+        }
+        .feature-card:hover{border-color:#c7d2fe;box-shadow:0 2px 12px rgba(99,102,241,.06)}
+        .feature-name{
+            font-size:14px;font-weight:700;margin-bottom:6px;
+            display:flex;align-items:center;gap:8px;
+        }
+        .feature-name .icon{font-size:16px}
+        .feature-desc{font-size:13px;color:#52525b;line-height:1.65}
+
+        /* ── Info Box ── */
+        .info-box{
+            border-radius:12px;padding:16px 20px;margin:12px 0;
+        }
+        .info-box h4{font-size:12px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+        .info-box p,.info-box li{font-size:12px;line-height:1.6}
+        .info-box ul{padding-left:16px;margin-top:4px}
+        .info-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+        .info-blue h4{color:#1d4ed8}
+        .info-amber{background:#fffbeb;border:1px solid #fde68a;color:#854d0e}
+        .info-amber h4{color:#a16207}
+        .info-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+        .info-green h4{color:#16a34a}
+        .info-violet{background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6}
+        .info-violet h4{color:#7c3aed}
+        .info-red{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+        .info-red h4{color:#dc2626}
+
+        /* ── Steps List ── */
+        .steps-list{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+        .step-item{
+            display:flex;gap:12px;align-items:flex-start;
+            padding:12px 16px;border-radius:10px;background:#f8fafc;border:1px solid #f1f5f9;
+        }
+        .step-num{
+            width:24px;height:24px;border-radius:8px;display:flex;align-items:center;
+            justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;
+        }
+        .step-text{font-size:13px;color:#3f3f46;line-height:1.5}
+        .step-text strong{color:#18181b}
+
+        /* ── Tag ── */
+        .tag{
+            display:inline-flex;align-items:center;gap:4px;
+            font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;
+        }
+        .tag-blue{background:#dbeafe;color:#1d4ed8}
+        .tag-green{background:#dcfce7;color:#16a34a}
+        .tag-amber{background:#fef3c7;color:#b45309}
+        .tag-red{background:#fee2e2;color:#dc2626}
+        .tag-violet{background:#ede9fe;color:#7c3aed}
+        .tag-gray{background:#f4f4f5;color:#52525b}
+
+        /* ── Screenshot Placeholder ── */
+        .screen-placeholder{
+            background:#f8fafc;border:2px dashed #e2e4e9;border-radius:12px;
+            padding:20px;text-align:center;margin:12px 0;
+        }
+        .screen-placeholder .label{font-size:11px;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:.1em}
+
+        /* ── Divider ── */
+        .divider{height:1px;background:#f1f5f9;margin:32px 0}
+
+        /* ── Footer ── */
+        .guide-footer{
+            text-align:center;margin-top:32px;padding-top:24px;
+            border-top:1px solid #e4e4e7;font-size:11px;color:#a1a1aa;
+        }
+
+        /* ── Responsive ── */
+        @media(max-width:700px){
+            #guide-canvas{padding:40px 20px 32px}
+            .toc-grid{grid-template-columns:1fr}
+            .guide-header h1{font-size:22px}
+            .section-header{flex-wrap:wrap}
+        }
+
+        /* ── Print / PDF ── */
+        @media print{
+            @page{size:A4;margin:12mm 10mm}
+            body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+            .toolbar{display:none!important}
+            .canvas-wrapper{padding:0}
+            #guide-canvas{border:none;box-shadow:none;border-radius:0;max-width:100%;padding:0}
+            .section{break-inside:avoid;page-break-inside:avoid}
+            .feature-card{break-inside:avoid;page-break-inside:avoid}
+            .info-box{break-inside:avoid;page-break-inside:avoid}
+            .steps-list{break-inside:avoid;page-break-inside:avoid}
+            .toc{break-inside:avoid;page-break-inside:avoid}
+            .section-header{break-after:avoid;page-break-after:avoid}
+            .guide-header h1{font-size:24px}
+            .feature-name{font-size:12px}
+            .feature-desc{font-size:11px}
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar">
+    <div class="toolbar-title">WorkOrder <span>System</span> — Panduan Fitur</div>
+    <div class="toolbar-actions">
+        <button class="btn btn-outline" onclick="downloadAsPNG()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            PNG
+        </button>
+        <button class="btn btn-primary" onclick="downloadAsPDF()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Download PDF
+        </button>
+    </div>
+</div>
+
+<!-- Content Canvas -->
+<div class="canvas-wrapper">
+    <div id="guide-canvas">
+
+        <!-- Header -->
+        <div class="guide-header">
+            <div class="badge">User Guide</div>
+            <h1>Panduan Fitur Sistem</h1>
+            <p>Penjelasan lengkap fitur Landing Page & sisi Pemohon (Requester)</p>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h3>📑 Daftar Isi</h3>
+            <div class="toc-grid">
+                <a href="#sec-landing"><span class="num">A</span> Landing Page</a>
+                <a href="#sec-login"><span class="num">B</span> Halaman Login</a>
+                <a href="#sec-dashboard"><span class="num">C</span> Dashboard Pemohon</a>
+                <a href="#sec-new-ticket"><span class="num">D</span> Buat Tiket Baru</a>
+                <a href="#sec-ticket-detail"><span class="num">E</span> Detail Tiket</a>
+                <a href="#sec-revision"><span class="num">F</span> Pengajuan Revisi</a>
+                <a href="#sec-meeting"><span class="num">G</span> Video Call / Meeting</a>
+                <a href="#sec-ringkasan"><span class="num">H</span> Ringkasan Akses</a>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- A. LANDING PAGE -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-landing">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#eff6ff;color:#3b82f6">🌐</div>
+                <div>
+                    <div class="section-title">A. Landing Page</div>
+                    <div class="section-subtitle">Halaman utama yang bisa diakses semua orang tanpa login</div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🚀</span> Hero & Tagline</div>
+                <div class="feature-desc">
+                    Bagian paling atas halaman. Menampilkan tagline divisi <strong>"WE BUILD DIGITAL THINGS"</strong> beserta
+                    deskripsi singkat peran tim Digital Technology. Ada dua tombol utama:
+                    <strong>"Launch Work Order"</strong> untuk masuk ke sistem, dan
+                    <strong>"System SOP"</strong> untuk scroll ke bagian aturan kerja.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🏛️</span> Tiga Pilar Layanan</div>
+                <div class="feature-desc">
+                    Tiga kartu yang menjelaskan layanan utama divisi:
+                </div>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-num" style="background:#ec4899">1</div>
+                        <div class="step-text"><strong>Creative Design</strong> — Branding, UI/UX, konten marketing, dan material visual lainnya.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#3b82f6">2</div>
+                        <div class="step-text"><strong>IT Development</strong> — Pengembangan website, aplikasi, sistem, dan automasi.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#22c55e">3</div>
+                        <div class="step-text"><strong>IT Support</strong> — Helpdesk, jaringan, troubleshoot, dan manajemen aset IT.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📊</span> Live Analytics</div>
+                <div class="feature-desc">
+                    Menampilkan data real-time dari sistem secara langsung:
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                    <span class="tag tag-blue">Grafik volume tiket 7 hari terakhir</span>
+                    <span class="tag tag-green">Jumlah tiket aktif</span>
+                    <span class="tag tag-amber">Rata-rata waktu penyelesaian</span>
+                    <span class="tag tag-red">Prioritas tertinggi saat ini</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📋</span> SOP — "NO TICKET, NO WORK"</div>
+                <div class="feature-desc">
+                    Empat aturan utama kerja yang wajib diketahui semua pemohon:
+                </div>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-num" style="background:#3b82f6">1</div>
+                        <div class="step-text"><strong>Discussion Policy</strong> — Instruksi lewat WA/lisan hanya bersifat diskusi, bukan perintah kerja resmi.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#06b6d4">2</div>
+                        <div class="step-text"><strong>Clocking System</strong> — Waktu pengerjaan resmi dihitung sejak tiket diterbitkan di sistem.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#6366f1">3</div>
+                        <div class="step-text"><strong>Traceable Revisions</strong> — Seluruh riwayat revisi tercatat dalam history tiket yang sama.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#f43f5e">4</div>
+                        <div class="step-text"><strong>Auto Closing</strong> — Tiket otomatis ditutup setelah 24 jam tanpa feedback dari pemohon.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🎨</span> Creative Portfolio — "OUR WORKS"</div>
+                <div class="feature-desc">
+                    Galeri hasil desain dari tim Creative Design. Gambar ditampilkan dalam
+                    carousel interaktif dengan animasi. Klik gambar untuk melihat preview ukuran penuh.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📱</span> App Showcase — "OUR APPS"</div>
+                <div class="feature-desc">
+                    Galeri aplikasi dan sistem yang dikembangkan oleh tim IT Development.
+                    Setiap aplikasi tampil sebagai kartu dengan screenshot. Klik kartu untuk melihat
+                    detail lengkap: deskripsi, semua screenshot, platform (Android/iOS/Web),
+                    dan <strong>tombol download dari Play Store, App Store, atau link demo</strong>.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">⚙️</span> System Pipeline</div>
+                <div class="feature-desc">
+                    Visualisasi 4 tahap alur kerja tiket secara sederhana:
+                    <strong>Input Ticket → Triaging → Execution → Review</strong>.
+                    Membantu pemohon memahami proses kerja sebelum membuat request.
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- B. LOGIN -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-login">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#f5f3ff;color:#7c3aed">🔐</div>
+                <div>
+                    <div class="section-title">B. Halaman Login</div>
+                    <div class="section-subtitle">Cara masuk ke dalam sistem</div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🟢</span> Login dengan Google</div>
+                <div class="feature-desc">
+                    Cara tercepat: klik tombol <strong>"Masuk dengan Google"</strong> dan pilih akun email perusahaan.
+                    Sistem akan otomatis mengenali role dan mengarahkan ke halaman yang sesuai.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">✉️</span> Login dengan Email & Password</div>
+                <div class="feature-desc">
+                    Alternatif jika Google OAuth tidak tersedia. Masukkan email dan password di form yang disediakan.
+                    Setelah berhasil login, pemohon langsung diarahkan ke <strong>Dashboard</strong>.
+                </div>
+            </div>
+
+            <div class="info-box info-blue">
+                <h4>🔒 Keamanan</h4>
+                <p>Semua session dienkripsi dengan standar Supabase SSR. Data login aman dan terproteksi.</p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- C. DASHBOARD -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-dashboard">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#ecfdf5;color:#10b981">📋</div>
+                <div>
+                    <div class="section-title">C. Dashboard Pemohon</div>
+                    <div class="section-subtitle">Pusat kendali untuk melihat dan mengelola semua tiket</div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📊</span> Kartu Statistik</div>
+                <div class="feature-desc">
+                    Empat kartu ringkasan di bagian atas dashboard:
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                    <span class="tag tag-blue">Total Tiket</span>
+                    <span class="tag tag-amber">Dalam Antrian (Open)</span>
+                    <span class="tag tag-green">Selesai (Completed)</span>
+                    <span class="tag tag-red">Urgent — P1</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🔴</span> Team Live Pipeline</div>
+                <div class="feature-desc">
+                    Menampilkan hingga 5 tiket yang <strong>sedang dikerjakan (Execution)</strong> oleh tim secara real-time.
+                    Pemohon bisa melihat tiket mana saja yang sedang dalam proses pengerjaan, lengkap dengan
+                    kategori, judul, dan nama brand. Ada indikator "live" yang berkedip.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📑</span> Daftar Tiket</div>
+                <div class="feature-desc">
+                    Tabel berisi semua tiket yang pernah dibuat oleh pemohon. Menampilkan judul, brand,
+                    kategori, status (dengan warna berbeda), dan deadline. Ada kolom pencarian untuk
+                    filter tiket, dan tombol <strong>"Detail"</strong> untuk masuk ke halaman detail masing-masing tiket.
+                </div>
+                <div class="info-box info-blue" style="margin-top:10px">
+                    <h4>🎨 Warna Status</h4>
+                    <ul>
+                        <li><strong style="color:#b45309">Kuning</strong> — Open / Menunggu verifikasi</li>
+                        <li><strong style="color:#2563eb">Biru</strong> — Execution / Sedang dikerjakan</li>
+                        <li><strong style="color:#16a34a">Hijau</strong> — Completed / Selesai</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">➕</span> Tombol "Buat Ticket Baru"</div>
+                <div class="feature-desc">
+                    Tombol utama di pojok kanan atas dashboard. Klik untuk masuk ke form pembuatan tiket baru
+                    (5 langkah).
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- D. BUAT TIKET BARU -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-new-ticket">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#fffbeb;color:#f59e0b">🎫</div>
+                <div>
+                    <div class="section-title">D. Buat Tiket Baru</div>
+                    <div class="section-subtitle">Form multi-langkah untuk mengajukan request pekerjaan</div>
+                </div>
+            </div>
+
+            <div class="info-box info-violet">
+                <h4>📝 Tentang Form Ini</h4>
+                <p>Form terdiri dari <strong>5 langkah</strong> berurutan. Di bagian atas ada progress bar yang menunjukkan
+                langkah keberapa kamu saat ini. Setiap langkah harus diisi sebelum bisa lanjut ke berikutnya.</p>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="feature-card">
+                <div class="feature-name"><span class="tag tag-violet">Langkah 1</span> Informasi Dasar</div>
+                <div class="feature-desc">Isi tiga informasi wajib:</div>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-num" style="background:#6366f1">a</div>
+                        <div class="step-text"><strong>Judul Pekerjaan</strong> — Nama singkat pekerjaan yang diminta (min. 5 karakter).</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#6366f1">b</div>
+                        <div class="step-text"><strong>Brand / Project</strong> — Nama brand atau project terkait (min. 2 karakter).</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#6366f1">c</div>
+                        <div class="step-text"><strong>Kategori Layanan</strong> — Pilih salah satu: <span class="tag tag-gray">Design</span> <span class="tag tag-gray">Programming</span> <span class="tag tag-gray">Asset Management</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="feature-card">
+                <div class="feature-name"><span class="tag tag-violet">Langkah 2</span> Detail Pekerjaan</div>
+                <div class="feature-desc">
+                    Isi <strong>brief / deskripsi lengkap</strong> pekerjaan yang diminta (min. 20 karakter). Semakin detail,
+                    semakin cepat tim memahami kebutuhan kamu.
+                </div>
+                <div class="info-box info-amber" style="margin-top:10px">
+                    <h4>📐 Kolom Tambahan per Kategori</h4>
+                    <ul>
+                        <li><strong>Design</strong> — Boleh isi ukuran/dimensi (misal "1080x1080px untuk Instagram")</li>
+                        <li><strong>Programming</strong> — Pilih tipe pekerjaan: Bug Fix, New Feature, Maintenance, atau Develop New System. Masing-masing punya kolom tambahan yang berbeda (langkah reproduksi bug, alur user flow, dll)</li>
+                        <li><strong>Asset</strong> — Cukup deskripsi saja</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="feature-card">
+                <div class="feature-name"><span class="tag tag-violet">Langkah 3</span> Jadwal Meeting</div>
+                <div class="feature-desc">
+                    Setiap tiket <strong>wajib ada jadwal meeting</strong> untuk diskusi brief secara langsung. Pilih tipe meeting:
+                </div>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-num" style="background:#3b82f6">🎥</div>
+                        <div class="step-text"><strong>Online</strong> — Video call internal via LiveKit. Room otomatis dibuat oleh sistem.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#22c55e">🏢</div>
+                        <div class="step-text"><strong>Offline</strong> — Datang langsung ke kantor IT di waktu yang ditentukan.</div>
+                    </div>
+                </div>
+                <div class="feature-desc" style="margin-top:8px">Lalu tentukan <strong>tanggal dan jam</strong> meeting.</div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="feature-card">
+                <div class="feature-name"><span class="tag tag-violet">Langkah 4</span> Deadline & Urgensi</div>
+                <div class="feature-desc">
+                    Tentukan <strong>target tanggal selesai</strong>. Jika deadline kurang dari 3 hari,
+                    sistem otomatis menandai tiket sebagai <span class="tag tag-red">P1 — Urgent</span>
+                    dan kamu wajib menulis alasan kenapa tiket ini mendesak.
+                </div>
+                <div class="info-box info-red" style="margin-top:10px">
+                    <h4>⚡ Aturan Prioritas Otomatis</h4>
+                    <ul>
+                        <li><strong>P1 (Urgent)</strong> — Deadline kurang dari 3 hari. Wajib tulis alasan.</li>
+                        <li><strong>P2 (Standar)</strong> — Deadline normal, tanpa tambahan alasan.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="feature-card">
+                <div class="feature-name"><span class="tag tag-violet">Langkah 5</span> Lampiran & Konfirmasi</div>
+                <div class="feature-desc">
+                    <strong>Upload file referensi</strong> (gambar, PDF, Word) jika ada. Lalu centang
+                    persetujuan SOP yang menyatakan bahwa pengerjaan dimulai setelah verifikasi admin.
+                    Klik <strong>"Kirim Work Order"</strong> untuk submit.
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                    <span class="tag tag-gray">JPG / PNG</span>
+                    <span class="tag tag-gray">PDF</span>
+                    <span class="tag tag-gray">Word (.doc / .docx)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- E. DETAIL TIKET -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-ticket-detail">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#fdf2f8;color:#ec4899">🔎</div>
+                <div>
+                    <div class="section-title">E. Detail Tiket</div>
+                    <div class="section-subtitle">Halaman lengkap informasi tiket beserta semua fitur interaktif</div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🎫</span> Boarding Pass Tiket</div>
+                <div class="feature-desc">
+                    Tiket ditampilkan dengan desain seperti <strong>boarding pass pesawat</strong>: ada nomor WO,
+                    judul pekerjaan, alur "Brand → Deadline", status, kategori, prioritas, dan tanggal pembuatan.
+                    Warna strip atas berubah sesuai prioritas (merah untuk P1, kuning untuk P2).
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📝</span> Deskripsi / Brief</div>
+                <div class="feature-desc">
+                    Menampilkan brief lengkap yang diisi saat buat tiket. Jika kategori Programming,
+                    ada section tambahan berisi detail teknis: tipe pekerjaan, modul, langkah reproduksi, dll.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📅</span> Jadwal Meeting</div>
+                <div class="feature-desc">
+                    Menampilkan detail jadwal meeting (Online/Offline), tanggal, dan jam.
+                    Untuk meeting online, ada <strong>tombol "Mulai Video Call"</strong> yang aktif
+                    15 menit sebelum waktu meeting.
+                </div>
+                <div class="info-box info-blue" style="margin-top:10px">
+                    <h4>🎥 Aturan Video Call</h4>
+                    <ul>
+                        <li>Tombol hanya aktif <strong>15 menit sebelum</strong> waktu meeting</li>
+                        <li>Tiket harus sudah diverifikasi (bukan status Open)</li>
+                        <li>Jika belum waktunya, tombol tampil "Ruangan Masih Dikunci"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📎</span> Lampiran & Referensi</div>
+                <div class="feature-desc">
+                    Daftar semua file yang di-upload saat pembuatan tiket. Klik untuk membuka file di tab baru.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🎨</span> Hasil Desain</div>
+                <div class="feature-desc">
+                    Ketika status tiket sudah <strong>Review</strong> atau <strong>Completed</strong>,
+                    bagian ini menampilkan file desain final yang dikirim oleh designer.
+                    Bisa berupa gambar (preview langsung) atau link Google Drive.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📜</span> Ticket History (Sidebar)</div>
+                <div class="feature-desc">
+                    Timeline vertikal di sisi kanan yang menunjukkan progres tiket:
+                    <strong>Open → Triaging → Execution → Completed</strong>.
+                    Setiap tahap yang sudah dilalui ditandai dengan warna penuh.
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- F. REVISI -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-revision">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#fef3c7;color:#f59e0b">✏️</div>
+                <div>
+                    <div class="section-title">F. Pengajuan Revisi</div>
+                    <div class="section-subtitle">Cara minta perubahan pada hasil desain</div>
+                </div>
+            </div>
+
+            <div class="info-box info-amber">
+                <h4>⏱️ Kapan Bisa Revisi?</h4>
+                <p>Revisi hanya bisa diajukan ketika status tiket <strong>"Review"</strong> dan masih dalam
+                <strong>jendela waktu 24 jam</strong> sejak desain dikirim. Ada timer countdown yang menampilkan sisa waktu.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📋</span> Form Revisi</div>
+                <div class="feature-desc">
+                    Muncul di halaman detail tiket ketika syarat terpenuhi. Isi form berikut:
+                </div>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-num" style="background:#f59e0b">1</div>
+                        <div class="step-text"><strong>Keterangan Revisi</strong> — Jelaskan apa yang kurang pas pada desain saat ini.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#f59e0b">2</div>
+                        <div class="step-text"><strong>Perubahan yang Diminta</strong> — Tulis spesifik mau diubah jadi apa. Contoh: "Ubah warna background dari biru ke merah", "Perbesar logo 20%".</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#f59e0b">3</div>
+                        <div class="step-text"><strong>Upload File Referensi</strong> (opsional) — Lampirkan gambar acuan jika perlu.</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num" style="background:#f59e0b">4</div>
+                        <div class="step-text"><strong>Jadwal Meeting Revisi</strong> — Atur jadwal diskusi online atau offline untuk bahas revisi.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🔢</span> Tipe Revisi</div>
+                <div class="feature-desc">
+                    Setiap revisi harus dipilih tipenya:
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+                    <div class="info-box info-blue" style="margin:0">
+                        <h4>Minor</h4>
+                        <p>Perubahan kecil: warna, teks, ukuran font, posisi elemen kecil. Estimasi selesai: 1-2 hari kerja.</p>
+                    </div>
+                    <div class="info-box info-red" style="margin:0">
+                        <h4>Major</h4>
+                        <p>Perubahan besar: layout, gaya keseluruhan, tambah elemen kompleks. Estimasi selesai: 2-4 hari kerja.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📜</span> Riwayat Revisi</div>
+                <div class="feature-desc">
+                    Semua revisi yang pernah diajukan tercatat di bagian <strong>"Riwayat Revisi"</strong> pada halaman detail tiket.
+                    Klik revisi untuk melihat detail: deskripsi, perubahan yang diminta, lampiran, dan
+                    <strong>tanggapan dari designer dan PIC IT</strong> (jika sudah direspon).
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                    <span class="tag tag-amber">⏳ Pending — Menunggu ditanggapi</span>
+                    <span class="tag tag-green">✅ Addressed — Sudah diperbaiki</span>
+                    <span class="tag tag-red">❌ Rejected — Ditolak</span>
+                </div>
+            </div>
+
+            <div class="info-box info-red">
+                <h4>⚠️ Aturan Penting Revisi</h4>
+                <ul>
+                    <li>Maksimal <strong>2 kali revisi</strong> per tiket</li>
+                    <li>Semua permintaan revisi harus <strong>dikumpulkan sekaligus</strong>, tidak boleh dicicil satu-satu</li>
+                    <li><strong>Ganti konsep total</strong> (beda tema dari brief awal) → harus buat tiket baru</li>
+                    <li>Jika 24 jam berlalu tanpa revisi → tiket <strong>otomatis selesai</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- G. VIDEO CALL -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-meeting">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#ecfeff;color:#06b6d4">🎥</div>
+                <div>
+                    <div class="section-title">G. Video Call / Meeting</div>
+                    <div class="section-subtitle">Fitur meeting online internal menggunakan LiveKit</div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">📹</span> Cara Bergabung</div>
+                <div class="feature-desc">
+                    Di halaman detail tiket, klik tombol <strong>"Mulai Video Call"</strong>.
+                    Sistem otomatis menghubungkan kamu ke room meeting.
+                    Kamu akan melihat halaman loading singkat, lalu masuk ke ruangan video.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🖥️</span> Fitur di Dalam Meeting</div>
+                <div class="feature-desc">Saat video call berlangsung, kamu bisa:</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                    <span class="tag tag-blue">Video on/off</span>
+                    <span class="tag tag-blue">Mute/unmute mikrofon</span>
+                    <span class="tag tag-blue">Screen sharing</span>
+                    <span class="tag tag-blue">Lihat peserta lain</span>
+                    <span class="tag tag-green">🔒 Terenkripsi</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-name"><span class="icon">🚪</span> Keluar dari Meeting</div>
+                <div class="feature-desc">
+                    Klik tombol merah <strong>"Keluar"</strong> di pojok kanan atas. Kamu akan diarahkan kembali
+                    ke halaman detail tiket. Meeting tidak akan terputus untuk peserta lain.
+                </div>
+            </div>
+
+            <div class="info-box info-blue">
+                <h4>💡 Tips</h4>
+                <ul>
+                    <li>Pastikan browser mengizinkan akses kamera & mikrofon</li>
+                    <li>Gunakan koneksi internet yang stabil</li>
+                    <li>Tombol meeting baru aktif <strong>15 menit sebelum</strong> jadwal yang ditentukan</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- H. RINGKASAN -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section" id="sec-ringkasan">
+            <div class="section-anchor"></div>
+            <div class="section-header">
+                <div class="section-icon" style="background:#f0fdf4;color:#22c55e">📌</div>
+                <div>
+                    <div class="section-title">H. Ringkasan Akses Pemohon</div>
+                    <div class="section-subtitle">Apa saja yang bisa dilakukan dan dilihat oleh pemohon</div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="info-box info-green" style="margin:0">
+                    <h4>✅ Yang Bisa Dilakukan</h4>
+                    <ul>
+                        <li>Buat tiket baru (Design / Programming / Asset)</li>
+                        <li>Lihat semua tiket milik sendiri</li>
+                        <li>Lihat detail & status tiket</li>
+                        <li>Upload lampiran referensi</li>
+                        <li>Ikut video call / meeting online</li>
+                        <li>Ajukan revisi (maks 2x dalam 24 jam)</li>
+                        <li>Lihat hasil desain final</li>
+                        <li>Lihat riwayat revisi & tanggapan tim</li>
+                    </ul>
+                </div>
+                <div class="info-box info-red" style="margin:0">
+                    <h4>❌ Yang Tidak Bisa</h4>
+                    <ul>
+                        <li>Melihat tiket milik user lain</li>
+                        <li>Mengubah status tiket secara manual</li>
+                        <li>Revisi lebih dari 2 kali per tiket</li>
+                        <li>Revisi setelah 24 jam berlalu</li>
+                        <li>Mengakses panel admin</li>
+                        <li>Mengakses halaman tim design</li>
+                        <li>Menghapus tiket yang sudah dibuat</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="guide-footer">
+            WorkOrder System — Digital Technology Division — Panduan Fitur v1.0
+        </div>
+    </div>
+</div>
+
+<!-- CDN Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+<script>
+    const spinnerSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
+
+    function setButtonLoading(btn, loading) {
+        if (loading) {
+            btn._originalHTML = btn.innerHTML;
+            btn.innerHTML = spinnerSVG + ' Generating...';
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = btn._originalHTML;
+            btn.disabled = false;
+        }
+    }
+
+    async function downloadAsPNG() {
+        const btn = document.querySelector('.btn-outline');
+        setButtonLoading(btn, true);
+        try {
+            const canvas = await html2canvas(document.getElementById('guide-canvas'), {
+                scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
+            });
+            const link = document.createElement('a');
+            link.download = 'panduan-fitur-workorder.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            alert('Gagal generate PNG: ' + err.message);
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    }
+
+    async function downloadAsPDF() {
+        const btn = document.querySelector('.btn-primary');
+        setButtonLoading(btn, true);
+        try {
+            const el = document.getElementById('guide-canvas');
+            const canvas = await html2canvas(el, {
+                scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: el.scrollWidth,
+            });
+
+            if (!window.jspdf) {
+                alert('Library jsPDF belum selesai dimuat. Coba lagi dalam beberapa detik.');
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+
+            const pageW = 210, pageH = 297, margin = 10;
+            const contentW = pageW - margin * 2;
+            const contentH = pageH - margin * 2;
+            const imgW = contentW;
+            const imgH = (canvas.height * contentW) / canvas.width;
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const totalPages = Math.ceil(imgH / contentH);
+
+            for (let page = 0; page < totalPages; page++) {
+                if (page > 0) pdf.addPage();
+                const srcY = (page * contentH / imgH) * canvas.height;
+                const srcH = (contentH / imgH) * canvas.height;
+                const sliceH = Math.min(srcH, canvas.height - srcY);
+
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = sliceH;
+                const ctx = sliceCanvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+                ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, sliceCanvas.width, sliceCanvas.height);
+
+                const sliceData = sliceCanvas.toDataURL('image/png');
+                const drawH = (sliceH / canvas.height) * imgH;
+                pdf.addImage(sliceData, 'PNG', margin, margin, imgW, drawH);
+            }
+            pdf.save('panduan-fitur-workorder.pdf');
+        } catch (err) {
+            alert('Gagal generate PDF: ' + err.message);
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    }
+</script>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</body>
+</html>

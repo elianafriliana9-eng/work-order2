@@ -42,6 +42,9 @@ export default function AdminTicketsPage() {
 
             let query = supabase.from('work_orders').select('*');
 
+            // Exclude archived tickets (Completed & Rejected → shown in /admin/archive)
+            query = query.not('status', 'in', '("Completed","Rejected")');
+
             if (userRole === 'head_it') {
                 query = query.order('created_at', { ascending: false });
             } else {
@@ -68,7 +71,7 @@ export default function AdminTicketsPage() {
         }
     };
 
-    const statusFilters = ['all', 'Open', 'Execution', 'Review', 'Completed', 'Rejected'];
+    const statusFilters = ['all', 'Open', 'Verified', 'Execution', 'Review'];
     const isHeadIT = role === 'head_it';
 
     const filteredTickets = tickets.filter((t: any) => {

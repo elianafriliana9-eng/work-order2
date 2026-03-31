@@ -16,10 +16,10 @@ import {
     Code,
     Headphones,
     User,
-    Send,
     ExternalLink,
     MessageCircle,
     Smartphone,
+    Archive,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -52,6 +52,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
         { href: "/admin/reporting", label: "Reporting", icon: PieChart },
         { href: "/admin/showcase", label: "Showcase", icon: Image },
         { href: "/admin/app-showcase", label: "App Showcase", icon: Smartphone },
+        { href: "/admin/archive", label: "Arsip Tiket", icon: Archive },
         { href: "/admin/chat", label: "Team Chat", icon: MessageCircle },
     ];
 

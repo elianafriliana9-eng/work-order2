@@ -12,7 +12,8 @@ import {
     ArrowRight,
     User,
     LogOut,
-    Code2
+    Code2,
+    Archive
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -32,11 +33,12 @@ export default function DashboardPage() {
             if (user) {
                 setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "User");
 
-                // Fetch personal tickets
+                // Fetch personal tickets (exclude archived: Completed & Rejected)
                 const { data: personalData } = await supabase
                     .from('work_orders')
                     .select('*')
                     .eq('user_id', user.id)
+                    .not('status', 'in', '("Completed","Rejected")')
                     .order('created_at', { ascending: false });
 
                 if (personalData) setTickets(personalData);
@@ -79,12 +81,20 @@ export default function DashboardPage() {
                         <h1 className="text-3xl font-bold tracking-tight">Dashboard User [V2]</h1>
                         <p className="text-muted-foreground mt-1">Kelola dan pantau status permintaan Work Order Anda.</p>
                     </div>
-                    <Link
-                        href="/new-ticket"
-                        className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                    >
-                        <Plus size={20} /> Buat Ticket Baru
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/dashboard/archive"
+                            className="flex items-center gap-2 px-5 py-3 border border-border rounded-xl font-bold text-sm text-muted-foreground hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                        >
+                            <Archive size={18} /> Arsip
+                        </Link>
+                        <Link
+                            href="/new-ticket"
+                            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                        >
+                            <Plus size={20} /> Buat Ticket Baru
+                        </Link>
+                    </div>
                 </div>
             </header>
 

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Request Design — WorkOrder System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f5f7;
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+
+        /* ── Toolbar ── */
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255,255,255,.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid #e2e4e9;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .toolbar-title {
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: -0.02em;
+        }
+        .toolbar-title span { color: #6366f1; }
+        .toolbar-actions { display: flex; gap: 8px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all .2s;
+        }
+        .btn-primary {
+            background: #18181b;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #3f3f46; }
+        .btn-outline {
+            background: #fff;
+            color: #18181b;
+            border: 1.5px solid #d4d4d8;
+        }
+        .btn-outline:hover { background: #f4f4f5; }
+        .btn svg { width: 16px; height: 16px; }
+
+        /* ── Canvas ── */
+        .canvas-wrapper {
+            padding: 80px 24px 60px;
+            display: flex;
+            justify-content: center;
+        }
+        #flowchart-canvas {
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid #e2e4e9;
+            box-shadow: 0 4px 40px rgba(0,0,0,.06);
+            padding: 60px 48px 48px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        /* ── Header ── */
+        .flow-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .flow-header .badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #6366f1;
+            background: #eef2ff;
+            padding: 6px 14px;
+            border-radius: 100px;
+            margin-bottom: 12px;
+        }
+        .flow-header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            margin-bottom: 6px;
+        }
+        .flow-header p {
+            font-size: 13px;
+            color: #71717a;
+        }
+
+        /* ── Flow Steps ── */
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+        }
+
+        /* ── Connector Line ── */
+        .connector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .connector .line {
+            width: 2px;
+            height: 32px;
+            background: linear-gradient(to bottom, #c7d2fe, #a5b4fc);
+        }
+        .connector .arrow {
+            width: 0; height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #a5b4fc;
+        }
+
+        .connector-branch {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 0;
+            padding: 4px 0 0;
+            position: relative;
+        }
+        .connector-branch .line-h {
+            height: 2px;
+            background: #a5b4fc;
+            flex: 1;
+            max-width: 140px;
+        }
+        .connector-branch .line-v {
+            width: 2px;
+            height: 24px;
+            background: #a5b4fc;
+        }
+        .connector-branch .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #a5b4fc;
+            flex-shrink: 0;
+        }
+
+        /* ── Step Card ── */
+        .step-card {
+            border: 1.5px solid #e2e4e9;
+            border-radius: 16px;
+            padding: 24px 28px;
+            position: relative;
+            background: #fff;
+            transition: all .2s;
+        }
+        .step-card:hover {
+            border-color: #c7d2fe;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, .08);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -12px;
+            left: 24px;
+            width: 24px; height: 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .step-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .step-title {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .step-role {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .step-desc {
+            font-size: 13px;
+            color: #52525b;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .step-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .detail-tag {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: #f4f4f5;
+            color: #52525b;
+        }
+
+        /* ── Color Themes ── */
+        .theme-blue .step-number { background: #3b82f6; }
+        .theme-blue .step-icon { background: #eff6ff; color: #3b82f6; }
+        .theme-blue .step-role { background: #eff6ff; color: #3b82f6; }
+
+        .theme-violet .step-number { background: #8b5cf6; }
+        .theme-violet .step-icon { background: #f5f3ff; color: #8b5cf6; }
+        .theme-violet .step-role { background: #f5f3ff; color: #8b5cf6; }
+
+        .theme-amber .step-number { background: #f59e0b; }
+        .theme-amber .step-icon { background: #fffbeb; color: #f59e0b; }
+        .theme-amber .step-role { background: #fffbeb; color: #b45309; }
+
+        .theme-pink .step-number { background: #ec4899; }
+        .theme-pink .step-icon { background: #fdf2f8; color: #ec4899; }
+        .theme-pink .step-role { background: #fdf2f8; color: #ec4899; }
+
+        .theme-green .step-number { background: #22c55e; }
+        .theme-green .step-icon { background: #f0fdf4; color: #22c55e; }
+        .theme-green .step-role { background: #f0fdf4; color: #16a34a; }
+
+        .theme-red .step-number { background: #ef4444; }
+        .theme-red .step-icon { background: #fef2f2; color: #ef4444; }
+        .theme-red .step-role { background: #fef2f2; color: #ef4444; }
+
+        .theme-cyan .step-number { background: #06b6d4; }
+        .theme-cyan .step-icon { background: #ecfeff; color: #06b6d4; }
+        .theme-cyan .step-role { background: #ecfeff; color: #0891b2; }
+
+        .theme-emerald .step-number { background: #10b981; }
+        .theme-emerald .step-icon { background: #ecfdf5; color: #10b981; }
+        .theme-emerald .step-role { background: #ecfdf5; color: #059669; }
+
+        /* ── Branch Layout ── */
+        .branch-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* ── Revision Loop ── */
+        .revision-loop {
+            border: 2px dashed #c7d2fe;
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            margin-top: 4px;
+        }
+        .revision-loop-label {
+            position: absolute;
+            top: -11px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 2px 14px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #6366f1;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* ── Rules Box ── */
+        .rules-box {
+            background: #fefce8;
+            border: 1.5px solid #fde68a;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 16px;
+        }
+        .rules-box h4 {
+            font-size: 12px;
+            font-weight: 800;
+            color: #a16207;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .rules-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        .rules-box li {
+            font-size: 12px;
+            color: #854d0e;
+            padding: 3px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+        .rules-box li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #f59e0b;
+            font-weight: bold;
+        }
+
+        /* ── Status Summary ── */
+        .status-summary {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .status-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0;
+            margin-top: 16px;
+        }
+        .status-chip {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .status-arrow {
+            font-size: 16px;
+            color: #a1a1aa;
+            margin: 0 4px;
+        }
+        .sc-open { background: #dbeafe; color: #1d4ed8; }
+        .sc-verified { background: #f5f3ff; color: #7c3aed; }
+        .sc-execution { background: #fffbeb; color: #b45309; }
+        .sc-review { background: #fdf2f8; color: #db2777; }
+        .sc-completed { background: #dcfce7; color: #16a34a; }
+        .sc-rejected { background: #fef2f2; color: #dc2626; }
+
+        /* ── Role Legend ── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #52525b;
+        }
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 4px;
+        }
+
+        /* ── Footer ── */
+        .flow-footer {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e4e4e7;
+            font-size: 11px;
+            color: #a1a1aa;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            #flowchart-canvas { padding: 40px 20px 32px; }
+            .branch-wrapper { grid-template-columns: 1fr; }
+            .flow-header h1 { font-size: 22px; }
+            .step-header { flex-wrap: wrap; }
+            .step-role { margin-left: 0; margin-top: 4px; }
+            .status-flow { gap: 4px; }
+            .status-chip { font-size: 10px; padding: 6px 10px; }
+        }
+
+        /* ── Print / PDF Styles ── */
+        @media print {
+            @page {
+                size: A4;
+                margin: 12mm 10mm;
+            }
+
+            body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .toolbar { display: none !important; }
+            .canvas-wrapper { padding: 0; display: block; }
+            #flowchart-canvas {
+                border: none;
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+                padding: 0;
+                break-inside: auto;
+            }
+
+            /* Prevent cards from being split across pages */
+            .step-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .branch-wrapper {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .revision-loop {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .rules-box {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .status-summary {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .legend {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .flow-header {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Keep connector + next card together */
+            .connector {
+                break-after: avoid;
+                page-break-after: avoid;
+            }
+
+            /* Shrink font sizes slightly for print to fit better */
+            .flow-header h1 { font-size: 24px; }
+            .step-title { font-size: 13px; }
+            .step-desc { font-size: 11px; }
+            .step-card { padding: 16px 20px; margin-bottom: 2px; }
+            .connector .line { height: 20px; }
+            .detail-tag { font-size: 10px; }
+            .rules-box li { font-size: 11px; }
+            .status-chip { font-size: 11px; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar">
+    <div class="toolbar-title">WorkOrder <span>System</span> — Flowchart</div>
+    <div class="toolbar-actions">
+        <button class="btn btn-outline" onclick="downloadAsPNG()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            PNG
+        </button>
+        <button class="btn btn-primary" onclick="downloadAsPDF()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Download PDF
+        </button>
+    </div>
+</div>
+
+<!-- Flowchart Canvas -->
+<div class="canvas-wrapper">
+    <div id="flowchart-canvas">
+
+        <!-- Header -->
+        <div class="flow-header">
+            <div class="badge">Standard Operating Procedure</div>
+            <h1>Flow Request Design</h1>
+            <p>WorkOrder System — Digital Technology Division</p>
+        </div>
+
+        <div class="flow-steps">
+
+            <!-- STEP 1 -->
+            <div class="step-card theme-blue">
+                <div class="step-number">1</div>
+                <div class="step-header">
+                    <div class="step-icon">📝</div>
+                    <div class="step-title">Buat Tiket Baru</div>
+                    <div class="step-role">Pemohon</div>
+                </div>
+                <div class="step-desc">
+                    Pemohon mengisi form tiket baru di sistem. Isi judul, nama brand, brief lengkap,
+                    ukuran/dimensi, jadwal meeting, dan deadline. Upload file referensi jika ada.
+                </div>
+                <div class="step-details">
+                    <span class="detail-tag">Kategori: Design</span>
+                    <span class="detail-tag">Brief min. 20 karakter</span>
+                    <span class="detail-tag">Jadwal meeting wajib</span>
+                    <span class="detail-tag">Lampiran referensi</span>
+                </div>
+                <div class="rules-box" style="margin-top: 14px;">
+                    <h4>⚡ Aturan Prioritas</h4>
+                    <ul>
+                        <li><strong>P1 (Urgent)</strong> — Deadline kurang dari 3 hari, wajib tulis alasan</li>
+                        <li><strong>P2 (Standar)</strong> — Deadline normal</li>
+                        <li><strong>P3 (Long-term)</strong> — Project jangka panjang</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- Status: Open -->
+            <div style="text-align:center">
+                <span class="status-chip sc-open">Status: Open</span>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- STEP 2 -->
+            <div class="step-card theme-violet">
+                <div class="step-number">2</div>
+                <div class="step-header">
+                    <div class="step-icon">🔍</div>
+                    <div class="step-title">Verifikasi Tiket</div>
+                    <div class="step-role">PIC IT</div>
+                </div>
+                <div class="step-desc">
+                    PIC IT memeriksa kelengkapan brief dan kelayakan tiket.
+                    Apakah brief sudah jelas? Apakah request ini memang perlu dikerjakan?
+                </div>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- Branch: Verified vs Rejected -->
+            <div class="branch-wrapper">
+                <div>
+                    <div class="step-card theme-green" style="height: 100%;">
+                        <div class="step-header">
+                            <div class="step-icon">✅</div>
+                            <div class="step-title">Diterima</div>
+                        </div>
+                        <div class="step-desc">
+                            Brief sudah jelas dan layak. Tiket diteruskan ke Designer untuk dikerjakan.
+                        </div>
+                        <div style="text-align:center; margin-top: 8px;">
+                            <span class="status-chip sc-verified">Status: Verified</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="step-card theme-red" style="height: 100%;">
+                        <div class="step-header">
+                            <div class="step-icon">❌</div>
+                            <div class="step-title">Ditolak</div>
+                        </div>
+                        <div class="step-desc">
+                            Brief kurang lengkap atau tidak sesuai. PIC IT menulis alasan penolakan.
+                            Pemohon harus buat tiket baru yang lebih jelas.
+                        </div>
+                        <div style="text-align:center; margin-top: 8px;">
+                            <span class="status-chip sc-rejected">Status: Rejected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- STEP 3 -->
+            <div class="step-card theme-amber">
+                <div class="step-number">3</div>
+                <div class="step-header">
+                    <div class="step-icon">🎨</div>
+                    <div class="step-title">Designer Mulai Kerjakan</div>
+                    <div class="step-role">Designer</div>
+                </div>
+                <div class="step-desc">
+                    Designer mengambil tiket dari antrian dan mulai mengerjakan desain sesuai brief.
+                    Jika ada jadwal meeting, diskusi dilakukan terlebih dahulu sebelum mulai.
+                </div>
+                <div style="text-align:center; margin-top: 12px;">
+                    <span class="status-chip sc-execution">Status: Execution</span>
+                </div>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- STEP 4 -->
+            <div class="step-card theme-pink">
+                <div class="step-number">4</div>
+                <div class="step-header">
+                    <div class="step-icon">📤</div>
+                    <div class="step-title">Kirim Hasil Desain</div>
+                    <div class="step-role">Designer</div>
+                </div>
+                <div class="step-desc">
+                    Setelah selesai, Designer upload file desain (PNG/JPG) atau tempel link Google Drive,
+                    lalu kirim ke tahap Review. <strong>Jendela revisi 24 jam mulai berjalan.</strong>
+                </div>
+                <div class="step-details">
+                    <span class="detail-tag">Upload file desain</span>
+                    <span class="detail-tag">Atau link Google Drive</span>
+                    <span class="detail-tag">⏱️ Timer 24 jam dimulai</span>
+                </div>
+                <div style="text-align:center; margin-top: 12px;">
+                    <span class="status-chip sc-review">Status: Review</span>
+                </div>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- STEP 5 -->
+            <div class="step-card theme-violet">
+                <div class="step-number">5</div>
+                <div class="step-header">
+                    <div class="step-icon">👑</div>
+                    <div class="step-title">Approval PIC IT</div>
+                    <div class="step-role">PIC IT</div>
+                </div>
+                <div class="step-desc">
+                    PIC IT memeriksa kualitas desain. Jika sudah sesuai standar, desain di-approve.
+                    Jika belum sesuai, dikembalikan ke Designer untuk diperbaiki.
+                </div>
+                <div class="branch-wrapper" style="margin-top: 12px;">
+                    <div style="text-align: center; padding: 12px; background: #f0fdf4; border-radius: 10px;">
+                        <div style="font-size: 20px; margin-bottom: 4px;">✅</div>
+                        <div style="font-size: 12px; font-weight: 700; color: #16a34a;">Approve</div>
+                        <div style="font-size: 11px; color: #52525b; margin-top: 2px;">Lanjut ke review pemohon</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: #fef2f2; border-radius: 10px;">
+                        <div style="font-size: 20px; margin-bottom: 4px;">🔄</div>
+                        <div style="font-size: 12px; font-weight: 700; color: #dc2626;">Reject</div>
+                        <div style="font-size: 11px; color: #52525b; margin-top: 2px;">Kembali ke Execution</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- STEP 6: Revision Loop -->
+            <div class="revision-loop">
+                <div class="revision-loop-label">⏱️ JENDELA REVISI 24 JAM</div>
+
+                <div class="step-card theme-cyan" style="margin-top: 8px;">
+                    <div class="step-number">6</div>
+                    <div class="step-header">
+                        <div class="step-icon">👀</div>
+                        <div class="step-title">Pemohon Review Hasil</div>
+                        <div class="step-role">Pemohon</div>
+                    </div>
+                    <div class="step-desc">
+                        Pemohon melihat dan mengecek hasil desain di dashboard.
+                        Ada waktu <strong>24 jam</strong> untuk minta revisi atau biarkan selesai otomatis.
+                    </div>
+                </div>
+
+                <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+                <div class="branch-wrapper">
+                    <!-- Option A: No Revision -->
+                    <div>
+                        <div class="step-card theme-green" style="height: 100%;">
+                            <div class="step-header">
+                                <div class="step-icon">👍</div>
+                                <div class="step-title">Puas / Tidak Ada Revisi</div>
+                            </div>
+                            <div class="step-desc">
+                                Tidak perlu klik apa-apa. Setelah 24 jam berlalu, tiket <strong>otomatis selesai</strong>.
+                            </div>
+                            <div style="text-align:center; margin-top: 8px;">
+                                <span class="status-chip sc-completed">→ Auto Completed</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Option B: Revision -->
+                    <div>
+                        <div class="step-card theme-red" style="height: 100%;">
+                            <div class="step-header">
+                                <div class="step-icon">✏️</div>
+                                <div class="step-title">Minta Revisi</div>
+                            </div>
+                            <div class="step-desc">
+                                Isi form revisi: tipe (Minor/Major), jelaskan masalah dan perubahan yang diminta.
+                                Upload referensi dan atur jadwal meeting revisi.
+                            </div>
+                            <div class="step-details" style="margin-top: 6px;">
+                                <span class="detail-tag">Minor: warna, teks, ukuran</span>
+                                <span class="detail-tag">Major: layout, gaya</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+                <!-- STEP 7 -->
+                <div class="step-card theme-amber">
+                    <div class="step-number">7</div>
+                    <div class="step-header">
+                        <div class="step-icon">🔄</div>
+                        <div class="step-title">Designer Tanggapi Revisi</div>
+                        <div class="step-role">Designer</div>
+                    </div>
+                    <div class="step-desc">
+                        Designer melihat permintaan revisi, perbaiki desain sesuai permintaan,
+                        lalu kirim ulang ke Review. <strong>24 jam baru dimulai lagi</strong> untuk pemohon mengecek.
+                    </div>
+                    <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #6366f1; font-weight: 700;">
+                        ↩️ Kembali ke Tahap 4 (Kirim Hasil) → Tahap 5 (Approval) → Tahap 6 (Review)
+                    </div>
+                </div>
+
+                <div class="rules-box" style="margin-top: 14px;">
+                    <h4>⚠️ Aturan Revisi</h4>
+                    <ul>
+                        <li>Maksimal <strong>2 kali revisi</strong> per tiket</li>
+                        <li>Revisi harus dikirim <strong>dalam 24 jam</strong> sejak desain dikirim</li>
+                        <li>Semua revisi harus dikumpulkan <strong>sekaligus</strong>, tidak boleh dicicil</li>
+                        <li><strong>Ganti konsep total</strong> (beda tema/brief) → harus buat tiket baru</li>
+                        <li>Lebih dari 2 revisi → PIC IT evaluasi apakah perlu tiket baru</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+            <!-- STEP 8 -->
+            <div class="step-card theme-emerald">
+                <div class="step-number">8</div>
+                <div class="step-header">
+                    <div class="step-icon">🎉</div>
+                    <div class="step-title">Tiket Selesai</div>
+                    <div class="step-role">Sistem</div>
+                </div>
+                <div class="step-desc">
+                    Tiket dianggap selesai jika salah satu kondisi terpenuhi:
+                </div>
+                <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+                    <div class="detail-tag" style="display: flex; align-items: center; gap: 6px;">
+                        <span>✅</span> PIC IT approve desain
+                    </div>
+                    <div class="detail-tag" style="display: flex; align-items: center; gap: 6px;">
+                        <span>⏱️</span> 24 jam berlalu tanpa ada permintaan revisi (auto-complete)
+                    </div>
+                    <div class="detail-tag" style="display: flex; align-items: center; gap: 6px;">
+                        <span>🔄</span> Semua revisi sudah ditanggapi dan tidak ada revisi lanjutan
+                    </div>
+                </div>
+                <div style="text-align:center; margin-top: 14px;">
+                    <span class="status-chip sc-completed" style="font-size: 14px; padding: 10px 24px;">✅ Status: Completed</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Flow Summary -->
+        <div class="status-summary">
+            <div style="font-size: 13px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Ringkasan Alur Status</div>
+            <div class="status-flow">
+                <span class="status-chip sc-open">Open</span>
+                <span class="status-arrow">→</span>
+                <span class="status-chip sc-verified">Verified</span>
+                <span class="status-arrow">→</span>
+                <span class="status-chip sc-execution">Execution</span>
+                <span class="status-arrow">→</span>
+                <span class="status-chip sc-review">Review</span>
+                <span class="status-arrow">→</span>
+                <span class="status-chip sc-completed">Completed</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 12px; color: #a1a1aa;">
+                Revisi: Review ↔ Execution (maks 2x) &nbsp;|&nbsp; Ditolak: Open → Rejected
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #3b82f6;"></div>
+                Pemohon
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #8b5cf6;"></div>
+                PIC IT
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #f59e0b;"></div>
+                Designer
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #10b981;"></div>
+                Sistem (Otomatis)
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flow-footer">
+            WorkOrder System — Digital Technology Division — SOP Request Design v1.0
+        </div>
+    </div>
+</div>
+
+<!-- CDN Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+<script>
+    const spinnerSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
+
+    function setButtonLoading(btn, loading) {
+        if (loading) {
+            btn._originalHTML = btn.innerHTML;
+            btn.innerHTML = spinnerSVG + ' Generating...';
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = btn._originalHTML;
+            btn.disabled = false;
+        }
+    }
+
+    async function downloadAsPNG() {
+        const btn = document.querySelector('.btn-outline');
+        setButtonLoading(btn, true);
+        try {
+            const canvas = await html2canvas(document.getElementById('flowchart-canvas'), {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                logging: false,
+            });
+            const link = document.createElement('a');
+            link.download = 'flowchart-request-design.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            alert('Gagal generate PNG: ' + err.message);
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    }
+
+    async function downloadAsPDF() {
+        const btn = document.querySelector('.btn-primary');
+        setButtonLoading(btn, true);
+
+        try {
+            const el = document.getElementById('flowchart-canvas');
+
+            // Render full canvas at high resolution
+            const canvas = await html2canvas(el, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                logging: false,
+                windowWidth: el.scrollWidth,
+            });
+
+            if (!window.jspdf) {
+                alert('Library jsPDF belum selesai dimuat. Coba lagi dalam beberapa detik.');
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+
+            // A4 dimensions in mm
+            const pageW = 210;
+            const pageH = 297;
+            const margin = 10; // mm margin on all sides
+
+            const contentW = pageW - margin * 2; // usable width
+            const contentH = pageH - margin * 2; // usable height per page
+
+            // Scale canvas image to fit A4 width
+            const imgW = contentW;
+            const imgH = (canvas.height * contentW) / canvas.width;
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            // Slice image into pages so nothing gets cut
+            const totalPages = Math.ceil(imgH / contentH);
+
+            for (let page = 0; page < totalPages; page++) {
+                if (page > 0) pdf.addPage();
+
+                // Calculate which slice of the source canvas to draw
+                const srcY = (page * contentH / imgH) * canvas.height;
+                const srcH = (contentH / imgH) * canvas.height;
+                const sliceH = Math.min(srcH, canvas.height - srcY);
+
+                // Create a temporary canvas for this page slice
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = sliceH;
+
+                const ctx = sliceCanvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+                ctx.drawImage(
+                    canvas,
+                    0, srcY,                          // source x, y
+                    canvas.width, sliceH,              // source w, h
+                    0, 0,                              // dest x, y
+                    sliceCanvas.width, sliceCanvas.height // dest w, h
+                );
+
+                const sliceData = sliceCanvas.toDataURL('image/png');
+                const drawH = (sliceH / canvas.height) * imgH;
+
+                pdf.addImage(sliceData, 'PNG', margin, margin, imgW, drawH);
+            }
+
+            pdf.save('flowchart-request-design.pdf');
+        } catch (err) {
+            alert('Gagal generate PDF: ' + err.message);
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    }
+</script>
+<style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>

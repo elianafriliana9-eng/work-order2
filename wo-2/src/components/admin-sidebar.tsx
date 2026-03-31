@@ -71,7 +71,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
             <div className="p-4 border-b border-border flex items-center justify-between">
                 {!collapsed && (
                     <div className="flex items-center">
-                        <Image src="/logo.png" alt="Digital Technology" width={170} height={42} className="h-9 w-auto object-contain" />
+                        <Image src="/logo.png" alt="Digital Technology" width={210} height={52} className="h-11 w-auto object-contain" />
                     </div>
                 )}
                 <button

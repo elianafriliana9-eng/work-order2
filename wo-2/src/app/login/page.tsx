@@ -92,7 +92,7 @@ export default function LoginPage() {
                     <ArrowLeft size={16} /> Kembali ke Landing Page
                 </Link>
                 <div className="flex justify-center mb-6">
-                    <Image src="/logo.png" alt="Digital Technology" width={260} height={65} className="h-16 w-auto object-contain" priority />
+                    <Image src="/logo.png" alt="Digital Technology" width={320} height={80} className="h-20 w-auto object-contain" priority />
                 </div>
                 <h2 className="text-center text-2xl font-extrabold tracking-tight text-foreground">
                     Work Order System

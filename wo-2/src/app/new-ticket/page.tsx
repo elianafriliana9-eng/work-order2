@@ -211,7 +211,7 @@ export default function NewTicketPage() {
             <nav className="fixed top-0 z-50 w-full glass border-b border-border">
                 <div className="container mx-auto flex h-16 items-center justify-between px-6">
                     <Link href="/dashboard" className="flex items-center">
-                        <Image src="/logo.png" alt="Digital Technology" width={200} height={50} className="h-10 w-auto object-contain" />
+                        <Image src="/logo.png" alt="Digital Technology" width={260} height={65} className="h-12 w-auto object-contain" />
                     </Link>
                     <Link href="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">Batal & Keluar</Link>
                 </div>

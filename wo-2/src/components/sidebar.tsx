@@ -43,12 +43,12 @@ export function Sidebar({ userName }: { userName: string }) {
             <div className="p-6 flex items-center justify-between">
                 {!isCollapsed && (
                     <Link href="/dashboard" className="flex items-center overflow-hidden">
-                        <Image src="/logo.png" alt="Digital Technology" width={180} height={45} className="h-10 w-auto object-contain" />
+                        <Image src="/logo.png" alt="Digital Technology" width={220} height={55} className="h-12 w-auto object-contain" />
                     </Link>
                 )}
                 {isCollapsed && (
                     <Link href="/dashboard" className="mx-auto">
-                        <Image src="/logo.png" alt="Digital Technology" width={40} height={40} className="h-10 w-10 object-contain" />
+                        <Image src="/logo.png" alt="Digital Technology" width={48} height={48} className="h-12 w-12 object-contain" />
                     </Link>
                 )}
 

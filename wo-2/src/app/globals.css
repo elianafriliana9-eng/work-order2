@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:not(*));
+
 :root {
+  color-scheme: light only;
   --background: #ffffff;
   --foreground: #09090b;
   --card: #ffffff;

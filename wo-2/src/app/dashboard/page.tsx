@@ -99,7 +99,7 @@ export default function DashboardPage() {
             </header>
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
                 {[
                     { label: "Total Ticket", value: tickets.length, icon: Layout, color: "text-zinc-500" },
                     { label: "Dalam Antrian", value: tickets.filter((t: any) => t.status === 'Open').length, icon: Clock, color: "text-amber-500" },
@@ -124,7 +124,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                     <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Team Live Pipeline</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                     {loadingOngoing ? (
                         <div className="col-span-full py-4 text-center text-xs text-muted-foreground italic">Loading pipeline...</div>
                     ) : ongoingTasks.length > 0 ? (
@@ -177,7 +177,8 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
                     {tickets.length > 0 ? (
                         <table className="w-full text-left text-sm border-collapse">
                             <thead>
@@ -227,8 +228,49 @@ export default function DashboardPage() {
                                 ))}
                             </tbody>
                         </table>
+                    ) : null}
+                </div>
+
+                {/* Mobile cards */}
+                <div className="md:hidden p-4 space-y-3">
+                    {tickets.length > 0 ? (
+                        tickets.map((ticket, i) => (
+                            <motion.div
+                                key={ticket.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                                className="bg-white dark:bg-zinc-900 rounded-xl border border-border p-4 shadow-sm"
+                            >
+                                <div className="flex items-start justify-between mb-2">
+                                    <div className="flex-1 min-w-0 mr-2">
+                                        <p className="font-bold text-sm text-foreground truncate">{ticket.title}</p>
+                                        <p className="text-xs text-muted-foreground">{ticket.brand}</p>
+                                    </div>
+                                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusColor(ticket.status)}`}>
+                                        {ticket.status}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 font-medium text-[10px]">
+                                            {ticket.category}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground font-medium">
+                                            {new Date(ticket.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                        </span>
+                                    </div>
+                                    <Link
+                                        href={`/dashboard/ticket/${ticket.id}`}
+                                        className="flex items-center gap-1 text-primary font-bold text-xs"
+                                    >
+                                        Detail <ArrowRight size={12} />
+                                    </Link>
+                                </div>
+                            </motion.div>
+                        ))
                     ) : (
-                        <div className="py-20 text-center">
+                        <div className="py-16 text-center">
                             <div className="mb-4 flex justify-center">
                                 <div className="p-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400">
                                     <Layout size={40} />

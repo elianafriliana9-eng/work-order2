@@ -18,7 +18,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-export function Sidebar({ userName }: { userName: string }) {
+export function Sidebar({ userName, isMobileOpen, onCloseMobile }: { userName: string; isMobileOpen?: boolean; onCloseMobile?: () => void }) {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const router = useRouter();
@@ -37,7 +37,7 @@ export function Sidebar({ userName }: { userName: string }) {
 
     return (
         <aside
-            className={`fixed left-0 top-0 h-screen bg-white dark:bg-zinc-900 border-r border-border transition-all duration-300 z-50 flex flex-col ${isCollapsed ? "w-20" : "w-64"}`}
+            className={`fixed left-0 top-0 h-screen bg-white dark:bg-zinc-900 border-r border-border transition-all duration-300 z-50 flex flex-col ${isCollapsed ? "w-20" : "w-64"} ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
         >
             {/* Header */}
             <div className="p-6 flex items-center justify-between">
@@ -54,7 +54,7 @@ export function Sidebar({ userName }: { userName: string }) {
 
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="absolute -right-3 top-12 bg-white dark:bg-zinc-800 border border-border p-1 rounded-full shadow-md text-muted-foreground hover:text-primary transition-colors"
+                    className="hidden lg:block absolute -right-3 top-12 bg-white dark:bg-zinc-800 border border-border p-1 rounded-full shadow-md text-muted-foreground hover:text-primary transition-colors"
                 >
                     {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                 </button>
@@ -68,6 +68,7 @@ export function Sidebar({ userName }: { userName: string }) {
                         <Link
                             key={item.label}
                             href={item.href}
+                            onClick={onCloseMobile}
                             className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive
                                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                                     : "text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-foreground"

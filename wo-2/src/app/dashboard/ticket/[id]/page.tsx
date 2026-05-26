@@ -225,7 +225,7 @@ export default function TicketDetailPage() {
                                     </div>
 
                                     {/* Detail grid */}
-                                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-dashed border-zinc-200 dark:border-zinc-700">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-dashed border-zinc-200 dark:border-zinc-700">
                                         <div>
                                             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Kategori</p>
                                             <p className="text-sm font-bold">{ticket.category}</p>

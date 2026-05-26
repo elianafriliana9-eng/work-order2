@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { Menu, X } from "lucide-react";
 
 export default function DashboardLayout({
     children,
@@ -12,6 +13,7 @@ export default function DashboardLayout({
 }) {
     const [userName, setUserName] = useState<string>("User");
     const [loading, setLoading] = useState(true);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -40,7 +42,28 @@ export default function DashboardLayout({
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-            <Sidebar userName={userName} />
+            {/* Mobile backdrop */}
+            {isMobileSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                />
+            )}
+
+            {/* Mobile hamburger button */}
+            <button
+                onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+                className="fixed top-4 left-4 z-50 lg:hidden p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-border shadow-md"
+                aria-label="Toggle sidebar"
+            >
+                {isMobileSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            <Sidebar
+                userName={userName}
+                isMobileOpen={isMobileSidebarOpen}
+                onCloseMobile={() => setIsMobileSidebarOpen(false)}
+            />
             <main className="transition-all duration-300 lg:pl-64 min-h-screen">
                 {children}
             </main>

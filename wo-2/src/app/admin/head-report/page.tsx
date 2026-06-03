@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import ExcelJS from "exceljs";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 import {
     BarChart3,
     TrendingUp,
@@ -187,6 +191,8 @@ export default function HeadOfITReportPage() {
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
     const [dateRange, setDateRange] = useState<'all' | '7d' | '30d' | '90d' | '6m' | '1y'>('all');
+    const [isExporting, setIsExporting] = useState(false);
+    const chartsRef = useRef<HTMLDivElement>(null);
 
     // Fetch all orders
     useEffect(() => {
@@ -330,34 +336,151 @@ export default function HeadOfITReportPage() {
         return data;
     }, [stats, searchQuery, categoryFilter, statusFilter, complexityFilter, sortField, sortDir]);
 
-    // ===================== EXPORT CSV =====================
-    function exportCSV() {
+    // ===================== EXPORT EXCEL (XLSX) =====================
+    async function exportXLSX() {
         if (tableData.length === 0) return;
-        const headers = ['Judul', 'Brand', 'Kategori', 'Status', 'Prioritas', 'Kompleksitas', 'Skor', 'Dibuat', 'Deadline', 'Jarak Deadline (Hari)', 'Revisi'];
-        const rows = tableData.map(o => {
-            const c = detectComplexity(o);
-            return [
-                `"${o.title}"`,
-                `"${o.brand}"`,
-                o.category,
-                o.status,
-                o.priority,
-                c.level,
-                c.score.toFixed(1),
-                formatDate(o.created_at),
-                o.deadline ? formatDate(o.deadline) : '-',
-                o.deadline ? daysBetween(o.created_at, o.deadline) : '-',
-                o.revision_count || 0,
-            ].join(',');
-        });
-        const csv = [headers.join(','), ...rows].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Head_IT_Report_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
+        setIsExporting(true);
+        try {
+            const workbook = new ExcelJS.Workbook();
+            const sheet = workbook.addWorksheet('Head IT Report');
+
+            // Set columns
+            sheet.columns = [
+                { header: 'No', key: 'no', width: 5 },
+                { header: 'Judul', key: 'title', width: 30 },
+                { header: 'Brand', key: 'brand', width: 15 },
+                { header: 'Kategori', key: 'category', width: 15 },
+                { header: 'Status', key: 'status', width: 15 },
+                { header: 'Prioritas', key: 'priority', width: 10 },
+                { header: 'Kompleksitas', key: 'complexity', width: 15 },
+                { header: 'Skor', key: 'score', width: 10 },
+                { header: 'Dibuat', key: 'created', width: 15 },
+                { header: 'Deadline', key: 'deadline', width: 15 },
+                { header: 'Jarak (Hari)', key: 'distance', width: 15 },
+                { header: 'Revisi', key: 'revisions', width: 10 },
+            ];
+
+            // Make headers bold
+            sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF18181B' } };
+
+            // Add table data
+            tableData.forEach((o, index) => {
+                const c = detectComplexity(o);
+                sheet.addRow({
+                    no: index + 1,
+                    title: o.title,
+                    brand: o.brand,
+                    category: o.category,
+                    status: o.status,
+                    priority: o.priority,
+                    complexity: c.level,
+                    score: c.score.toFixed(1),
+                    created: formatDate(o.created_at),
+                    deadline: o.deadline ? formatDate(o.deadline) : '-',
+                    distance: o.deadline ? daysBetween(o.created_at, o.deadline) : '-',
+                    revisions: o.revision_count || 0
+                });
+            });
+
+            // Add Charts via HTML2Canvas
+            if (chartsRef.current) {
+                const canvas = await html2canvas(chartsRef.current, { scale: 1.5, backgroundColor: '#ffffff' });
+                const imgData = canvas.toDataURL('image/png');
+                const imageId = workbook.addImage({
+                    base64: imgData,
+                    extension: 'png',
+                });
+                
+                const lastRow = sheet.lastRow ? sheet.lastRow.number : 1;
+                // Calculate dimensions for excel (approximate)
+                sheet.addImage(imageId, {
+                    tl: { col: 0, row: lastRow + 2 },
+                    ext: { width: 900, height: (canvas.height * 900) / canvas.width } 
+                });
+            }
+
+            // Save file
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Head_IT_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Failed to export XLSX:', error);
+            alert('Gagal export data Excel');
+        } finally {
+            setIsExporting(false);
+        }
+    }
+
+    // ===================== EXPORT PDF =====================
+    async function exportPDF() {
+        if (tableData.length === 0) return;
+        setIsExporting(true);
+        try {
+            const pdf = new jsPDF('l', 'pt', 'a4'); // landscape
+            
+            pdf.setFontSize(18);
+            pdf.text('Laporan Kinerja Head of IT', 40, 40);
+            pdf.setFontSize(10);
+            pdf.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 40, 55);
+
+            // Add Charts via HTML2Canvas
+            let chartHeight = 0;
+            if (chartsRef.current) {
+                const canvas = await html2canvas(chartsRef.current, { scale: 1.5, backgroundColor: '#ffffff' });
+                const imgData = canvas.toDataURL('image/png');
+                const pdfWidth = pdf.internal.pageSize.getWidth() - 80;
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 40, 70, pdfWidth, pdfHeight);
+                chartHeight = pdfHeight + 40; // Add margin after chart
+            }
+
+            // Check if we need a new page for the table
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            let tableStartY = 70 + chartHeight;
+            if (tableStartY > pageHeight - 100) {
+                pdf.addPage();
+                tableStartY = 40;
+            }
+
+            // Add Table using jspdf-autotable
+            const tableCols = ['No', 'Judul', 'Brand', 'Kategori', 'Status', 'Prior.', 'Komp.', 'Dibuat', 'Deadline'];
+            const tableRows = tableData.map((o, index) => {
+                const c = detectComplexity(o);
+                return [
+                    (index + 1).toString(),
+                    o.title,
+                    o.brand,
+                    o.category,
+                    o.status,
+                    o.priority || 'P2',
+                    `${c.level} (${c.score.toFixed(1)})`,
+                    formatDate(o.created_at),
+                    o.deadline ? formatDate(o.deadline) : '-'
+                ];
+            });
+
+            autoTable(pdf, {
+                head: [tableCols],
+                body: tableRows,
+                startY: tableStartY,
+                theme: 'grid',
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [24, 24, 27] }, // zinc-900
+            });
+
+            pdf.save(`Head_IT_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+            console.error('Failed to export PDF:', error);
+            alert('Gagal export data PDF');
+        } finally {
+            setIsExporting(false);
+        }
     }
 
     function handleSort(field: string) {
@@ -431,9 +554,16 @@ export default function HeadOfITReportPage() {
                                 </button>
                             ))}
                         </div>
-                        <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-sm">
-                            <Download size={14} /> Export CSV
-                        </button>
+                        <div className="flex gap-2">
+                            <button disabled={isExporting} onClick={exportXLSX} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-50 min-w-[120px] justify-center">
+                                {isExporting ? <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Download size={14} />} 
+                                Export XLSX
+                            </button>
+                            <button disabled={isExporting} onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-50 min-w-[120px] justify-center">
+                                {isExporting ? <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Download size={14} />} 
+                                Export PDF
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -510,7 +640,8 @@ export default function HeadOfITReportPage() {
             </div>
 
             {/* ============ CHARTS ROW ============ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div ref={chartsRef} className="bg-transparent p-2 -m-2">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                 {/* Complexity Distribution */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -611,6 +742,7 @@ export default function HeadOfITReportPage() {
                     </div>
                 </motion.div>
             )}
+            </div>
 
             {/* ============ DATA TABLE ============ */}
             <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-border shadow-sm overflow-hidden">

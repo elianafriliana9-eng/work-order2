@@ -193,6 +193,7 @@ export default function HeadOfITReportPage() {
     const [dateRange, setDateRange] = useState<'all' | '7d' | '30d' | '90d' | '6m' | '1y'>('all');
     const [isExporting, setIsExporting] = useState(false);
     const chartsRef = useRef<HTMLDivElement>(null);
+    const conclusionRef = useRef<HTMLDivElement>(null);
 
     // Fetch all orders
     useEffect(() => {
@@ -421,6 +422,25 @@ export default function HeadOfITReportPage() {
                 });
             }
 
+            // Add Conclusion via html-to-image
+            if (conclusionRef.current) {
+                const imgData = await toPng(conclusionRef.current, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
+                const imageId = workbook.addImage({
+                    base64: imgData,
+                    extension: 'png',
+                });
+                
+                const lastRow = sheet.lastRow ? sheet.lastRow.number : 1;
+                const { offsetWidth, offsetHeight } = conclusionRef.current;
+                const excelWidth = 900;
+                const excelHeight = offsetWidth ? (offsetHeight * excelWidth) / offsetWidth : 150;
+
+                sheet.addImage(imageId, {
+                    tl: { col: 0, row: lastRow + 2 },
+                    ext: { width: excelWidth, height: excelHeight } 
+                });
+            }
+
             // Save file
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -491,9 +511,24 @@ export default function HeadOfITReportPage() {
                 body: tableRows,
                 startY: tableStartY,
                 theme: 'grid',
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [24, 24, 27] }, // zinc-900
+                styles: { fontSize: 8, cellPadding: 4 },
+                headStyles: { fillColor: [63, 63, 70], textColor: 255, fontStyle: 'bold' },
             });
+
+            // Add Conclusion Image
+            if (conclusionRef.current) {
+                let finalY = (pdf as any).lastAutoTable.finalY + 40;
+                const imgData = await toPng(conclusionRef.current, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
+                const { offsetWidth, offsetHeight } = conclusionRef.current;
+                const pdfWidth = pdf.internal.pageSize.getWidth() - 80;
+                const cHeight = offsetWidth ? (offsetHeight * pdfWidth) / offsetWidth : 150;
+
+                if (finalY + cHeight > pdf.internal.pageSize.getHeight() - 40) {
+                    pdf.addPage();
+                    finalY = 40;
+                }
+                pdf.addImage(imgData, 'PNG', 40, finalY, pdfWidth, cHeight);
+            }
 
             pdf.save(`Head_IT_Report_${new Date().toISOString().split('T')[0]}.pdf`);
         } catch (error) {
@@ -980,6 +1015,7 @@ export default function HeadOfITReportPage() {
 
             {/* ============ CONCLUSION & SOP COMPLIANCE ============ */}
             <motion.div
+                ref={conclusionRef}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}

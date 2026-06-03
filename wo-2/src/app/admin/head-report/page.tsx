@@ -50,6 +50,7 @@ interface WorkOrder {
     meeting_type: string | null;
     completed_at?: string | null;
     updated_at?: string | null;
+    urgent_reason?: string | null;
 }
 
 interface ComplexityResult {
@@ -147,6 +148,13 @@ function detectComplexity(wo: WorkOrder): ComplexityResult {
         factors.push('Multi-modul terpengaruh');
     }
 
+    // 9. Video/Vidio keyword check
+    const textToCheck = `${wo.title} ${wo.description}`.toLowerCase();
+    if (textToCheck.includes('video') || textToCheck.includes('vidio')) {
+        if (score < 7) score = 7;
+        factors.push('Mengandung kata Video/Vidio (Otomatis High/Critical)');
+    }
+
     // Classify
     if (score >= 10) return { score, level: 'Critical', factors, color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20' };
     if (score >= 7) return { score, level: 'High', factors, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/20' };
@@ -226,19 +234,19 @@ export default function HeadOfITReportPage() {
             avgDeadlineDays = totalDays / withDeadline.length;
         }
 
-        // Completion time range (created_at -> updated_at for completed)
-        let minCompletionDays = Infinity;
-        let maxCompletionDays = 0;
-        let avgCompletionDays = 0;
-        if (completed.length > 0) {
-            const completionDays = completed.map(o => {
-                const endDate = o.completed_at || o.updated_at || o.created_at;
-                return daysBetween(o.created_at, endDate);
-            });
-            minCompletionDays = Math.min(...completionDays);
-            maxCompletionDays = Math.max(...completionDays);
-            avgCompletionDays = completionDays.reduce((a, b) => a + b, 0) / completionDays.length;
-        }
+        // Top 3 P1 Urgent Reasons
+        const p1ReasonsMap = p1.reduce((acc: Record<string, number>, o) => {
+            if (o.urgent_reason && o.urgent_reason.trim() !== '') {
+                const reason = o.urgent_reason.trim();
+                acc[reason] = (acc[reason] || 0) + 1;
+            }
+            return acc;
+        }, {});
+        
+        const topP1Reasons = Object.entries(p1ReasonsMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([reason, count]) => ({ reason, count }));
 
         // Complexity distribution
         const complexities = filtered.map(o => detectComplexity(o));
@@ -275,9 +283,7 @@ export default function HeadOfITReportPage() {
             rejectedCount: rejected.length,
             p1Count: p1.length,
             avgDeadlineDays: Math.round(avgDeadlineDays * 10) / 10,
-            minCompletionDays: minCompletionDays === Infinity ? 0 : minCompletionDays,
-            maxCompletionDays,
-            avgCompletionDays: Math.round(avgCompletionDays * 10) / 10,
+            topP1Reasons,
             resolutionRate: total > 0 ? Math.round((completed.length / total) * 100) : 0,
             complexityDist,
             categoryDist,
@@ -433,12 +439,10 @@ export default function HeadOfITReportPage() {
             </header>
 
             {/* ============ TOP METRIC CARDS ============ */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                 {[
                     { label: 'Total Tiket Masuk', value: stats.total, icon: FileText, color: 'text-zinc-600', bg: 'bg-zinc-50 dark:bg-zinc-800' },
                     { label: 'Avg. Jarak Deadline', value: `${stats.avgDeadlineDays} hari`, icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-500/10' },
-                    { label: 'Rentan Penyelesaian', value: `${stats.minCompletionDays}–${stats.maxCompletionDays} hari`, icon: Timer, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-500/10' },
-                    { label: 'Avg. Penyelesaian', value: `${stats.avgCompletionDays} hari`, icon: Target, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-500/10' },
                     { label: 'Resolution Rate', value: `${stats.resolutionRate}%`, icon: Activity, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-500/10' },
                 ].map((card, i) => (
                     <motion.div
@@ -455,6 +459,30 @@ export default function HeadOfITReportPage() {
                         <p className="text-xl font-bold">{card.value}</p>
                     </motion.div>
                 ))}
+
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-border flex flex-col justify-center"
+                >
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="inline-flex p-1.5 rounded-lg bg-orange-50 dark:bg-orange-500/10">
+                            <AlertTriangle size={14} className="text-orange-600" />
+                        </div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Top 3 Alasan P1</p>
+                    </div>
+                    <div className="space-y-1.5 mt-1">
+                        {stats.topP1Reasons.length === 0 ? (
+                            <p className="text-xs text-muted-foreground">Tidak ada data urgent</p>
+                        ) : stats.topP1Reasons.map((r, i) => (
+                            <div key={i} className="flex justify-between items-center text-xs">
+                                <span className="truncate pr-2 font-medium" title={r.reason}>{r.reason}</span>
+                                <span className="font-bold shrink-0 bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 px-1.5 py-0.5 rounded-full text-[10px]">{r.count}</span>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
             </div>
 
             {/* ============ SECONDARY STATS ============ */}

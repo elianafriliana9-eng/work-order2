@@ -157,7 +157,7 @@ export default function SubmitForReviewModal({
                     <div>
                         <h2 className="text-xl font-bold">Submit untuk Review</h2>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Upload hasil design final untuk approval Head IT
+                            Upload hasil design final untuk approval PIC IT
                         </p>
                     </div>
                     <button
@@ -181,7 +181,7 @@ export default function SubmitForReviewModal({
                                 <ul className="text-xs text-blue-700 dark:text-blue-400 mt-2 space-y-1">
                                     <li>• Upload file PNG/JPG (maksimal 10MB per file)</li>
                                     <li>• Atau cantumkan link Google Drive yang dapat diakses</li>
-                                    <li>• Head IT akan meninjau design dalam 1-2 hari kerja</li>
+                                    <li>• PIC IT akan meninjau design dalam 1-2 hari kerja</li>
                                     <li>• Setelah approved, status berubah menjadi Completed</li>
                                 </ul>
                             </div>

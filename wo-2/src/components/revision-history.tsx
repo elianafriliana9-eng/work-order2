@@ -328,7 +328,7 @@ export default function RevisionHistory({ ticketId, canRespond = false }: Revisi
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <User size={12} className="text-violet-600 dark:text-violet-400" />
                                                         <span className="text-xs font-bold text-violet-700 dark:text-violet-300">
-                                                            Head of IT
+                                                            PIC IT
                                                         </span>
                                                     </div>
                                                     <p className="text-sm text-violet-800 dark:text-violet-300 whitespace-pre-wrap">

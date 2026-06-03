@@ -118,7 +118,7 @@ export default function AdminDashboardPage() {
                     );
                 }
 
-                // Fetch reports if not Head IT (personal)
+                // Fetch reports if not PIC IT (personal)
                 if (userRole !== ROLES.HEAD_IT) {
                     const { data: reportData } = await supabase
                         .from('daily_reports')
@@ -244,7 +244,7 @@ export default function AdminDashboardPage() {
                 </section>
             )}
 
-            {/* Design Pending Approval (Head IT only) */}
+            {/* Design Pending Approval (PIC IT only) */}
             {isHeadIT && (
                 <section>
                     <div className="flex items-center gap-2 mb-5">

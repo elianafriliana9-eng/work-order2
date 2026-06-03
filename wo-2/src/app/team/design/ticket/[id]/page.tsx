@@ -184,7 +184,7 @@ export default function DesignTicketDetailPage() {
                                 <div className="flex flex-col gap-2 items-end">
                                     <span className="text-xs font-bold px-3 py-1.5 bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 rounded-full flex items-center gap-1.5">
                                         <Eye size={12} />
-                                        Menunggu Approval Head IT
+                                        Menunggu Approval PIC IT
                                     </span>
                                     {ticket.head_it_approval_status === 'pending' && (
                                         <span className="text-[10px] text-purple-600 dark:text-purple-400">
@@ -346,7 +346,7 @@ export default function DesignTicketDetailPage() {
                     onSuccess={() => {
                         setShowReviewModal(false);
                         setTicket({ ...ticket, status: 'Review' });
-                        alert("Design berhasil disubmit untuk review! Menunggu approval Head IT.");
+                        alert("Design berhasil disubmit untuk review! Menunggu approval PIC IT.");
                     }}
                 />
             </motion.div>

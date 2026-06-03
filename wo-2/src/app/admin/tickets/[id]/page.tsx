@@ -161,7 +161,7 @@ export default function AdminTicketDetailPage() {
     // Determine which statuses this role can transition to
     const getAvailableStatuses = () => {
         if (isHeadIT) {
-            // Head IT can approve (Verified), reject, or complete
+            // PIC IT can approve (Verified), reject, or complete
             if (ticket.status === 'Open') return ['Verified', 'Rejected'];
             if (ticket.status === 'Review') return ['Completed', 'Execution'];
             return STATUS_FLOW.filter(s => s !== ticket.status);
@@ -267,7 +267,7 @@ export default function AdminTicketDetailPage() {
                     </div>
                 )}
 
-                {/* Head IT Approval Section (When status is Review) */}
+                {/* PIC IT Approval Section (When status is Review) */}
                 {isHeadIT && ticket.status === 'Review' && ticket.final_design_urls && ticket.final_design_urls.length > 0 && (
                     <div className="mb-6 p-4 rounded-xl bg-purple-50 dark:bg-purple-500/10 border-2 border-purple-200 dark:border-purple-500/20">
                         <div className="flex items-center justify-between flex-wrap gap-4 mb-4">

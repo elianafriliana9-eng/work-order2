@@ -15,7 +15,7 @@ export default function AdminChatPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        setUserName(user.user_metadata?.full_name || user.email?.split("@")[0] || "Head IT");
+        setUserName(user.user_metadata?.full_name || user.email?.split("@")[0] || "PIC IT");
       }
       setLoading(false);
     }
@@ -41,7 +41,7 @@ export default function AdminChatPage() {
           <div>
             <h1 className="text-lg font-black tracking-tight">Team Chat</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-              Head IT &harr; Designer
+              PIC IT &harr; Designer
             </p>
           </div>
         </div>

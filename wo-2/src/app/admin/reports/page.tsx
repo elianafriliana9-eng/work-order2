@@ -318,7 +318,7 @@ export default function AdminReportsPage() {
                                                         <div className="flex items-center gap-1.5 mb-1">
                                                             <MessageSquare size={12} className="text-violet-500" />
                                                             <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest">
-                                                                Komentar Head IT
+                                                                Komentar PIC IT
                                                             </span>
                                                             {report.commented_at && (
                                                                 <span className="text-[10px] text-muted-foreground ml-auto">

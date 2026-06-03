@@ -451,7 +451,7 @@ export default function ReportSummaryPage() {
                     </div>
                     <div className="text-center w-48">
                         <p className="text-xs font-bold mb-12">Mengetahui,</p>
-                        <p className="text-xs border-t border-zinc-400 pt-1">Head of IT</p>
+                        <p className="text-xs border-t border-zinc-400 pt-1">PIC IT</p>
                     </div>
                 </div>
             </div>

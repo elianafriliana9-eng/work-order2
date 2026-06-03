@@ -100,7 +100,7 @@ export default function DesignReportPage() {
                     <Send size={22} /> Laporan Harian
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                    Submit laporan progress harian Anda. Laporan akan dikirim ke Head of IT.
+                    Submit laporan progress harian Anda. Laporan akan dikirim ke PIC IT.
                 </p>
             </header>
 

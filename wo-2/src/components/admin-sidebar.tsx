@@ -32,7 +32,7 @@ interface AdminSidebarProps {
 }
 
 const roleConfig: Record<string, { label: string; icon: any; color: string }> = {
-    head_it: { label: "Head of IT", icon: Shield, color: "text-violet-500" },
+    head_it: { label: "PIC IT", icon: Shield, color: "text-violet-500" },
     designer: { label: "Designer", icon: Palette, color: "text-pink-500" },
     it_dev: { label: "IT Developer", icon: Code, color: "text-blue-500" },
     it_support: { label: "IT Support", icon: Headphones, color: "text-green-500" },
@@ -52,7 +52,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
         { href: "/admin/it-dev", label: "IT Development", icon: Code },
         { href: "/admin/reports", label: "Laporan Tim", icon: FileText },
         { href: "/admin/reporting", label: "Reporting", icon: PieChart },
-        { href: "/admin/head-report", label: "Head IT Report", icon: BarChart3 },
+        { href: "/admin/head-report", label: "PIC IT Report", icon: BarChart3 },
         { href: "/admin/showcase", label: "Showcase", icon: ImageIcon },
         { href: "/admin/app-showcase", label: "App Showcase", icon: Smartphone },
         { href: "/admin/archive", label: "Arsip Tiket", icon: Archive },

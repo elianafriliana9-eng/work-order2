@@ -104,7 +104,7 @@ export default function LandingPage() {
 
   const workflow = [
     { title: "Input Ticket", desc: "Pemohon mengisi form WO di sistem.", icon: ClipboardList },
-    { title: "Triaging", desc: "Verifikasi brief oleh Head of IT.", icon: ShieldCheck },
+    { title: "Triaging", desc: "Verifikasi brief oleh PIC IT.", icon: ShieldCheck },
     { title: "Execution", desc: "Pengerjaan oleh tim Programmer/Designer.", icon: Code2 },
     { title: "Review", desc: "Pengecekan hasil oleh pemohon.", icon: CheckCircle2 },
   ];

@@ -282,6 +282,19 @@ export default function HeadOfITReportPage() {
             return acc;
         }, {});
 
+        // Conclusion Analytics
+        const sopViolations = filtered.filter(o => o.deadline && daysBetween(o.created_at, o.deadline) <= 2);
+        const sopViolationRate = total > 0 ? Math.round((sopViolations.length / total) * 100) : 0;
+        
+        let avgViolationCompletionDays = 0;
+        const completedViolations = sopViolations.filter(o => o.status === 'Completed' || o.completed_at);
+        if (completedViolations.length > 0) {
+            const completionDays = completedViolations.map(o => daysBetween(o.created_at, o.completed_at || o.updated_at || o.created_at));
+            avgViolationCompletionDays = completionDays.reduce((a, b) => a + b, 0) / completionDays.length;
+        }
+
+        const uncoordinatedRevisions = completedViolations.filter(o => o.revision_count === 0 && daysBetween(o.created_at, o.completed_at || o.updated_at || o.created_at) > 5);
+
         return {
             total,
             activeCount: active.length,
@@ -296,6 +309,10 @@ export default function HeadOfITReportPage() {
             statusDist,
             monthlyTrend,
             filtered,
+            sopViolationsCount: sopViolations.length,
+            sopViolationRate,
+            avgViolationCompletionDays: Math.round(avgViolationCompletionDays * 10) / 10,
+            uncoordinatedRevisionsCount: uncoordinatedRevisions.length
         };
     }, [orders, dateRange]);
 
@@ -342,7 +359,7 @@ export default function HeadOfITReportPage() {
         setIsExporting(true);
         try {
             const workbook = new ExcelJS.Workbook();
-            const sheet = workbook.addWorksheet('Head IT Report');
+            const sheet = workbook.addWorksheet('PIC IT Report');
 
             // Set columns
             sheet.columns = [
@@ -429,7 +446,7 @@ export default function HeadOfITReportPage() {
             const pdf = new jsPDF('l', 'pt', 'a4'); // landscape
             
             pdf.setFontSize(18);
-            pdf.text('Laporan Kinerja Head of IT', 40, 40);
+            pdf.text('Laporan Kinerja PIC IT', 40, 40);
             pdf.setFontSize(10);
             pdf.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 40, 55);
 
@@ -539,7 +556,7 @@ export default function HeadOfITReportPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold flex items-center gap-2">
-                            <BarChart3 size={24} /> Head of IT Report
+                            <BarChart3 size={24} /> PIC IT Report
                         </h1>
                         <p className="text-sm text-muted-foreground mt-1">
                             Laporan komprehensif tiket aktif & arsip — dengan deteksi kompleksitas otomatis.
@@ -960,6 +977,50 @@ export default function HeadOfITReportPage() {
                     })()}
                 </AnimatePresence>
             </div>
+
+            {/* ============ CONCLUSION & SOP COMPLIANCE ============ */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="mt-6 p-6 bg-red-50 dark:bg-red-950/20 rounded-2xl border-2 border-red-200 dark:border-red-900/50 shadow-sm"
+            >
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-xl text-red-600 dark:text-red-400">
+                        <AlertTriangle size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-black text-red-900 dark:text-red-300">Kesimpulan & Evaluasi Kepatuhan SOP</h2>
+                        <p className="text-xs text-red-700/80 dark:text-red-400/80 font-medium">Berdasarkan analisa komprehensif seluruh data tiket masuk</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* SOP Violation Warning */}
+                    <div className="bg-white dark:bg-black/40 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">1. Tekanan Deadline Mepet</p>
+                        <p className="text-sm text-foreground leading-relaxed">
+                            <strong className="text-red-600 dark:text-red-400 text-lg">{stats.sopViolationRate}% ({stats.sopViolationsCount})</strong> dari total tiket diminta dengan tenggat waktu sangat tidak wajar (≤ 2 Hari). Hal ini mengindikasikan bahwa SOP pengajuan *request* normal seringkali diabaikan (Bypass SOP).
+                        </p>
+                    </div>
+
+                    {/* The Irony of Urgency */}
+                    <div className="bg-white dark:bg-black/40 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">2. Inefisiensi Revisi (Urgensi Palsu)</p>
+                        <p className="text-sm text-foreground leading-relaxed">
+                            Ironisnya, tiket-tiket urgent tersebut justru memakan waktu rata-rata <strong className="text-red-600 dark:text-red-400 text-lg">{stats.avgViolationCompletionDays} Hari</strong> untuk benar-benar selesai. Waktu terbuang akibat lambatnya pemberian revisi oleh peminta (*revisi dicicil*).
+                        </p>
+                    </div>
+
+                    {/* Shadow IT / Ignored meetings */}
+                    <div className="bg-white dark:bg-black/40 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">3. Indikasi "Shadow IT" (WhatsApp)</p>
+                        <p className="text-sm text-foreground leading-relaxed">
+                            Terdapat <strong className="text-red-600 dark:text-red-400 text-lg">{stats.uncoordinatedRevisionsCount}</strong> tiket urgent yang molor parah (\u003E 5 hari) namun tidak memiliki *log* revisi di sistem. Hal ini menjadi bukti kuat bahwa fasilitas sistem & meeting tidak dipakai, dan revisi dilakukan via jalur belakang (WhatsApp).
+                        </p>
+                    </div>
+                </div>
+            </motion.div>
 
             {/* ============ COMPLEXITY LEGEND ============ */}
             <motion.div

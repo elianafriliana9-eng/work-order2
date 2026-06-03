@@ -21,6 +21,7 @@ import {
     MessageCircle,
     Smartphone,
     Archive,
+    BarChart3,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -51,6 +52,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
         { href: "/admin/it-dev", label: "IT Development", icon: Code },
         { href: "/admin/reports", label: "Laporan Tim", icon: FileText },
         { href: "/admin/reporting", label: "Reporting", icon: PieChart },
+        { href: "/admin/head-report", label: "Head IT Report", icon: BarChart3 },
         { href: "/admin/showcase", label: "Showcase", icon: ImageIcon },
         { href: "/admin/app-showcase", label: "App Showcase", icon: Smartphone },
         { href: "/admin/archive", label: "Arsip Tiket", icon: Archive },

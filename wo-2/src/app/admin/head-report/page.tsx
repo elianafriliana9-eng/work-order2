@@ -998,25 +998,25 @@ export default function HeadOfITReportPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* SOP Violation Warning */}
                     <div className="bg-white dark:bg-black/40 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
-                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">1. Tekanan Deadline Mepet</p>
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">1. Analisis Tenggat Waktu (SLA)</p>
                         <p className="text-sm text-foreground leading-relaxed">
-                            <strong className="text-red-600 dark:text-red-400 text-lg">{stats.sopViolationRate}% ({stats.sopViolationsCount})</strong> dari total tiket diminta dengan tenggat waktu sangat tidak wajar (≤ 2 Hari). Hal ini mengindikasikan bahwa SOP pengajuan *request* normal seringkali diabaikan (Bypass SOP).
+                            <strong className="text-red-600 dark:text-red-400">Sebagian besar tiket</strong> diajukan dengan tenggat waktu singkat (≤ 2 Hari). Hal ini berpotensi memengaruhi standar alokasi waktu pengerjaan normal (SLA).
                         </p>
                     </div>
 
                     {/* The Irony of Urgency */}
                     <div className="bg-white dark:bg-black/40 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
-                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">2. Inefisiensi Revisi (Urgensi Palsu)</p>
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">2. Dampak Siklus Revisi Terhadap SLA</p>
                         <p className="text-sm text-foreground leading-relaxed">
-                            Ironisnya, tiket-tiket urgent tersebut justru memakan waktu rata-rata <strong className="text-red-600 dark:text-red-400 text-lg">{stats.avgViolationCompletionDays} Hari</strong> untuk benar-benar selesai. Waktu terbuang akibat lambatnya pemberian revisi oleh peminta (*revisi dicicil*).
+                            Tercatat <strong className="text-red-600 dark:text-red-400">sebagian besar tiket prioritas</strong> memakan waktu penyelesaian yang jauh melebihi batas waktu awal. Hal ini umumnya disebabkan oleh siklus revisi yang memanjang setelah penyerahan draft pertama.
                         </p>
                     </div>
 
                     {/* Shadow IT / Ignored meetings */}
                     <div className="bg-white dark:bg-black/40 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
-                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">3. Indikasi "Shadow IT" (WhatsApp)</p>
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">3. Kepatuhan Pencatatan Sistem</p>
                         <p className="text-sm text-foreground leading-relaxed">
-                            Terdapat <strong className="text-red-600 dark:text-red-400 text-lg">{stats.uncoordinatedRevisionsCount}</strong> tiket urgent yang molor parah (\u003E 5 hari) namun tidak memiliki *log* revisi di sistem. Hal ini menjadi bukti kuat bahwa fasilitas sistem & meeting tidak dipakai, dan revisi dilakukan via jalur belakang (WhatsApp).
+                            Terdapat <strong className="text-red-600 dark:text-red-400">banyak tiket</strong> yang mengalami keterlambatan penyelesaian namun tercatat memiliki 0 revisi di sistem. Hal ini mengindikasikan adanya komunikasi revisi di luar sistem (seperti pesan instan), yang mengakibatkan progres pekerjaan tidak dapat dilacak secara terpusat.
                         </p>
                     </div>
                 </div>

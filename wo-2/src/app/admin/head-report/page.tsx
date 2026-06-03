@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import {
     BarChart3,
     TrendingUp,
@@ -383,10 +383,9 @@ export default function HeadOfITReportPage() {
                 });
             });
 
-            // Add Charts via HTML2Canvas
+            // Add Charts via html-to-image
             if (chartsRef.current) {
-                const canvas = await html2canvas(chartsRef.current, { scale: 1.5, backgroundColor: '#ffffff' });
-                const imgData = canvas.toDataURL('image/png');
+                const imgData = await toPng(chartsRef.current, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
                 const imageId = workbook.addImage({
                     base64: imgData,
                     extension: 'png',
@@ -394,9 +393,14 @@ export default function HeadOfITReportPage() {
                 
                 const lastRow = sheet.lastRow ? sheet.lastRow.number : 1;
                 // Calculate dimensions for excel (approximate)
+                // get original width/height from DOM to maintain aspect ratio
+                const { offsetWidth, offsetHeight } = chartsRef.current;
+                const excelWidth = 900;
+                const excelHeight = offsetWidth ? (offsetHeight * excelWidth) / offsetWidth : 400;
+
                 sheet.addImage(imageId, {
                     tl: { col: 0, row: lastRow + 2 },
-                    ext: { width: 900, height: (canvas.height * 900) / canvas.width } 
+                    ext: { width: excelWidth, height: excelHeight } 
                 });
             }
 
@@ -429,13 +433,13 @@ export default function HeadOfITReportPage() {
             pdf.setFontSize(10);
             pdf.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 40, 55);
 
-            // Add Charts via HTML2Canvas
+            // Add Charts via html-to-image
             let chartHeight = 0;
             if (chartsRef.current) {
-                const canvas = await html2canvas(chartsRef.current, { scale: 1.5, backgroundColor: '#ffffff' });
-                const imgData = canvas.toDataURL('image/png');
+                const imgData = await toPng(chartsRef.current, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
+                const { offsetWidth, offsetHeight } = chartsRef.current;
                 const pdfWidth = pdf.internal.pageSize.getWidth() - 80;
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdfHeight = offsetWidth ? (offsetHeight * pdfWidth) / offsetWidth : 300;
                 pdf.addImage(imgData, 'PNG', 40, 70, pdfWidth, pdfHeight);
                 chartHeight = pdfHeight + 40; // Add margin after chart
             }

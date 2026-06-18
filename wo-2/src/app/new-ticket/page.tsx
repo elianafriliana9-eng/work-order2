@@ -66,6 +66,39 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const ColorPicker = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) => {
+    const colorRef = useRef<HTMLInputElement>(null);
+    const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(value);
+    return (
+        <div className="flex items-center gap-3">
+            <button
+                type="button"
+                onClick={() => colorRef.current?.showPicker()}
+                className="w-10 h-10 shrink-0 rounded-xl border-2 border-border cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: isValidHex ? value : '#e4e4e7' }}
+                aria-label="Pilih warna"
+            />
+            <input
+                ref={colorRef}
+                type="color"
+                value={isValidHex ? value : '#000000'}
+                onChange={(e) => onChange(e.target.value)}
+                className="sr-only"
+            />
+            <div className="relative flex-1">
+                <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all text-sm pr-10"
+                />
+                <PaintBucket size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            </div>
+        </div>
+    );
+};
+
 export default function NewTicketPage() {
     const [step, setStep] = useState(1);
     const totalSteps = 5;
@@ -143,39 +176,6 @@ export default function NewTicketPage() {
             setFormReady(true);
         }
     }, [holidays, holidayDates, formReady, setValue]);
-
-    const ColorPicker = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) => {
-        const colorRef = useRef<HTMLInputElement>(null);
-        const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(value);
-        return (
-            <div className="flex items-center gap-3">
-                <button
-                    type="button"
-                    onClick={() => colorRef.current?.showPicker()}
-                    className="w-10 h-10 shrink-0 rounded-xl border-2 border-border cursor-pointer hover:opacity-80 transition-opacity"
-                    style={{ backgroundColor: isValidHex ? value : '#e4e4e7' }}
-                    aria-label="Pilih warna"
-                />
-                <input
-                    ref={colorRef}
-                    type="color"
-                    value={isValidHex ? value : '#000000'}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="sr-only"
-                />
-                <div className="relative flex-1">
-                    <input
-                        type="text"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        placeholder={placeholder}
-                        className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all text-sm pr-10"
-                    />
-                    <PaintBucket size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                </div>
-            </div>
-        );
-    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {

@@ -149,20 +149,20 @@ export default function NewTicketPage() {
         const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(value);
         return (
             <div className="flex items-center gap-3">
-                <div className="relative shrink-0">
-                    <div
-                        className="w-10 h-10 rounded-xl border-2 border-border cursor-pointer"
-                        style={{ backgroundColor: isValidHex ? value : '#e4e4e7' }}
-                        onClick={() => colorRef.current?.click()}
-                    />
-                    <input
-                        ref={colorRef}
-                        type="color"
-                        value={isValidHex ? value : '#000000'}
-                        onChange={(e) => onChange(e.target.value)}
-                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                    />
-                </div>
+                <button
+                    type="button"
+                    onClick={() => colorRef.current?.showPicker()}
+                    className="w-10 h-10 shrink-0 rounded-xl border-2 border-border cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: isValidHex ? value : '#e4e4e7' }}
+                    aria-label="Pilih warna"
+                />
+                <input
+                    ref={colorRef}
+                    type="color"
+                    value={isValidHex ? value : '#000000'}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="sr-only"
+                />
                 <div className="relative flex-1">
                     <input
                         type="text"
@@ -411,7 +411,7 @@ export default function NewTicketPage() {
                                                         <label className="block text-sm font-semibold mb-2">Warna Primer <span className="text-red-500">*</span></label>
                                                         <ColorPicker
                                                             value={watch("primaryColor") || ""}
-                                                            onChange={(v) => setValue("primaryColor", v, { shouldValidate: true })}
+                                                            onChange={(v) => setValue("primaryColor", v)}
                                                             placeholder="#1A365D atau Biru Navy"
                                                         />
                                                         {errors.primaryColor && <p className="text-red-500 text-xs mt-1">{errors.primaryColor.message}</p>}
@@ -422,7 +422,7 @@ export default function NewTicketPage() {
                                                         <label className="block text-sm font-semibold mb-2">Warna Sekunder <span className="text-red-500">*</span></label>
                                                         <ColorPicker
                                                             value={watch("secondaryColor") || ""}
-                                                            onChange={(v) => setValue("secondaryColor", v, { shouldValidate: true })}
+                                                            onChange={(v) => setValue("secondaryColor", v)}
                                                             placeholder="#FFD700 atau Emas"
                                                         />
                                                         {errors.secondaryColor && <p className="text-red-500 text-xs mt-1">{errors.secondaryColor.message}</p>}

@@ -40,7 +40,7 @@ import {
 
 const formSchema = z.object({
     title: z.string().min(5, "Judul minimal 5 karakter"),
-    brand: z.string().min(2, "Brand harus diisi"),
+    brand: z.string().min(1, "Brand harus dipilih"),
     category: z.enum(["Design", "Programming", "Asset"]),
     // Step 2: Conditional
     concept: z.string().min(10, "Konsep minimal 10 karakter"),
@@ -357,7 +357,27 @@ export default function NewTicketPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-semibold mb-2">Brand / Project</label>
-                                                <input {...register("brand")} placeholder="Nama Brand atau Nama Project Utama" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all" />
+                                                <select {...register("brand")} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all">
+                                                    <option value="">Pilih Brand / Project</option>
+                                                    <option value="Kingtech">Kingtech</option>
+                                                    <option value="Pioneer Wrap">Pioneer Wrap</option>
+                                                    <option value="Galaxy Port">Galaxy Port</option>
+                                                    <option value="Robust Pack">Robust Pack</option>
+                                                    <option value="First Secure">First Secure</option>
+                                                    <option value="Starwrap">Starwrap</option>
+                                                    <option value="Urban">Urban</option>
+                                                    <option value="Latte story">Latte story</option>
+                                                    <option value="Papimart">Papimart</option>
+                                                    <option value="Point one">Point one</option>
+                                                    <option value="Bekal yuk">Bekal yuk</option>
+                                                    <option value="M mart">M mart</option>
+                                                    <option value="Papicoffe">Papicoffe</option>
+                                                    <option value="Serenity Blossom">Serenity Blossom</option>
+                                                    <option value="Datacell">Datacell</option>
+                                                    <option value="Pointcell">Pointcell</option>
+                                                    <option value="Kingcell">Kingcell</option>
+                                                    <option value="Telkomsel">Telkomsel</option>
+                                                </select>
                                                 {errors.brand && <p className="text-red-500 text-xs mt-1">{errors.brand.message}</p>}
                                             </div>
                                             <div>

@@ -46,7 +46,10 @@ const formSchema = z.object({
     concept: z.string().min(10, "Konsep minimal 10 karakter"),
     primaryColor: z.string().min(1, "Warna primer harus diisi"),
     secondaryColor: z.string().min(1, "Warna sekunder harus diisi"),
-    description: z.string().min(20, "Deskripsi minimal 20 karakter"),
+    description: z.string().refine(val => {
+        const wordCount = val.trim().split(/\s+/).filter(word => word.length > 0).length;
+        return wordCount >= 25;
+    }, "Materi / Brief minimal 25 kata agar instruksi lebih jelas"),
     platform: z.string().optional(),
     dimension: z.string().optional(),
     taskType: z.enum(["Bug Fix", "New Feature", "Maintenance", "Develop New System"]).optional(),

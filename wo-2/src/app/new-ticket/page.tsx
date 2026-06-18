@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronRight,
@@ -16,7 +16,8 @@ import {
     ArrowRight,
     Video,
     Users,
-    MapPin
+    MapPin,
+    PaintBucket,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,6 +43,9 @@ const formSchema = z.object({
     brand: z.string().min(2, "Brand harus diisi"),
     category: z.enum(["Design", "Programming", "Asset"]),
     // Step 2: Conditional
+    concept: z.string().min(10, "Konsep minimal 10 karakter"),
+    primaryColor: z.string().min(1, "Warna primer harus diisi"),
+    secondaryColor: z.string().min(1, "Warna sekunder harus diisi"),
     description: z.string().min(20, "Deskripsi minimal 20 karakter"),
     platform: z.string().optional(),
     dimension: z.string().optional(),
@@ -140,6 +144,39 @@ export default function NewTicketPage() {
         }
     }, [holidays, holidayDates, formReady, setValue]);
 
+    const ColorPicker = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) => {
+        const colorRef = useRef<HTMLInputElement>(null);
+        const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(value);
+        return (
+            <div className="flex items-center gap-3">
+                <div className="relative shrink-0">
+                    <div
+                        className="w-10 h-10 rounded-xl border-2 border-border cursor-pointer"
+                        style={{ backgroundColor: isValidHex ? value : '#e4e4e7' }}
+                        onClick={() => colorRef.current?.click()}
+                    />
+                    <input
+                        ref={colorRef}
+                        type="color"
+                        value={isValidHex ? value : '#000000'}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    />
+                </div>
+                <div className="relative flex-1">
+                    <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder={placeholder}
+                        className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all text-sm pr-10"
+                    />
+                    <PaintBucket size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                </div>
+            </div>
+        );
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files);
@@ -165,7 +202,13 @@ export default function NewTicketPage() {
     const nextStep = async () => {
         let fieldsToValidate: (keyof FormValues)[] = [];
         if (step === 1) fieldsToValidate = ["title", "brand", "category"];
-        else if (step === 2) fieldsToValidate = ["description", "platform", "dimension"];
+        else if (step === 2) {
+            if (selectedCategory === "Design") {
+                fieldsToValidate = ["concept", "primaryColor", "secondaryColor", "description", "dimension"];
+            } else {
+                fieldsToValidate = ["description", "platform", "dimension"];
+            }
+        }
         else if (step === 3) fieldsToValidate = ["meetingType", "meetingDate"];
         else if (step === 4) fieldsToValidate = ["deadline", "urgentReason"];
 
@@ -213,6 +256,13 @@ export default function NewTicketPage() {
                 meeting_date: data.meetingDate ? `${data.meetingDate}:00+07:00` : null,
                 meeting_link: meetingLink,
             };
+
+            // Design-specific fields
+            if (data.category === 'Design') {
+                insertData.concept = data.concept;
+                insertData.primary_color = data.primaryColor;
+                insertData.secondary_color = data.secondaryColor;
+            }
 
             // Programming-specific fields
             if (data.category === 'Programming') {
@@ -332,15 +382,73 @@ export default function NewTicketPage() {
                                     <div className="space-y-4">
                                         <h2 className="text-xl font-bold flex items-center gap-2"><CheckCircle2 size={20} className="text-primary" /> Detail Pekerjaan</h2>
                                         <div className="space-y-6">
-                                            <div>
-                                                <label className="block text-sm font-semibold mb-2">Deskripsi Lengkap / Brief</label>
-                                                <textarea {...register("description")} rows={5} placeholder="Jelaskan secara detail apa yang perlu dikerjakan..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
-                                                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
-                                            </div>
+
                                             {selectedCategory === "Design" && (
+                                                <>
+                                                    {/* Example Card */}
+                                                    <div className="p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/20">
+                                                        <p className="text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-3 flex items-center gap-2">
+                                                            <CheckCircle2 size={14} />
+                                                            Contoh Pengisian Detail Design
+                                                        </p>
+                                                        <div className="space-y-2 text-[11px] text-indigo-600 dark:text-indigo-400 leading-relaxed">
+                                                            <p><strong className="text-indigo-800 dark:text-indigo-200">Konsep:</strong> Desain minimalis elegan dengan nuansa premium untuk banner promo akhir tahun. Menggabungkan elemen garis tipis dan tipografi modern.</p>
+                                                            <p><strong className="text-indigo-800 dark:text-indigo-200">Warna Primer:</strong> #1A365D (Biru Navy) — sebagai warna dominan background</p>
+                                                            <p><strong className="text-indigo-800 dark:text-indigo-200">Warna Sekunder:</strong> #FFD700 (Emas) — untuk aksen dan highlight</p>
+                                                            <p><strong className="text-indigo-800 dark:text-indigo-200">Brief / Materi:</strong> Banner ukuran 1080x1080px untuk feed Instagram. Menampilkan produk utama dengan latar navy, teks promo berwarna emas, dan logo brand di pojok kanan atas.</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Concept */}
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Konsep <span className="text-red-500">*</span></label>
+                                                        <textarea {...register("concept")} rows={3} placeholder="Jelaskan konsep desain yang diinginkan. Contoh: Desain minimalis elegan dengan nuansa premium..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                        {errors.concept && <p className="text-red-500 text-xs mt-1">{errors.concept.message}</p>}
+                                                    </div>
+
+                                                    {/* Primary Color */}
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Warna Primer <span className="text-red-500">*</span></label>
+                                                        <ColorPicker
+                                                            value={watch("primaryColor") || ""}
+                                                            onChange={(v) => setValue("primaryColor", v, { shouldValidate: true })}
+                                                            placeholder="#1A365D atau Biru Navy"
+                                                        />
+                                                        {errors.primaryColor && <p className="text-red-500 text-xs mt-1">{errors.primaryColor.message}</p>}
+                                                    </div>
+
+                                                    {/* Secondary Color */}
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Warna Sekunder <span className="text-red-500">*</span></label>
+                                                        <ColorPicker
+                                                            value={watch("secondaryColor") || ""}
+                                                            onChange={(v) => setValue("secondaryColor", v, { shouldValidate: true })}
+                                                            placeholder="#FFD700 atau Emas"
+                                                        />
+                                                        {errors.secondaryColor && <p className="text-red-500 text-xs mt-1">{errors.secondaryColor.message}</p>}
+                                                    </div>
+
+                                                    {/* Brief / Materi */}
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Brief / Materi <span className="text-red-500">*</span></label>
+                                                        <textarea {...register("description")} rows={5} placeholder="Jelaskan secara detail materi/brief yang perlu dikerjakan. Sertakan informasi platform, dimensi, dan elemen-elemen yang harus ada..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                        {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
+                                                    </div>
+
+                                                    {/* Dimension (existing) */}
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Dimensi / Ukuran <span className="text-zinc-400 font-normal">(Opsional)</span></label>
+                                                        <input {...register("dimension")} placeholder="Contoh: 1080x1080px (Instagram)" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none" />
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {/* Brief for non-Design categories */}
+                                            {selectedCategory !== "Design" && (
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2">Dimensi / Ukuran (Opsional)</label>
-                                                    <input {...register("dimension")} placeholder="Contoh: 1080x1080px (Instagram)" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none" />
+                                                    <label className="block text-sm font-semibold mb-2">Deskripsi Lengkap / Brief</label>
+                                                    <textarea {...register("description")} rows={5} placeholder="Jelaskan secara detail apa yang perlu dikerjakan..." className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all resize-none" />
+                                                    {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
                                                 </div>
                                             )}
                                             {selectedCategory === "Programming" && (

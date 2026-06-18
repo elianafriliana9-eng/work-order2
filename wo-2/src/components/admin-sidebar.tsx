@@ -22,6 +22,7 @@ import {
     Smartphone,
     Archive,
     BarChart3,
+    CalendarDays,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -55,6 +56,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
         { href: "/admin/head-report", label: "PIC IT Report", icon: BarChart3 },
         { href: "/admin/showcase", label: "Showcase", icon: ImageIcon },
         { href: "/admin/app-showcase", label: "App Showcase", icon: Smartphone },
+        { href: "/admin/holidays", label: "Kalender Libur", icon: CalendarDays },
         { href: "/admin/archive", label: "Arsip Tiket", icon: Archive },
         { href: "/admin/chat", label: "Team Chat", icon: MessageCircle },
     ];

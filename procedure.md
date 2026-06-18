@@ -13,7 +13,7 @@ Agar tim IT bisa bekerja cepat tanpa bertanya balik berulang kali, setiap tiket 
 1.	Judul Tugas: Singkat dan jelas (Contoh: Update Harga Web atau Desain Banner Promo Toko).
 2.	Deskripsi/Brief: penjelasan mengenai konsep, materi dan semua yang dibutuhkan untuk project, jika brief seadanya maka pengerjaan tidak akan maksimal.
 3.	Lampiran/Referensi: Foto coretan kertas, link contoh dari internet, atau file data (Excel/PDF) yang diperlukan.
-4.	Deadline: tidak kurang dati 2 hari kerja.
+4.	Deadline: minimal 3 hari kerja (hari Sabtu, Minggu, dan hari libur nasional tidak dihitung).
 4. ALUR KERJA (WORKFLOW) HARI KE HARI
 1.	Input: Pemohon mengisi tiket di WO System.
 2.	Verifikasi (Triaging): Head of IT/Admin mengecek kelengkapan brief. Jika kurang jelas, tiket dikembalikan ke pemohon untuk dilengkapi di sistem.
@@ -39,7 +39,7 @@ Mengingat ritme perusahaan yang dinamis, prioritas ditentukan sebagai berikut:
 •	Revisi dilakukan dengan merujuk pada nomor tiket WO yang sama agar histori perubahan tercatat.
 •	Revisi sebaiknya dikumpulkan jadi satu list, bukan dicicil satu per satu lewat chat.
 •	Jika revisi mengubah konsep awal secara total (berbeda dengan brief pertama), maka pemohon disarankan membuat tiket WO baru untuk transparansi beban kerja.
-•	Jika dalam 1x24 jam tidak ada komplain, tugas dianggap selesai.
+•	Jika dalam 1x24 jam (waktu kalender) tidak ada komplain, tugas dianggap selesai. Catatan: batas waktu 24 jam untuk revisi adalah waktu kalender, sedangkan SLA pengerjaan dihitung dalam hari kerja (tidak termasuk akhir pekan & hari libur nasional).
 
 
 
@@ -67,7 +67,7 @@ C. Asset Management:
 •	Tujuan Penggunaan:
 3. Batas Waktu (Timeline)
 •	Tanggal Dibutuhkan: (Pilih Tanggal)
-Ingat: Sesuai SOP, minimal pengerjaan desain adalah 3 hari kerja dan programming menyesuaikan kompleksitas.
+Ingat: Sesuai SOP, minimal pengerjaan desain adalah 3 hari kerja (tidak termasuk akhir pekan & hari libur nasional) dan programming menyesuaikan kompleksitas.
 •	Alasan jika membutuhkan waktu lebih cepat dari SLA: (Wajib diisi jika memilih prioritas Tinggi)
 4. Lampiran Pendukung
 •	Silakan unggah logo, foto produk, atau dokumen pendukung di sini.

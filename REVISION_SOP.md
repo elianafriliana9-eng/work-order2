@@ -43,7 +43,7 @@ Perubahan kecil yang tidak mengubah konsep dasar:
 - ✅ Penambahan/hapus elemen kecil
 - ✅ Koreksi typo atau kesalahan minor
 
-**SLA Pengerjaan:** 1-2 hari kerja
+**SLA Pengerjaan:** 1-2 hari kerja (tidak termasuk akhir pekan & hari libur nasional)
 
 ### 3.2 Revisi Major
 Perubahan signifikan yang mempengaruhi desain:
@@ -53,7 +53,7 @@ Perubahan signifikan yang mempengaruhi desain:
 - ⚠️ Perubahan target audience/branding
 - ⚠️ Perubahan format/output media
 
-**SLA Pengerjaan:** 2-4 hari kerja
+**SLA Pengerjaan:** 2-4 hari kerja (tidak termasuk akhir pekan & hari libur nasional)
 
 ### 3.3 Perubahan Konsep Total (Wajib Tiket Baru)
 Perubahan yang mengubah fundamental desain:

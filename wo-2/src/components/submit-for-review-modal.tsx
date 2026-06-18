@@ -181,7 +181,7 @@ export default function SubmitForReviewModal({
                                 <ul className="text-xs text-blue-700 dark:text-blue-400 mt-2 space-y-1">
                                     <li>• Upload file PNG/JPG (maksimal 10MB per file)</li>
                                     <li>• Atau cantumkan link Google Drive yang dapat diakses</li>
-                                    <li>• PIC IT akan meninjau design dalam 1-2 hari kerja</li>
+                                    <li>• PIC IT akan meninjau design dalam 1-2 hari kerja (tidak termasuk akhir pekan & hari libur nasional)</li>
                                     <li>• Setelah approved, status berubah menjadi Completed</li>
                                 </ul>
                             </div>

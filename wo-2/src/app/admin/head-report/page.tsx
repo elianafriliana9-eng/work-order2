@@ -33,6 +33,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
     ResponsiveContainer, Cell, PieChart, Pie, Legend
 } from 'recharts';
+import { countWorkingDays, getHolidayDates, type Holiday } from "@/lib/working-days";
 
 // ===================== TYPES =====================
 interface WorkOrder {
@@ -126,13 +127,13 @@ function detectComplexity(wo: WorkOrder): ComplexityResult {
         const daysDiff = (deadline - created) / (1000 * 60 * 60 * 24);
         if (daysDiff <= 1) {
             score += 3;
-            factors.push('Deadline sangat ketat (≤1 hari)');
+            factors.push('Deadline sangat ketat (≤1 hari kerja)');
         } else if (daysDiff <= 3) {
             score += 2;
-            factors.push('Deadline ketat (≤3 hari)');
+            factors.push('Deadline ketat (≤3 hari kerja)');
         } else if (daysDiff <= 7) {
             score += 1;
-            factors.push('Deadline moderat (≤7 hari)');
+            factors.push('Deadline moderat (≤7 hari kerja)');
         }
     }
 
@@ -167,10 +168,18 @@ function detectComplexity(wo: WorkOrder): ComplexityResult {
 }
 
 // ===================== HELPER FUNCTIONS =====================
-function daysBetween(date1: string, date2: string): number {
-    const d1 = new Date(date1).getTime();
-    const d2 = new Date(date2).getTime();
-    return Math.round(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
+function daysBetween(date1: string, date2: string, holidayDatesSet?: Set<string>): number {
+    if (holidayDatesSet && holidayDatesSet.size > 0) {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        if (d1 <= d2) {
+            return countWorkingDays(d1, d2, holidayDatesSet);
+        }
+        return countWorkingDays(d2, d1, holidayDatesSet);
+    }
+    const t1 = new Date(date1).getTime();
+    const t2 = new Date(date2).getTime();
+    return Math.round(Math.abs(t2 - t1) / (1000 * 60 * 60 * 24));
 }
 
 function formatDate(dateStr: string): string {
@@ -192,8 +201,24 @@ export default function HeadOfITReportPage() {
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
     const [dateRange, setDateRange] = useState<'all' | '7d' | '30d' | '90d' | '6m' | '1y'>('all');
     const [isExporting, setIsExporting] = useState(false);
+    const [holidayDates, setHolidayDates] = useState<Set<string>>(new Set());
     const chartsRef = useRef<HTMLDivElement>(null);
     const conclusionRef = useRef<HTMLDivElement>(null);
+
+    // Fetch holidays
+    useEffect(() => {
+        const currentYear = new Date().getFullYear();
+        supabase
+            .from('holidays')
+            .select('*')
+            .gte('year', currentYear - 1)
+            .lte('year', currentYear + 1)
+            .then(({ data }: { data: Holiday[] | null }) => {
+                if (data) {
+                    setHolidayDates(getHolidayDates(data));
+                }
+            });
+    }, []);
 
     // Fetch all orders
     useEffect(() => {
@@ -237,7 +262,7 @@ export default function HeadOfITReportPage() {
         const withDeadline = filtered.filter(o => o.deadline);
         let avgDeadlineDays = 0;
         if (withDeadline.length > 0) {
-            const totalDays = withDeadline.reduce((sum, o) => sum + daysBetween(o.created_at, o.deadline), 0);
+            const totalDays = withDeadline.reduce((sum, o) => sum + daysBetween(o.created_at, o.deadline, holidayDates), 0);
             avgDeadlineDays = totalDays / withDeadline.length;
         }
 
@@ -284,17 +309,17 @@ export default function HeadOfITReportPage() {
         }, {});
 
         // Conclusion Analytics
-        const sopViolations = filtered.filter(o => o.deadline && daysBetween(o.created_at, o.deadline) <= 2);
+        const sopViolations = filtered.filter(o => o.deadline && daysBetween(o.created_at, o.deadline, holidayDates) <= 2);
         const sopViolationRate = total > 0 ? Math.round((sopViolations.length / total) * 100) : 0;
         
         let avgViolationCompletionDays = 0;
         const completedViolations = sopViolations.filter(o => o.status === 'Completed' || o.completed_at);
         if (completedViolations.length > 0) {
-            const completionDays = completedViolations.map(o => daysBetween(o.created_at, o.completed_at || o.updated_at || o.created_at));
+            const completionDays = completedViolations.map(o => daysBetween(o.created_at, o.completed_at || o.updated_at || o.created_at, holidayDates));
             avgViolationCompletionDays = completionDays.reduce((a, b) => a + b, 0) / completionDays.length;
         }
 
-        const uncoordinatedRevisions = completedViolations.filter(o => o.revision_count === 0 && daysBetween(o.created_at, o.completed_at || o.updated_at || o.created_at) > 5);
+        const uncoordinatedRevisions = completedViolations.filter(o => o.revision_count === 0 && daysBetween(o.created_at, o.completed_at || o.updated_at || o.created_at, holidayDates) > 5);
 
         return {
             total,
@@ -374,7 +399,7 @@ export default function HeadOfITReportPage() {
                 { header: 'Skor', key: 'score', width: 10 },
                 { header: 'Dibuat', key: 'created', width: 15 },
                 { header: 'Deadline', key: 'deadline', width: 15 },
-                { header: 'Jarak (Hari)', key: 'distance', width: 15 },
+                { header: 'Jarak (Hari Kerja)', key: 'distance', width: 15 },
                 { header: 'Revisi', key: 'revisions', width: 10 },
             ];
 
@@ -628,7 +653,7 @@ export default function HeadOfITReportPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                 {[
                     { label: 'Total Tiket Masuk', value: stats.total, icon: FileText, color: 'text-zinc-600', bg: 'bg-zinc-50 dark:bg-zinc-800' },
-                    { label: 'Avg. Jarak Deadline', value: `${stats.avgDeadlineDays} hari`, icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-500/10' },
+                    { label: 'Avg. Jarak Deadline', value: `${stats.avgDeadlineDays} hari kerja`, icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-500/10' },
                     { label: 'Resolution Rate', value: `${stats.resolutionRate}%`, icon: Activity, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-500/10' },
                 ].map((card, i) => (
                     <motion.div
@@ -877,7 +902,7 @@ export default function HeadOfITReportPage() {
                                     <div className="flex items-center gap-1">Dibuat <ArrowUpDown size={12} /></div>
                                 </th>
                                 <th className="px-3 py-3">Deadline</th>
-                                <th className="px-3 py-3">Jarak (Hari)</th>
+                                <th className="px-3 py-3">Jarak (Hari Kerja)</th>
                                 <th className="px-3 py-3 cursor-pointer hover:text-foreground" onClick={() => handleSort('complexity')}>
                                     <div className="flex items-center gap-1">Kompleksitas <ArrowUpDown size={12} /></div>
                                 </th>
@@ -890,7 +915,7 @@ export default function HeadOfITReportPage() {
                                 <tr><td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">Tidak ada data ditemukan.</td></tr>
                             ) : tableData.map((o, i) => {
                                 const complexity = detectComplexity(o);
-                                const deadlineDays = o.deadline ? daysBetween(o.created_at, o.deadline) : null;
+                                const deadlineDays = o.deadline ? daysBetween(o.created_at, o.deadline, holidayDates) : null;
                                 const isExpanded = expandedRow === o.id;
 
                                 return (
@@ -920,7 +945,7 @@ export default function HeadOfITReportPage() {
                                         <td className="px-3 py-3">
                                             {deadlineDays !== null ? (
                                                 <span className={`font-bold text-[11px] ${deadlineDays <= 3 ? 'text-red-600' : deadlineDays <= 7 ? 'text-amber-600' : 'text-foreground'}`}>
-                                                    {deadlineDays} hari
+                                                    {deadlineDays} hari kerja
                                                 </span>
                                             ) : '-'}
                                         </td>
@@ -997,7 +1022,7 @@ export default function HeadOfITReportPage() {
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground">Jarak ke Deadline:</span>
-                                                    <span className="font-bold">{o.deadline ? `${daysBetween(o.created_at, o.deadline)} hari` : '-'}</span>
+                                                    <span className="font-bold">{o.deadline ? `${daysBetween(o.created_at, o.deadline, holidayDates)} hari kerja` : '-'}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground">Jumlah Revisi:</span>
@@ -1036,7 +1061,7 @@ export default function HeadOfITReportPage() {
                     <div className="bg-white dark:bg-black/40 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
                         <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">1. Analisis Tenggat Waktu (SLA)</p>
                         <p className="text-sm text-foreground leading-relaxed">
-                            <strong className="text-red-600 dark:text-red-400">Sebagian besar tiket</strong> diajukan dengan tenggat waktu singkat (≤ 2 Hari). Hal ini berpotensi memengaruhi standar alokasi waktu pengerjaan normal (SLA).
+                            <strong className="text-red-600 dark:text-red-400">Sebagian besar tiket</strong> diajukan dengan tenggat waktu singkat (≤ 2 Hari Kerja). Hal ini berpotensi memengaruhi standar alokasi waktu pengerjaan normal (SLA).
                         </p>
                     </div>
 

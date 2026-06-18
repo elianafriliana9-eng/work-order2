@@ -91,7 +91,7 @@ create table work_order_attachments (
   - Step 2: Detail Berdasarkan Kategori (Koding/Desain/Aset).
   - Step 3: Timeline & Alasan Mendesak.
   - Step 4: Upload Lampiran/Referensi.
-•⁠  ⁠SLA Warning: Jika user pilih tanggal < 3 hari dari sekarang, sistem wajib memunculkan textarea "Alasan Butuh Cepat".
+•⁠  ⁠SLA Warning: Jika user pilih deadline < 3 hari kerja (tidak termasuk Sabtu/Minggu & hari libur nasional) dari sekarang, sistem wajib memunculkan textarea "Alasan Butuh Cepat". Data hari libur dikelola via tabel holidays dengan sync otomatis dari API.
 
 ### C. Admin Workspace (⁠ /admin ⁠)
 •⁠  ⁠Triage View: List tiket masuk yang butuh verifikasi awal.

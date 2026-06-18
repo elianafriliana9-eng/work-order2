@@ -493,7 +493,7 @@ export default function SimpleRevisionForm({
 
                         <p className="text-[10px] text-center text-zinc-500">
                             <Info size={10} className="inline mr-1" />
-                            Revisi akan ditinjau oleh tim design dalam 1-2 hari kerja. 
+                            Revisi akan ditinjau oleh tim design dalam 1-2 hari kerja (tidak termasuk akhir pekan & hari libur nasional). 
                             Pastikan keterangan yang diisi sudah lengkap dan jelas.
                         </p>
                     </form>

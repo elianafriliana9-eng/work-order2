@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronRight,
@@ -23,9 +23,17 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format, addDays, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import {
+    getHolidayDates,
+    getDefaultDeadline,
+    countWorkingDays,
+    isDateAllowed,
+    isWorkingDay,
+    type Holiday,
+} from "@/lib/working-days";
 
 // --- Schema Definitions ---
 
@@ -70,7 +78,7 @@ export default function NewTicketPage() {
         defaultValues: {
             category: "Design",
             meetingType: "Online",
-            deadline: format(addDays(new Date(), 3), "yyyy-MM-dd"),
+            deadline: "",
         }
     });
 
@@ -78,14 +86,59 @@ export default function NewTicketPage() {
     const selectedDeadline = watch("deadline");
     const selectedMeetingType = watch("meetingType");
 
+    const [holidays, setHolidays] = useState<Holiday[]>([]);
+    const [holidayDates, setHolidayDates] = useState<Set<string>>(new Set());
+    const [deadlineWarning, setDeadlineWarning] = useState<string | null>(null);
+
+    useEffect(() => {
+        const currentYear = new Date().getFullYear();
+        supabase
+            .from('holidays')
+            .select('*')
+            .gte('year', currentYear)
+            .lte('year', currentYear + 1)
+            .order('date', { ascending: true })
+            .then(({ data }: { data: Holiday[] | null }) => {
+                if (data) {
+                    setHolidays(data);
+                    setHolidayDates(getHolidayDates(data));
+                }
+            });
+    }, []);
+
     const isUrgent = () => {
         if (!selectedDeadline) return false;
-        const threeDaysFromNow = addDays(new Date(), 3);
-        return isBefore(new Date(selectedDeadline), threeDaysFromNow);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const deadlineDate = new Date(selectedDeadline + 'T00:00:00');
+        const workingDays = countWorkingDays(today, deadlineDate, holidayDates);
+        return workingDays < 3;
     };
+
+    useEffect(() => {
+        if (!selectedDeadline) {
+            setDeadlineWarning(null);
+            return;
+        }
+        const d = new Date(selectedDeadline + 'T00:00:00');
+        const check = isDateAllowed(d, holidayDates);
+        if (!check.allowed) {
+            setDeadlineWarning(check.reason || 'Tanggal tidak valid');
+        } else {
+            setDeadlineWarning(null);
+        }
+    }, [selectedDeadline, holidayDates]);
 
     const [files, setFiles] = useState<File[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [formReady, setFormReady] = useState(false);
+
+    useEffect(() => {
+        if (holidays.length > 0 && !formReady) {
+            setValue('deadline', format(getDefaultDeadline(holidayDates), "yyyy-MM-dd"));
+            setFormReady(true);
+        }
+    }, [holidays, holidayDates, formReady, setValue]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -419,6 +472,22 @@ export default function NewTicketPage() {
                                         <div>
                                             <label className="block text-sm font-semibold mb-2">Target Deadline</label>
                                             <input {...register("deadline")} type="date" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none" />
+
+                                            {deadlineWarning && (
+                                                <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20">
+                                                    <p className="text-xs font-bold text-red-600 flex items-center gap-1.5">
+                                                        <AlertCircle size={14} />
+                                                        {deadlineWarning}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {!deadlineWarning && selectedDeadline && (
+                                                <p className="text-xs text-muted-foreground mt-2">
+                                                    Perhitungan SLA berdasarkan <strong>hari kerja</strong> (Senin-Jumat, tidak termasuk hari libur nasional).
+                                                </p>
+                                            )}
+
                                             {isUrgent() && (
                                                 <div className="mt-4 p-4 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/20">
                                                     <p className="text-xs font-bold text-red-600 mb-2">Alasan Urgent (P1)</p>

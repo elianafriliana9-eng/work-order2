@@ -428,7 +428,11 @@ export default function NewTicketPage() {
                                                             <p><strong className="text-indigo-800 dark:text-indigo-200">Konsep:</strong> Desain minimalis elegan dengan nuansa premium untuk banner promo akhir tahun. Menggabungkan elemen garis tipis dan tipografi modern.</p>
                                                             <p><strong className="text-indigo-800 dark:text-indigo-200">Warna Primer:</strong> #1A365D (Biru Navy) — sebagai warna dominan background</p>
                                                             <p><strong className="text-indigo-800 dark:text-indigo-200">Warna Sekunder:</strong> #FFD700 (Emas) — untuk aksen dan highlight</p>
-                                                            <p><strong className="text-indigo-800 dark:text-indigo-200">Brief / Materi:</strong> Banner ukuran 1080x1080px untuk feed Instagram. Menampilkan produk utama dengan latar navy, teks promo berwarna emas, dan logo brand di pojok kanan atas.</p>
+                                                            <p><strong className="text-indigo-800 dark:text-indigo-200">Brief / Materi:</strong>Pembuatan Video display untuk pricelist, orientasi potrait left, warna dominan terlampir. dengan materi sebagai berikut:
+                                                            produk A = 150.000
+                                                            produk B = 200.000
+                                                            dst.
+                                                            setiap slide minimal berdurasi 5-7 detik, slide pertama logo dan ucapan welcome</p>
                                                         </div>
                                                     </div>
 

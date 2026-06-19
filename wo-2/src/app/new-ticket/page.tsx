@@ -368,6 +368,7 @@ export default function NewTicketPage() {
                                                 <label className="block text-sm font-semibold mb-2">Brand / Project</label>
                                                 <select {...register("brand")} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary transition-all">
                                                     <option value="">Pilih Brand / Project</option>
+                                                    <option value="Head Office">Head Office</option>
                                                     <option value="Kingtech">Kingtech</option>
                                                     <option value="Pioneer Wrap">Pioneer Wrap</option>
                                                     <option value="Galaxy Port">Galaxy Port</option>

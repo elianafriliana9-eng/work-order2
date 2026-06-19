@@ -214,6 +214,41 @@ export default function DesignTicketDetailPage() {
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">{ticket.description || "Tidak ada deskripsi."}</p>
                         </div>
 
+                        {/* Design Detail */}
+                        {ticket.category === 'Design' && (ticket.concept || ticket.primary_color || ticket.secondary_color) && (
+                            <div className="p-4 rounded-xl bg-pink-50 dark:bg-pink-500/5 border border-pink-100 dark:border-pink-500/10">
+                                <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5 text-pink-700 dark:text-pink-400">
+                                    <Palette size={14} /> Detail Permintaan Design
+                                </h3>
+                                {ticket.concept && (
+                                    <div className="mb-3">
+                                        <p className="text-[10px] font-bold text-pink-600/70 dark:text-pink-400/70 uppercase tracking-widest mb-1">Konsep / Referensi Visual</p>
+                                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{ticket.concept}</p>
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {ticket.primary_color && (
+                                        <div>
+                                            <p className="text-[10px] font-bold text-pink-600/70 dark:text-pink-400/70 uppercase tracking-widest mb-1.5">Warna Primer</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-md shadow-sm border border-border" style={{ backgroundColor: ticket.primary_color }} />
+                                                <p className="text-sm font-mono uppercase">{ticket.primary_color}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {ticket.secondary_color && (
+                                        <div>
+                                            <p className="text-[10px] font-bold text-pink-600/70 dark:text-pink-400/70 uppercase tracking-widest mb-1.5">Warna Sekunder</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-md shadow-sm border border-border" style={{ backgroundColor: ticket.secondary_color }} />
+                                                <p className="text-sm font-mono uppercase">{ticket.secondary_color}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {ticket.link && (
                             <div>
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Link Referensi</p>

@@ -33,6 +33,7 @@ import {
     countWorkingDays,
     isDateAllowed,
     isWorkingDay,
+    addWorkingDays,
     type Holiday,
 } from "@/lib/working-days";
 
@@ -162,8 +163,16 @@ export default function NewTicketPage() {
         }
         const d = new Date(selectedDeadline + 'T00:00:00');
         const check = isDateAllowed(d, holidayDates);
+        
+        // Cek apakah kurang dari 2 hari kerja
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const minAllowedDate = addWorkingDays(today, 2, holidayDates);
+        
         if (!check.allowed) {
             setDeadlineWarning(check.reason || 'Tanggal tidak valid');
+        } else if (d < minAllowedDate) {
+            setDeadlineWarning('SOP Pengajuan Tiket P1/Urgent minimal 2 Hari Kerja (Sabtu, Minggu, & Libur Nasional tidak dihitung)');
         } else {
             setDeadlineWarning(null);
         }
@@ -602,7 +611,7 @@ export default function NewTicketPage() {
                                         <h2 className="text-xl font-bold flex items-center gap-2"><Calendar size={20} className="text-primary" /> Timeline & Urgency</h2>
                                         <div>
                                             <label className="block text-sm font-semibold mb-2">Target Deadline</label>
-                                            <input {...register("deadline")} type="date" className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none" />
+                                            <input {...register("deadline")} type="date" min={format(addWorkingDays(new Date(), 2, holidayDates), 'yyyy-MM-dd')} className="w-full px-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none" />
 
                                             {deadlineWarning && (
                                                 <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20">

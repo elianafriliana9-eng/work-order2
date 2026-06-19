@@ -226,7 +226,7 @@ export default function DesignTicketDetailPage() {
                                         <p className="text-sm whitespace-pre-wrap leading-relaxed">{ticket.concept}</p>
                                     </div>
                                 )}
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-3">
                                     {ticket.primary_color && (
                                         <div>
                                             <p className="text-[10px] font-bold text-pink-600/70 dark:text-pink-400/70 uppercase tracking-widest mb-1.5">Warna Primer</p>
@@ -242,6 +242,15 @@ export default function DesignTicketDetailPage() {
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-md shadow-sm border border-border" style={{ backgroundColor: ticket.secondary_color }} />
                                                 <p className="text-sm font-mono uppercase">{ticket.secondary_color}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {ticket.tertiary_color && (
+                                        <div>
+                                            <p className="text-[10px] font-bold text-pink-600/70 dark:text-pink-400/70 uppercase tracking-widest mb-1.5">Warna Tersier</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-md shadow-sm border border-border" style={{ backgroundColor: ticket.tertiary_color }} />
+                                                <p className="text-sm font-mono uppercase">{ticket.tertiary_color}</p>
                                             </div>
                                         </div>
                                     )}

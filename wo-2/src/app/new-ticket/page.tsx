@@ -47,6 +47,7 @@ const formSchema = z.object({
     concept: z.string().min(10, "Konsep minimal 10 karakter"),
     primaryColor: z.string().min(1, "Warna primer harus diisi"),
     secondaryColor: z.string().min(1, "Warna sekunder harus diisi"),
+    tertiaryColor: z.string().optional(),
     description: z.string().refine(val => {
         const wordCount = val.trim().split(/\s+/).filter(word => word.length > 0).length;
         return wordCount >= 25;
@@ -274,6 +275,7 @@ export default function NewTicketPage() {
                 insertData.concept = data.concept;
                 insertData.primary_color = data.primaryColor;
                 insertData.secondary_color = data.secondaryColor;
+                insertData.tertiary_color = data.tertiaryColor;
             }
 
             // Programming-specific fields
@@ -463,6 +465,16 @@ export default function NewTicketPage() {
                                                             placeholder="#FFD700 atau Emas"
                                                         />
                                                         {errors.secondaryColor && <p className="text-red-500 text-xs mt-1">{errors.secondaryColor.message}</p>}
+                                                    </div>
+
+                                                    {/* Tertiary Color */}
+                                                    <div>
+                                                        <label className="block text-sm font-semibold mb-2">Warna Tersier <span className="text-zinc-400 font-normal">(Opsional)</span></label>
+                                                        <ColorPicker
+                                                            value={watch("tertiaryColor") || ""}
+                                                            onChange={(v) => setValue("tertiaryColor", v)}
+                                                            placeholder="#FFFFFF atau Bebas"
+                                                        />
                                                     </div>
 
                                                     {/* Brief / Materi */}

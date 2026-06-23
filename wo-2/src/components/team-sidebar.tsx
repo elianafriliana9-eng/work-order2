@@ -14,6 +14,7 @@ import {
     ExternalLink,
     ListOrdered,
     MessageCircle,
+    Archive,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ export function TeamSidebar({ userName, role }: TeamSidebarProps) {
     const menuItems = [
         { href: "/team/design", label: "Dashboard", icon: LayoutDashboard },
         { href: "/team/design/queue", label: "Antrian Tiket", icon: ListOrdered },
+        { href: "/team/design/archive", label: "Arsip Tiket", icon: Archive },
         { href: "/team/design/report", label: "Laporan Harian", icon: Send },
         { href: "/team/design/chat", label: "Team Chat", icon: MessageCircle },
     ];

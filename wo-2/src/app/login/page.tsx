@@ -8,6 +8,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { ADMIN_ROLES, DEFAULT_REDIRECTS } from "@/lib/constants";
+import { classifyLoginError, getLoginErrorMessage } from "@/lib/auth-errors";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -36,42 +37,55 @@ export default function LoginPage() {
                 },
             });
             if (error) throw error;
-        } catch (error: any) {
-            console.error("Error logging in with Google:", error.message);
+        } catch (error: unknown) {
+            console.error("Google login failed", { kind: classifyLoginError(error) });
             setError("Gagal login dengan Google. Cek konfigurasi Supabase.");
         }
     }
 
     async function handleEmailLogin(e: React.FormEvent) {
         e.preventDefault();
+        if (loading) return;
+        const normalizedEmail = email.trim().toLowerCase();
+        if (!normalizedEmail || !password) {
+            setError("Email dan password wajib diisi.");
+            return;
+        }
         setLoading(true);
         setError(null);
 
         try {
             const { error, data: authData } = await supabase.auth.signInWithPassword({
-                email,
+                email: normalizedEmail,
                 password,
             });
 
-            if (error) throw error;
+            if (error) {
+                const kind = classifyLoginError(error);
+                setError(getLoginErrorMessage(kind));
+                if (kind !== "credentials") console.error("Login failed", { kind, code: error.code });
+                return;
+            }
 
             if (authData.user) {
-                const { data: profile } = await supabase
+                const { data: profile, error: profileError } = await supabase
                     .from('profiles')
                     .select('role')
                     .eq('id', authData.user.id)
                     .maybeSingle();
+                if (profileError) throw profileError;
 
-                const redirectPath = (profile && ADMIN_ROLES.includes(profile.role as any))
+                const redirectPath = (profile && ADMIN_ROLES.includes(profile.role as (typeof ADMIN_ROLES)[number]))
                     ? DEFAULT_REDIRECTS.ADMIN
                     : DEFAULT_REDIRECTS.USER;
 
-                router.push(redirectPath);
+                router.replace(redirectPath);
                 router.refresh();
             }
-        } catch (error: any) {
-            console.error("Login Error:", error.message);
-            setError("Email atau password salah.");
+        } catch (error: unknown) {
+            const kind = classifyLoginError(error);
+            console.error("Login failed", { kind });
+            setError(getLoginErrorMessage(kind));
         } finally {
             setLoading(false);
         }
@@ -146,8 +160,11 @@ export default function LoginPage() {
                                     <input
                                         type="email"
                                         required
+                                        autoComplete="email"
+                                        disabled={loading}
+                                        aria-invalid={Boolean(error)}
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
                                         placeholder="user@it.com"
                                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                                     />
@@ -160,8 +177,11 @@ export default function LoginPage() {
                                     <input
                                         type="password"
                                         required
+                                        autoComplete="current-password"
+                                        disabled={loading}
+                                        aria-invalid={Boolean(error)}
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        onChange={(e) => { setPassword(e.target.value); if (error) setError(null); }}
                                         placeholder="••••••••"
                                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-zinc-50 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                                     />
@@ -169,10 +189,10 @@ export default function LoginPage() {
                             </div>
                             <button
                                 type="submit"
-                                disabled={loading || !email || !password}
+                                disabled={loading || !email.trim() || !password}
                                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50 shadow-md shadow-primary/20"
                             >
-                                {loading ? <Loader2 size={16} className="animate-spin" /> : "Masuk"}
+                                {loading ? <><Loader2 size={16} className="animate-spin" /> Memproses...</> : "Masuk"}
                             </button>
                         </form>
 

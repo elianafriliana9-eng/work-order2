@@ -181,6 +181,9 @@ export default function NewTicketPage() {
 
     const [files, setFiles] = useState<File[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+    const [fileError, setFileError] = useState<string | null>(null);
     const [formReady, setFormReady] = useState(false);
 
     useEffect(() => {
@@ -192,6 +195,7 @@ export default function NewTicketPage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
+            setFileError(null);
             const newFiles = Array.from(e.target.files);
             const allowedTypes = [
                 'image/jpeg', 'image/png', 'image/jpg', 'application/pdf',
@@ -199,7 +203,7 @@ export default function NewTicketPage() {
             ];
             const filteredFiles = newFiles.filter(file => {
                 if (!allowedTypes.includes(file.type)) {
-                    alert(`File ${file.name} ditolak. Hanya file gambar, PDF, atau Word yang diizinkan.`);
+                    setFileError(`File ${file.name} ditolak. Hanya file gambar, PDF, atau Word yang diizinkan.`);
                     return false;
                 }
                 return true;
@@ -242,6 +246,8 @@ export default function NewTicketPage() {
 
         try {
             setIsUploading(true);
+            setSubmitError(null);
+            setSubmitSuccess(null);
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not authenticated");
 
@@ -253,7 +259,7 @@ export default function NewTicketPage() {
             }
 
             // 1. Create Work Order
-            const insertData: any = {
+            const insertData: Record<string, string | null> = {
                 user_id: user.id,
                 title: data.title,
                 brand: data.brand,
@@ -313,11 +319,12 @@ export default function NewTicketPage() {
                 }
             }
 
-            alert("Work Order & Jadwal Meeting berhasil dibuat!");
+            setSubmitSuccess("Work Order dan jadwal meeting berhasil dibuat. Mengalihkan ke dashboard...");
             router.push("/dashboard");
-        } catch (error: any) {
-            console.error("Error submitting WO:", error.message);
-            alert("Gagal mengirim Work Order: " + error.message);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.";
+            console.error("Error submitting WO:", message);
+            setSubmitError(`Work Order belum terkirim. ${message} Silakan periksa data lalu coba lagi.`);
         } finally {
             setIsUploading(false);
         }
@@ -693,6 +700,12 @@ export default function NewTicketPage() {
                                             </div>
                                         )}
 
+                                        {fileError && (
+                                            <div role="alert" className="p-4 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20 text-sm text-red-700 dark:text-red-400">
+                                                {fileError}
+                                            </div>
+                                        )}
+
                                         <div className="flex items-start gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border">
                                             <input type="checkbox" {...register("confirmSOP")} className="mt-1" />
                                             <p className="text-xs text-muted-foreground">Saya mengonfirmasi bahwa pengerjaan dimulai setelah verifikasi Admin.</p>
@@ -702,6 +715,18 @@ export default function NewTicketPage() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        {submitError && (
+                            <div role="alert" aria-live="assertive" className="mt-8 p-4 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20 text-sm text-red-700 dark:text-red-400">
+                                <p className="font-bold">Pengiriman gagal</p>
+                                <p className="mt-1">{submitError}</p>
+                            </div>
+                        )}
+                        {submitSuccess && (
+                            <div role="status" aria-live="polite" className="mt-8 p-4 rounded-xl bg-green-50 dark:bg-green-500/5 border border-green-200 dark:border-green-500/20 text-sm text-green-700 dark:text-green-400">
+                                {submitSuccess}
+                            </div>
+                        )}
 
                         <div className="mt-12 pt-8 border-t border-border flex items-center justify-between">
                             {step > 1 ? <button type="button" onClick={prevStep} className="flex items-center gap-2 font-semibold text-muted-foreground hover:text-foreground transition-colors"><ChevronLeft size={20} /> Sebelumnya</button> : <div />}

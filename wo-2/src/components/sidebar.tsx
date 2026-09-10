@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+    Layout,
     Ticket,
     PlusCircle,
     Settings,
@@ -11,14 +11,14 @@ import {
     User,
     ChevronLeft,
     ChevronRight,
-    Home
+    Home,
+    Boxes,
 } from "lucide-react";
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-export function Sidebar({ userName, isMobileOpen, onCloseMobile }: { userName: string; isMobileOpen?: boolean; onCloseMobile?: () => void }) {
+export function Sidebar({ userName }: { userName: string }) {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const router = useRouter();
@@ -26,35 +26,43 @@ export function Sidebar({ userName, isMobileOpen, onCloseMobile }: { userName: s
     const menuItems = [
         { icon: Home, label: "Home", href: "/dashboard" },
         { icon: Ticket, label: "My Tickets", href: "/dashboard" }, // In actual app, might be different
+        { icon: Boxes, label: "Pengelolaan Asset", href: "/dashboard/asset" },
         { icon: PlusCircle, label: "New Order", href: "/new-ticket" },
         { icon: Settings, label: "Settings", href: "#" },
     ];
 
     async function handleLogout() {
+        if (typeof document !== "undefined") {
+            document.cookie = "demo_user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+            document.cookie = "demo_user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        }
         await supabase.auth.signOut();
-        router.push("/");
+        router.push("/login");
     }
 
     return (
         <aside
-            className={`fixed left-0 top-0 h-screen bg-white dark:bg-zinc-900 border-r border-border transition-all duration-300 z-50 flex flex-col ${isCollapsed ? "w-20" : "w-64"} ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+            className={`fixed left-0 top-0 h-screen bg-white dark:bg-zinc-900 border-r border-border transition-all duration-300 z-50 flex flex-col ${isCollapsed ? "w-20" : "w-64"}`}
         >
             {/* Header */}
             <div className="p-6 flex items-center justify-between">
                 {!isCollapsed && (
-                    <Link href="/dashboard" className="flex items-center overflow-hidden">
-                        <Image src="/logo.png" alt="Digital Technology" width={220} height={55} className="h-12 w-auto object-contain" />
+                    <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl overflow-hidden whitespace-nowrap">
+                        <div className="bg-primary text-primary-foreground p-1 rounded shrink-0">
+                            <Layout size={20} />
+                        </div>
+                        <span className="text-zinc-900 dark:text-zinc-100">WorkOrder</span>
                     </Link>
                 )}
                 {isCollapsed && (
-                    <Link href="/dashboard" className="mx-auto">
-                        <Image src="/logo.png" alt="Digital Technology" width={48} height={48} className="h-12 w-12 object-contain" />
-                    </Link>
+                    <div className="bg-primary text-primary-foreground p-1 rounded mx-auto">
+                        <Layout size={20} />
+                    </div>
                 )}
 
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="hidden lg:block absolute -right-3 top-12 bg-white dark:bg-zinc-800 border border-border p-1 rounded-full shadow-md text-muted-foreground hover:text-primary transition-colors"
+                    className="absolute -right-3 top-12 bg-white dark:bg-zinc-800 border border-border p-1 rounded-full shadow-md text-muted-foreground hover:text-primary transition-colors"
                 >
                     {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                 </button>
@@ -68,7 +76,6 @@ export function Sidebar({ userName, isMobileOpen, onCloseMobile }: { userName: s
                         <Link
                             key={item.label}
                             href={item.href}
-                            onClick={onCloseMobile}
                             className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive
                                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                                     : "text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-foreground"

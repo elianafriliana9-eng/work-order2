@@ -20,6 +20,16 @@ export default function AdminLayout({
 
         async function checkAdminAccess() {
             try {
+                // Support local development demo bypass
+                if (typeof document !== "undefined" && document.cookie.includes("demo_user_role=head_it")) {
+                    if (isMounted) {
+                        setUserName("Demo Head of IT");
+                        setRole("head_it");
+                        setLoading(false);
+                    }
+                    return;
+                }
+
                 const { data: { user }, error: authError } = await supabase.auth.getUser();
 
                 if (authError || !user) {

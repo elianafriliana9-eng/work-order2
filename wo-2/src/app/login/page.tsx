@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
-import Image from "next/image";
+import { Layout, ArrowLeft, ShieldCheck, Mail, Lock, Loader2, Sparkles, Shield, User } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -16,6 +15,15 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [origin, setOrigin] = useState<string>("");
     const router = useRouter();
+
+    function handleDemoLogin(role: string, name: string, targetPath: string) {
+        if (typeof document !== "undefined") {
+            document.cookie = `demo_user_role=${role}; path=/; max-age=86400; SameSite=Lax`;
+            document.cookie = `demo_user_name=${encodeURIComponent(name)}; path=/; max-age=86400; SameSite=Lax`;
+        }
+        router.push(targetPath);
+        router.refresh();
+    }
 
     useEffect(() => {
         // Set origin on client side to ensure correct callback URL
@@ -36,8 +44,9 @@ export default function LoginPage() {
                 },
             });
             if (error) throw error;
-        } catch (error: any) {
-            console.error("Error logging in with Google:", error.message);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Unknown error";
+            console.error("Error logging in with Google:", msg);
             setError("Gagal login dengan Google. Cek konfigurasi Supabase.");
         }
     }
@@ -62,15 +71,16 @@ export default function LoginPage() {
                     .eq('id', authData.user.id)
                     .maybeSingle();
 
-                const redirectPath = (profile && ADMIN_ROLES.includes(profile.role as any))
+                const redirectPath = (profile && (ADMIN_ROLES as readonly string[]).includes(profile.role))
                     ? DEFAULT_REDIRECTS.ADMIN
                     : DEFAULT_REDIRECTS.USER;
 
                 router.push(redirectPath);
                 router.refresh();
             }
-        } catch (error: any) {
-            console.error("Login Error:", error.message);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Unknown error";
+            console.error("Login Error:", msg);
             setError("Email atau password salah.");
         } finally {
             setLoading(false);
@@ -92,9 +102,11 @@ export default function LoginPage() {
                     <ArrowLeft size={16} /> Kembali ke Landing Page
                 </Link>
                 <div className="flex justify-center mb-6">
-                    <Image src="/logo.png" alt="Digital Technology" width={320} height={80} className="h-20 w-auto object-contain" priority />
+                    <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-lg ring-4 ring-primary/10">
+                        <Layout size={32} />
+                    </div>
                 </div>
-                <h2 className="text-center text-2xl font-extrabold tracking-tight text-foreground">
+                <h2 className="text-center text-3xl font-extrabold tracking-tight text-foreground">
                     Work Order System
                 </h2>
                 <p className="mt-2 text-center text-sm text-muted-foreground">
@@ -175,6 +187,43 @@ export default function LoginPage() {
                                 {loading ? <Loader2 size={16} className="animate-spin" /> : "Masuk"}
                             </button>
                         </form>
+
+                        {/* Mode Pengujian Lokal - Quick Login Demo */}
+                        <div className="relative pt-2">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-dashed border-border"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white dark:bg-zinc-900 text-muted-foreground uppercase tracking-wider text-[10px] font-bold flex items-center gap-1.5">
+                                    <Sparkles size={12} className="text-amber-500" />
+                                    Mode Pengujian Lokal
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 pt-1">
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => handleDemoLogin('head_it', 'Demo Head of IT', '/admin/assets')}
+                                    className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-violet-500/30 bg-violet-50/60 dark:bg-violet-950/20 text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/40 font-bold text-xs transition-all shadow-sm group"
+                                >
+                                    <Shield size={14} className="text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform shrink-0" />
+                                    <span>Demo Admin</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDemoLogin('user', 'Demo Karyawan (PIC)', '/dashboard/asset')}
+                                    className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-blue-500/30 bg-blue-50/60 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-bold text-xs transition-all shadow-sm group"
+                                >
+                                    <User size={14} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform shrink-0" />
+                                    <span>Demo User</span>
+                                </button>
+                            </div>
+                            <p className="text-[11px] text-center text-muted-foreground">
+                                Akses cepat Inventaris Aset & Tanda Tangan BAST tanpa Supabase Auth.
+                            </p>
+                        </div>
 
                         <div className="grid grid-cols-1 gap-4 text-xs pt-2">
                             <div className="flex items-start gap-3 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-border">

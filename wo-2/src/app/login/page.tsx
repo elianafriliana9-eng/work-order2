@@ -71,7 +71,7 @@ export default function LoginPage() {
                     .eq('id', authData.user.id)
                     .maybeSingle();
 
-                let redirectPath = DEFAULT_REDIRECTS.USER;
+                let redirectPath: string = DEFAULT_REDIRECTS.USER;
                 if (profile?.role === 'head_it') {
                     redirectPath = DEFAULT_REDIRECTS.ADMIN;
                 } else if (profile?.role === 'designer') {

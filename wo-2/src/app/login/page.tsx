@@ -71,9 +71,12 @@ export default function LoginPage() {
                     .eq('id', authData.user.id)
                     .maybeSingle();
 
-                const redirectPath = (profile && (ADMIN_ROLES as readonly string[]).includes(profile.role))
-                    ? DEFAULT_REDIRECTS.ADMIN
-                    : DEFAULT_REDIRECTS.USER;
+                let redirectPath = DEFAULT_REDIRECTS.USER;
+                if (profile?.role === 'head_it') {
+                    redirectPath = DEFAULT_REDIRECTS.ADMIN;
+                } else if (profile?.role === 'designer') {
+                    redirectPath = '/team/design';
+                }
 
                 router.push(redirectPath);
                 router.refresh();

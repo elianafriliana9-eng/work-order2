@@ -52,8 +52,10 @@ export async function GET(request: Request) {
             .eq('id', data.user.id)
             .maybeSingle()
 
-        if (profile && ['head_it', 'designer', 'it_dev', 'it_support'].includes(profile.role)) {
+        if (profile?.role === 'head_it') {
             redirectPath = '/admin'
+        } else if (profile?.role === 'designer') {
+            redirectPath = '/team/design'
         }
 
         // Create redirect and APPLY ALL collected cookies to the response

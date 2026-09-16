@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({
+    const response = NextResponse.next({
         request: {
             headers: request.headers,
         },
@@ -38,14 +38,28 @@ export async function middleware(request: NextRequest) {
             }
         )
 
-        // Refresh session and get user
-        const { data: { user } } = await supabase.auth.getUser()
+        // Check for local development demo bypass cookie
+        const demoRole = request.cookies.get('demo_user_role')?.value
 
         const path = request.nextUrl.pathname
         const isAuthPage = path.startsWith('/login')
         const isAdminPage = path.startsWith('/admin')
         const isTeamPage = path.startsWith('/team')
         const isUserPage = path.startsWith('/dashboard') || path.startsWith('/new-ticket')
+
+        if (demoRole) {
+            if (isAuthPage) {
+                const target = demoRole === 'head_it' ? '/admin/assets' : '/dashboard/asset'
+                return NextResponse.redirect(new URL(target, request.url))
+            }
+            if (isAdminPage && demoRole !== 'head_it') {
+                return NextResponse.redirect(new URL('/dashboard/asset', request.url))
+            }
+            return response
+        }
+
+        // Refresh session and get user
+        const { data: { user } } = await supabase.auth.getUser()
 
         // Redirect unauthenticated users to login
         if ((isAdminPage || isTeamPage || isUserPage) && !user) {

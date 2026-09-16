@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     Ticket,
     FileText,
     PieChart,
-    Image as ImageIcon,
+    Image,
     ChevronLeft,
     LogOut,
     Shield,
@@ -17,12 +16,9 @@ import {
     Code,
     Headphones,
     User,
+    Send,
     ExternalLink,
-    MessageCircle,
-    Smartphone,
-    Archive,
-    BarChart3,
-    CalendarDays,
+    Boxes,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -33,7 +29,7 @@ interface AdminSidebarProps {
 }
 
 const roleConfig: Record<string, { label: string; icon: any; color: string }> = {
-    head_it: { label: "PIC IT", icon: Shield, color: "text-violet-500" },
+    head_it: { label: "Head of IT", icon: Shield, color: "text-violet-500" },
     designer: { label: "Designer", icon: Palette, color: "text-pink-500" },
     it_dev: { label: "IT Developer", icon: Code, color: "text-blue-500" },
     it_support: { label: "IT Support", icon: Headphones, color: "text-green-500" },
@@ -50,20 +46,20 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
     const menuItems = [
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
         { href: "/admin/tickets", label: "Kelola Tiket", icon: Ticket },
+        { href: "/admin/assets", label: "Pengelolaan Asset", icon: Boxes },
         { href: "/admin/it-dev", label: "IT Development", icon: Code },
         { href: "/admin/reports", label: "Laporan Tim", icon: FileText },
         { href: "/admin/reporting", label: "Reporting", icon: PieChart },
-        { href: "/admin/head-report", label: "PIC IT Report", icon: BarChart3 },
-        { href: "/admin/showcase", label: "Showcase", icon: ImageIcon },
-        { href: "/admin/app-showcase", label: "App Showcase", icon: Smartphone },
-        { href: "/admin/holidays", label: "Kalender Libur", icon: CalendarDays },
-        { href: "/admin/archive", label: "Arsip Tiket", icon: Archive },
-        { href: "/admin/chat", label: "Team Chat", icon: MessageCircle },
+        { href: "/admin/showcase", label: "Showcase", icon: Image },
     ];
 
     async function handleLogout() {
+        if (typeof document !== "undefined") {
+            document.cookie = "demo_user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+            document.cookie = "demo_user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        }
         await supabase.auth.signOut();
-        router.push("/");
+        router.push("/login");
     }
 
     return (
@@ -74,8 +70,11 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
             {/* Header */}
             <div className="p-4 border-b border-border flex items-center justify-between">
                 {!collapsed && (
-                    <div className="flex items-center">
-                        <Image src="/logo.png" alt="Digital Technology" width={210} height={52} className="h-11 w-auto object-contain" />
+                    <div className="flex items-center gap-2">
+                        <div className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 p-1.5 rounded-lg">
+                            <Shield size={18} />
+                        </div>
+                        <span className="font-bold text-sm">Admin Panel</span>
                     </div>
                 )}
                 <button
